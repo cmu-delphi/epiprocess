@@ -429,7 +429,6 @@ determined the time window for the current computation.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4,016 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use the geo_value or the ref_time_value in the slide computation</span></span></span>
 <span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide</span><span class="op">(</span><span class="op">~</span> <span class="va">.x</span><span class="op">$</span><span class="va">geo_value</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, .window_size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>

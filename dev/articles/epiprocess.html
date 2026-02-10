@@ -136,7 +136,7 @@ follows:</p>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-19 21:07:00.393865</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-02-10 07:28:03.778419</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -157,7 +157,7 @@ wrapper to <code>ggplot2</code>).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">cases_cumulative</span><span class="op">)</span></span></code></pre></div>
-<p><img src="epiprocess_files/figure-html/unnamed-chunk-5-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epiprocess_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>We can compute the 7 day moving average of the confirmed daily cases
 for each <code>geo_value</code> by using the
 <code><a href="../reference/epi_slide_opt.html">epi_slide_mean()</a></code> function. For a more in-depth guide to
@@ -169,7 +169,7 @@ sliding, see <code><a href="../articles/epi_df.html">vignette("epi_df")</a></cod
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-19 21:07:00.393865</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-02-10 07:28:03.778419</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -192,7 +192,7 @@ see <code><a href="../articles/growth_rate.html">vignette("growth_rate")</a></co
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-19 21:07:00.393865</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-02-10 07:28:03.778419</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -216,7 +216,7 @@ see <code><a href="../articles/outliers.html">vignette("outliers")</a></code>.</
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-19 21:07:00.393865</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-02-10 07:28:03.778419</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases_cumulative</span> <span style="font-weight: bold;">cases_daily</span> <span style="font-weight: bold;">outlier_info$rm_lower</span></span></span>

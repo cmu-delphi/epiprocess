@@ -225,7 +225,7 @@ value.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 cases"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-6-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>As a more direct visualization, we plot the estimated growth rates
 themselves, overlaying the curves for the two states on one plot.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -236,7 +236,7 @@ themselves, overlaying the curves for the two states on one plot.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"State"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>We can see that the estimated growth rates from the relative change
 method are somewhat volatile, and there appears to be some bias towards
 towards the right boundary of the time span—look at the estimated growth
@@ -275,7 +275,7 @@ troublesome spikes:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-8-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="nonparametric-estimation">Nonparametric estimation<a class="anchor" aria-label="anchor" href="#nonparametric-estimation"></a>
@@ -318,7 +318,7 @@ can use <code>pak::pkg_install("glmgen/trendfilter")</code>.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-9-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>In this particular example, the trend filtering estimates of growth
 rate appear to be much more stable than those from the smoothing spline,
 and also much more stable than the estimates from local relative changes
@@ -376,7 +376,7 @@ argument <code>log_scale = TRUE</code> in the call to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -396,7 +396,7 @@ argument <code>log_scale = TRUE</code> in the call to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Growth rate"</span>, col <span class="op">=</span> <span class="st">"Method"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-2.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="growth_rate_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>Comparing the <code>rel_change_log</code> curves with their
 <code>rel_change</code> counterparts (shown in earlier figures), we see
 that the former curves appear less volatile and match the linear

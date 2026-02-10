@@ -81,9 +81,9 @@ computation, or alternatively, a running/cumulative computation (with
 are temporarily added to fill in any time gaps, and, for rolling
 computations, to pad the time series to ensure that the first &amp; last
 computations use exactly <code>.window_size</code> values.</p>
-<p><code>epi_slide_opt</code> allows you to use any <a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">data.table::froll</a> or
+<p><code>epi_slide_opt</code> allows you to use any <a href="https://rdrr.io/pkg/data.table/man/froll.html" class="external-link">data.table::froll</a> or
 <a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slider::summary-slide</a> function. If none of those specialized functions fit
-your usecase, you can use <code><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">data.table::frollapply</a></code> together with a non-rolling
+your usecase, you can use <code><a href="https://rdrr.io/pkg/data.table/man/frollapply.html" class="external-link">data.table::frollapply</a></code> together with a non-rolling
 function (e.g., <code>median</code>). See <code><a href="epi_slide.html">epi_slide</a></code> if you need to work with
 multiple columns at once or output a custom type.</p>
 <p><code>epi_slide_mean</code> is a wrapper around <code>epi_slide_opt</code> with <code>.f = data.table::frollmean</code>.</p>
@@ -158,7 +158,7 @@ names, use <code><a href="https://dplyr.tidyverse.org/reference/rename.html" cla
 <dt id="arg--f">.f<a class="anchor" aria-label="anchor" href="#arg--f"></a></dt>
 <dd><p>Function; together with <code>...</code> specifies the computation to slide.
 <code>.f</code> must be one of <code>data.table</code>'s rolling functions
-(<code>frollmean</code>, <code>frollsum</code>, <code>frollapply</code>. See <a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">data.table::roll</a>) or one
+(<code>frollmean</code>, <code>frollsum</code>, <code>frollapply</code>. See <a href="https://rdrr.io/pkg/data.table/man/froll.html" class="external-link">data.table::roll</a>) or one
 of <code>slider</code>'s specialized sliding functions (<code>slide_mean</code>, <code>slide_sum</code>,
 etc. See <a href="https://slider.r-lib.org/reference/summary-slide.html" class="external-link">slider::summary-slide</a>).</p>
 <p>The optimized <code>data.table</code> and <code>slider</code> functions can't be directly passed
@@ -395,6 +395,62 @@ for <code>.f</code> factoring in the input column type(s) for <code>.col_names</
 <span class="r-in"><span>    .window_size <span class="op">=</span> <span class="fl">7</span>,</span></span>
 <span class="r-in"><span>    na.rm <span class="op">=</span> <span class="cn">TRUE</span>, algo <span class="op">=</span> <span class="st">"exact"</span>, hasNA <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>hasNA is deprecated, use has.nf instead</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 37,576 x 5 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>
@@ -422,11 +478,23 @@ for <code>.f</code> factoring in the input column type(s) for <code>.col_names</
 <span class="r-in"><span><span class="va">cases_deaths_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">case_rate_7d_av</span>, <span class="va">death_rate_7d_av</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">epi_slide_opt</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">case_rate_7d_av</span>, <span class="va">death_rate_7d_av</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdatatable.gitlab.io/data.table/reference/froll.html" class="external-link">frollapply</a></span>,</span></span>
+<span class="r-in"><span>    <span class="fu">data.table</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/data.table/man/frollapply.html" class="external-link">frollapply</a></span>,</span></span>
 <span class="r-in"><span>    FUN <span class="op">=</span> <span class="va">median</span>, .window_size <span class="op">=</span> <span class="fl">28</span>,</span></span>
 <span class="r-in"><span>    .suffix <span class="op">=</span> <span class="st">"_{.n}{.time_unit_abbr}_median"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'x' is deprecated in frollapply, use 'X' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'n' is deprecated in frollapply, use 'N' instead</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_df` object, 4,026 x 6 with metadata:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * geo_type  = state</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> * time_type = day</span>

@@ -99,7 +99,7 @@ COVID-19 case counts from FL and NJ.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-3-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>There are multiple outliers in these data that a modeler may want to
 detect and correct. We’ll discuss those two tasks in turn.</p>
 <div class="section level2">
@@ -268,7 +268,7 @@ detection method.</p>
 <span>    x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color <span class="op">=</span> <span class="st">"Method"</span>,</span>
 <span>    shape <span class="op">=</span> <span class="st">"Method"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-7-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu">plot_outlr</span><span class="op">(</span><span class="va">x</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"nj"</span><span class="op">)</span>, <span class="va">cases</span>, <span class="va">method_abbr</span>,</span>
@@ -279,7 +279,7 @@ detection method.</p>
 <span>    x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span>, color <span class="op">=</span> <span class="st">"Method"</span>,</span>
 <span>    shape <span class="op">=</span> <span class="st">"Method"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-7-2.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="outlier-correction">Outlier correction<a class="anchor" aria-label="anchor" href="#outlier-correction"></a>
@@ -318,7 +318,7 @@ point.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">geo_value</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 counts"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="outliers_files/figure-html/unnamed-chunk-8-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="outliers_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>More advanced correction functionality will be coming at some point
 in the future.</p>
 </div>
