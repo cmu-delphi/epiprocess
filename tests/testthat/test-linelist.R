@@ -17,21 +17,16 @@ test_that("linelist_to_archive works with basic inputs", {
   )
 
   expect_s3_class(ea, "epi_archive")
-  expect_equal(ea$DT$n, c(2, 1, 1))
 
-  # Check content at different versions
-  df_v2 <- epix_as_of(ea, as.Date("2022-01-02"))
-  expect_equal(nrow(df_v2), 1)
-  expect_equal(df_v2$n, 2)
-  expect_equal(df_v2$time_value, as.Date("2022-01-01"))
-
-  df_v3 <- epix_as_of(ea, as.Date("2022-01-03"))
-  expect_equal(nrow(df_v3), 2)
-  expect_equal(sum(df_v3$n), 3)
-
-  df_v4 <- epix_as_of(ea, as.Date("2022-01-04"))
-  expect_equal(nrow(df_v4), 2)
-  expect_equal(df_v4$n[df_v4$time_value == "2022-01-01"], 1)
+  # Check full parity
+  expected_df <- tibble(
+    geo_value = "ca",
+    time_value = as.Date(c("2022-01-01", "2022-01-01", "2022-01-02")),
+    version = as.Date(c("2022-01-02", "2022-01-04", "2022-01-03")),
+    n = c(2, 1, 1)
+  )
+  expected_ea <- as_epi_archive(expected_df)
+  expect_equal(ea, expected_ea)
 })
 
 test_that("linelist_to_archive handles tidy selection", {
