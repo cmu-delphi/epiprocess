@@ -17,12 +17,11 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-
-#' To install mytidyfunctions, you need 
+#' To install mytidyfunctions, you need
 #' remotes::install_github("JavierMtzRdz/mytidyfunctions")
 if (!require("pacman")) install.packages("pacman")
 if (!require("devtools")) install.packages("devtools")
-if (require("mytidyfunctions")) mytidyfunctions::set_mytheme() 
+if (require("mytidyfunctions")) mytidyfunctions::set_mytheme()
 
 Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
@@ -49,7 +48,6 @@ Create linelist data of different sizes to benchmark scaling behavior.
 
 ```{r generate-data}
 generate_linelist <- function(n_events, n_geos = 5, date_range_days = 365) {
-
   # Scenario: constant flow of cases over 50 days
   days <- seq(as.Date("2023-01-01"), by = "day", length.out = date_range_days)
   geos <- paste0("state_", sprintf("%02d", 1:n_geos))
@@ -75,7 +73,7 @@ generate_linelist <- function(n_events, n_geos = 5, date_range_days = 365) {
   linelist <- cases %>%
     select(id, geo_value, time_value, version_recorded, version_deleted) %>%
     arrange(version_recorded)
-  
+
   linelist
 }
 ```
@@ -87,14 +85,14 @@ set.seed(42)
 linelist <- generate_linelist(1000, 1, 30)
 
 ea <- linelist_to_archive(
-    linelist,
-    geo_value = geo_value,
-    time_value = time_value,
-    version_recorded = version_recorded,
-    version_deleted = version_deleted,
-    id = id,
-    value = "cases"
-  )
+  linelist,
+  geo_value = geo_value,
+  time_value = time_value,
+  version_recorded = version_recorded,
+  version_deleted = version_deleted,
+  id = id,
+  value = "cases"
+)
 
 autoplot(ea)
 ```
@@ -124,7 +122,7 @@ inputs <- list(
   small = linelist_small,
   medium = linelist_medium,
   large = linelist_large,
-  "1M" = linelist_1M#,
+  "1M" = linelist_1M # ,
   # "100M" = linelist_100M # one test machine: individual conversions don't out-of-memory, but benching does
 )
 
@@ -169,7 +167,6 @@ system.time({
       )
   }
 }) / N
-
 ```
 
 ### Cost of ID Validation
@@ -184,7 +181,7 @@ convert_to_chart_style <- function(df) {
     mutate(is_deletion = FALSE) %>%
     rename(.version = version_recorded) %>%
     select(-version_deleted)
-  
+
   # Rows with version_deleted become additional row
   dels <- df %>%
     filter(!is.na(version_deleted)) %>%
@@ -193,8 +190,8 @@ convert_to_chart_style <- function(df) {
       .version = version_deleted
     ) %>%
     select(-version_recorded, -version_deleted)
-  
-  # Combine and rename 
+
+  # Combine and rename
   bind_rows(recs, dels) %>%
     rename(version_recorded = .version) %>%
     arrange(version_recorded, is_deletion)
