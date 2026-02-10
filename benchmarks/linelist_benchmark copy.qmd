@@ -1,19 +1,9 @@
 ---
 title: "linelist_to_archive Benchmarks"
 format:
-  commonmark:
-    variant: +gfm_auto_identifiers
-    df-print: kable
-knitr:
-  opts_chunk:
-    comment: "#>"
-    message: false
-    dev: "png"
-    fig.width: 8
-    fig.height: 4.5
-    fig.align: center
-editor_options: 
-  chunk_output_type: console
+  gfm:
+    toc: true
+    code-fold: true
 ---
 
 ```{r setup, include=FALSE}
@@ -24,12 +14,13 @@ if (!require("pacman")) install.packages("pacman")
 if (!require("devtools")) install.packages("devtools")
 if (require("mytidyfunctions")) mytidyfunctions::set_mytheme() 
 
-Sys.setlocale("LC_ALL", "en_US.UTF-8")
+Sys.setlocale("LC_ALL", "en.US.UTF-8")
 
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
-  warning = FALSE
+  warning = FALSE,
+  comment =  "#>"
 )
 ```
 
@@ -104,7 +95,7 @@ autoplot(ea)
 
 ### Scaling with Dataset Size
 
-It is tested across 1K, 10K, 50K, 1M, and (partially on) 100M datasets.
+It is tested across 1K, 10K, and 50K datasets.
 
 ```{r bench-scaling}
 # Dataset
@@ -114,18 +105,10 @@ linelist_medium <- generate_linelist(10000)
 
 linelist_large <- generate_linelist(50000)
 
-# CA COVID-19 hosps for a few years
-linelist_1M <- generate_linelist(1e6)
-
-# USA COVID-19 hosps for a few years
-linelist_100M <- generate_linelist(100e6)
-
 inputs <- list(
   small = linelist_small,
   medium = linelist_medium,
-  large = linelist_large,
-  "1M" = linelist_1M#,
-  # "100M" = linelist_100M # one test machine: individual conversions don't out-of-memory, but benching does
+  large = linelist_large
 )
 
 # Run benchmark
@@ -142,9 +125,7 @@ scaling_bench <- bench::press(
         version_deleted = version_deleted,
         id = id
       ),
-      min_time = 10,
-      min_iterations = 5,
-      max_iterations = 1e9,
+      iterations = 5,
       check = FALSE
     )
   }
@@ -155,21 +136,6 @@ scaling_bench %>%
   select(size, median, mem_alloc, n_itr) %>%
   arrange(median)
 
-# one test machine: manual benchmark doesn't out-of-memory
-N <- 1L
-system.time({
-  for (i in seq_len(N)) {
-    linelist_100M %>%
-      linelist_to_archive(
-        geo_value = geo_value,
-        time_value = time_value,
-        version_recorded = version_recorded,
-        version_deleted = version_deleted,
-        id = id
-      )
-  }
-}) / N
-
 ```
 
 ### Cost of ID Validation
@@ -179,25 +145,19 @@ We compare `linelist_to_archive()` with different validation modes using a 50K r
 ```{r bench-validation}
 # Helper to convert to chart-style
 convert_to_chart_style <- function(df) {
-  # All original rows become "recording"
+  # Rows that are recordings
   recs <- df %>%
-    mutate(is_deletion = FALSE) %>%
-    rename(.version = version_recorded) %>%
-    select(-version_deleted)
+    select(id, geo_value, time_value, version_recorded) %>%
+    mutate(is_deletion = FALSE)
   
-  # Rows with version_deleted become additional row
+  # Rows that are deletions
   dels <- df %>%
     filter(!is.na(version_deleted)) %>%
-    mutate(
-      is_deletion = TRUE,
-      .version = version_deleted
-    ) %>%
-    select(-version_recorded, -version_deleted)
+    select(id, geo_value, time_value, version_recorded = version_deleted) %>%
+    mutate(is_deletion = TRUE)
   
-  # Combine and rename 
   bind_rows(recs, dels) %>%
-    rename(version_recorded = .version) %>%
-    arrange(version_recorded, is_deletion)
+    arrange(version_recorded)
 }
 
 linelist_chart <- convert_to_chart_style(linelist_large)
@@ -237,6 +197,85 @@ validation_bench %>%
 
 # Plot
 plot(validation_bench, type = "boxplot")
+```
+
+
+## Real-World Data (NHSN)
+
+This section benchmarks using versioned NHSN data for California (CA) and Florida (FL) in 2023.
+
+**Key Insight**: NHSN data from `pub_covidcast(issues = "*")` is already in "interval-style" format—each row is a (geo, time, version) snapshot of aggregate counts. We can pass this directly to `linelist_to_archive` treating `issue` as `version_recorded`.
+
+```{r nhsn-bench}
+states <- c("ca", "fl")
+start_week <- 202301
+end_week   <- 202352
+
+nhsn_data <- pub_covidcast(
+  source = "nhsn",
+  signals = "confirmed_admissions_covid_ew",
+  geo_type = "state",
+  time_type = "week",
+  geo_values = states,
+  time_values = epirange(start_week, end_week),
+  issues = "*" 
+)
+
+message("Fetched ", nrow(nhsn_data), " rows of versioned history.")
+
+# Baseline: using as_epi_archive directly
+archive_direct <- as_epi_archive(nhsn_data)
+
+# Using linelist_to_archive (treating each row as interval update)
+archive_linelist <- linelist_to_archive(
+  nhsn_data,
+  geo_value = geo_value,
+  time_value = time_value,
+  version_recorded = issue,
+  value = "count"
+)
+
+# Compare the two approaches
+cat("\n--- Direct as_epi_archive ---\n")
+print(archive_direct)
+
+cat("\n--- Via linelist_to_archive ---\n")
+print(archive_linelist)
+
+# Validation: Compare key metrics
+cat("\n--- Validation ---\n")
+cat("Direct archive rows:", nrow(archive_direct$DT), "\n")
+cat("Linelist archive rows:", nrow(archive_linelist$DT), "\n")
+cat("Direct version range:", 
+    as.character(min(archive_direct$DT$version)), "to", 
+    as.character(max(archive_direct$DT$version)), "\n")
+cat("Linelist version range:", 
+    as.character(min(archive_linelist$DT$version)), "to", 
+    as.character(max(archive_linelist$DT$version)), "\n")
+```
+
+### Benchmark
+
+```{r nhsn-bench-time}
+real_bench <- bench::mark(
+  `as_epi_archive` = as_epi_archive(nhsn_data),
+  `linelist_to_archive` = linelist_to_archive(
+    nhsn_data,
+    geo_value = geo_value,
+    time_value = time_value,
+    version_recorded = issue,
+    value = "count"
+  ),
+  iterations = 5,
+  check = FALSE
+)
+
+# Summary
+real_bench %>%
+  select(expression, median, mem_alloc, n_itr)
+
+# Plot
+plot(real_bench, type = "boxplot")
 ```
 
 ## Session Info
