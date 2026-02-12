@@ -663,8 +663,8 @@ autoplot.epi_archive <- function(object, ...,
     )
   }
 
-  min_version <- min(object$DT$version)
-  max_version <- max(object$DT$version)
+  min_version <- min(archive_col(object, "version"))
+  max_version <- max(archive_col(object, "version"))
   versions_end <- object$versions_end
 
   .versions <- versions_standardize(.versions, object)
