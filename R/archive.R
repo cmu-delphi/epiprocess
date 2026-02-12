@@ -160,7 +160,7 @@ next_after.POSIXct <- function(x) {
 #' The variables `geo_value`, `time_value`, `version` serve as key variables for
 #'   the data table (in addition to any other keys specified in the metadata).
 #'   There can only be a single row per unique combination of key variables. The
-#'   keys for an `epi_archive` can be viewed with `key(epi_archive$DT)`.
+#'   keys for an `epi_archive` can be viewed with `key_colnames(epi_archive)`.
 #'
 #' ## Compactification
 #'
@@ -307,7 +307,7 @@ new_epi_archive <- function(
   validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
   validate_version_bound(versions_end, x, na_ok = FALSE)
 
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
+  key_vars <- c("geo_value", other_keys, "time_value", "version")
   if (!all(key_vars %in% names(x))) {
     # Give a more tailored error message than as.data.table would:
     cli_abort(c(
@@ -354,13 +354,13 @@ new_epi_archive <- function(
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
 
-  ukey_vars1 <- c("geo_value", "time_value", x$other_keys, "version")
-  ukey_vars2 <- key(x$DT)
-  if (!identical(ukey_vars1, ukey_vars2)) {
-    cli_abort(c("`data.table::key(x$DT)` not as expected",
-      "*" = "Based on `x$other_keys` the key should be {format_chr_deparse(ukey_vars1)}",
-      "*" = "But `key(x$DT)` is {format_chr_deparse(ukey_vars2)}",
-      ">" = "Consider reconstructing the archive from `x$DT` specifying
+  ukey_vars_expected <- c("geo_value", x$other_keys, "time_value", "version")
+  ukey_vars_actual <- key_colnames(x)
+  if (!identical(ukey_vars_expected, ukey_vars_actual)) {
+    cli_abort(c("Key columns of archive not as expected",
+      "*" = "Based on `x$other_keys` the key columns should be {format_chr_deparse(ukey_vars_expected)}",
+      "*" = "But `key_colnames(x)` is {format_chr_deparse(ukey_vars_actual)}",
+      ">" = "Consider reconstructing the archive specifying
                        the appropriate `other_keys`."
     ))
   }
@@ -621,7 +621,7 @@ as_epi_archive <- function(
   }
 
   data_table <- result$DT
-  key_vars <- key(data_table)
+  key_vars <- key_colnames(result)
 
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
@@ -679,8 +679,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
   cat_line(format_message(
     c(
       if (class) "An `epi_archive` object, with:",
-      "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
-        "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
+      "i" = if (length(x$other_keys) > 0) {
+        "Other keys: {x$other_keys}"
       },
       "i" = if (nrow(x$DT) != 0L) {
         # \u00a0 is non-breaking space cli won't crush, to align with version range

@@ -64,7 +64,7 @@ test_that("linelist_to_archive handles other_keys", {
   )
 
   expect_true("age_group" %in% names(ea$DT))
-  expect_equal(key(ea$DT), c("geo_value", "time_value", "age_group", "version"))
+  expect_equal(key(ea$DT), c("geo_value", "age_group", "time_value", "version"))
 })
 
 test_that("linelist_to_archive errors on missing required cols", {
