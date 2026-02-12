@@ -131,7 +131,7 @@ revision_analysis <- function(epi_arch,
   # if the column to summarize isn't specified, use the only one if there is only one
   if (dots_n(...) == 0) {
     # Choose the first column that's not a key:
-    value_colnames <- setdiff(names(epi_arch$DT), key_colnames(epi_arch))
+    value_colnames <- setdiff(archive_colnames(epi_arch), key_colnames(epi_arch))
     if (length(value_colnames) == 1) {
       arg <- value_colnames
     } else {
@@ -143,7 +143,7 @@ revision_analysis <- function(epi_arch,
     }
   } else {
     # get the names of columns matching any tidyselect used in `...`
-    arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = epi_arch$DT))
+    arg <- names(eval_select(rlang::expr(c(...)), allow_rename = FALSE, data = archive_colmask(epi_arch)))
     if (length(arg) == 0) {
       cli_abort("Could not find any columns matching the selection in `...`.",
         class = "epiprocess__revision_summary__selected_zero_columns"
@@ -165,9 +165,9 @@ revision_analysis <- function(epi_arch,
   ukey_names <- c(epikeytime_names, "version")
   time_type <- epi_arch$time_type
 
-  revision_behavior <- epi_arch$DT %>%
-    as.data.frame() %>%
-    as_tibble() %>%
+  # Stay on the backend handle so select/filter push down on lazy backends;
+  # `apply_compactify` is eager (data-frame row indexing), so collect first.
+  revision_behavior <- archive_data(epi_arch) %>%
     select(all_of(unique(c(ukey_names, arg))))
   if (!is.null(min_waiting_period)) {
     last_semistable_time_value <- time_minus_n_steps(
@@ -184,6 +184,7 @@ revision_analysis <- function(epi_arch,
       revision_behavior %>%
       filter(!is.na(.data[[arg]]))
   }
+  revision_behavior <- revision_behavior %>% dplyr::collect() %>% tibble::as_tibble()
   if (compactify) {
     revision_behavior <- revision_behavior %>%
       apply_compactify(ukey_names, compactify_abs_tol, init_nas_are_locf = compactify_drop_initial_nas)
@@ -276,12 +277,12 @@ revision_analysis <- function(epi_arch,
       bulk_reporting_versions = bulk_reporting_versions,
       nonbulk_expanding_versions = nonbulk_expanding_versions,
       revision_only_versions = revision_only_versions,
-      range_time_values = range(epi_arch$DT$time_value),
+      range_time_values = range(archive_col(epi_arch, "time_value")),
       signal_variable = arg,
       drop_nas = drop_nas,
       time_type = time_type,
       total_na = total_na,
-      max_val = max(epi_arch$DT[[arg]], na.rm = TRUE),
+      max_val = max(archive_col(epi_arch, arg), na.rm = TRUE),
       n_obs = n_obs,
       n_epikeytimes = n_epikeytimes,
       n_nonbulk_epikeytimes = n_nonbulk_epikeytimes,

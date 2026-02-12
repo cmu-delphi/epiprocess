@@ -668,8 +668,8 @@ autoplot.epi_archive <- function(object, ...,
     )
   }
 
-  max_version <- max(object$DT$version)
-  min_version <- min(object$DT$version)
+  max_version <- max(archive_col(object, "version"))
+  min_version <- min(archive_col(object, "version"))
 
   tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
   .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
