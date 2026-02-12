@@ -595,7 +595,31 @@ pipeline <- function(...) {
 # TODO consider (train_archive, test_archive, col_info, fit_info)
 # pipeline... might fit better into recipes, but still want/need
 # wrappers for archive cv, calibration, ensembles, etc. to feel
-# natural
+# natural.
+# - train archive needs latest versions of targets for fitting, so
+#   maybe more like all_archive, test_archive?
+# - test archive may need more versions for vlagged predictors...
+
+# sometimes we might just want all, not a train-test split... do we
+# need to differentiate between things taking in all and things taking
+# in train-test splits?
+
+# FV: sometimes we just want on all (e.g., evaluation), sometimes we
+# want train-test or maybe all-test.
+
+# would clarifying what should be run on all vs. what should be run on
+# train-test actually help with structuring and making into
+# fit-predict style, or hurt?
+
+# calibration and ensembling: a bit awkward with multi-targets.  We
+# normally extract features using t(v)lags of predictor signals, but
+# we'll have started with preds in wider gv,hq format.  Have to pivot
+# to longer gvt,q format (tbl? archive?) to use same t(v)lag selection
+# language.  Pivoting makes var info more complicated; seems similar
+# to rbinding from combining sources; need to look at names_to/equiv
+# col. But we may end up doing all this beforehand anyway in a
+# separate pipeline so we can store in an archive/other object
+# anyway...
 
 # todo consider also smoothing and Mercer kernel methods... train x
 # test dimensions... perhaps can just provide indices into matrix held
@@ -687,3 +711,20 @@ pipeline <- function(...) {
 # type of combination.
 
 # full_join vs. left_join vs. inner_join composition approaches...
+
+# Test cases: weekly-weekly version-aware geo-pooled(?) quantile AR,
+# flusion, pseudoprospective forecasts, pseudoprospective evaluation /
+# forward evaluation, model selection, models ensembling, model
+# calibration via AR, model calibration via online approach, geo-split
+# nowcast -> geo-pooled forecast, version-aware AR w/
+# geo-interactions, automatic outlier treatments / bad data
+# replacement, manual bad data replacements, AR 1d targ from 7dav
+# feats, iterative multi-horizon, baselinenowcast, Xueda's nowcaster,
+# AR w/ datetime versioning, per-capita AR, per-capita FV
+
+# perhaps this is an opportunity to consider requiring specifying what
+# type of signal something is... count, rate, normalization,
+# proportion, numerator, denominator?
+
+# or at least put some checks for similar geo signal ranges into
+# nowcaster if allow geo-pooling?
