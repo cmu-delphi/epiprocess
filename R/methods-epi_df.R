@@ -586,23 +586,46 @@ cross_join.epi_df <- function(x, y, ..., copy = FALSE, suffix = c(".x", ".y")) {
 
 # Helper to merge keys and validate result
 merge_epi_df_join <- function(res, x, y) {
-  # Start with x's metadata
   meta <- attr(x, "metadata")
 
-  # If y is also an epi_df, merge its keys
+  # NA checks for essential keys
+  has_na_geo <- anyMissing(res$geo_value)
+  has_na_time <- anyMissing(res$time_value)
+  has_na_essential <- has_na_geo || has_na_time
+
+  # If y is also an epi_df, merge its keys and check for metadata mismatches
   if (is_epi_df(y)) {
-    y_keys <- attr(y, "metadata")$other_keys
-    meta$other_keys <- vec_set_union(meta$other_keys, y_keys)
+    y_meta <- attr(y, "metadata")
+    y_other_keys <- y_meta$other_keys
+
+    # Skip union if y has no extra keys or identical keys
+    if (length(y_other_keys) > 0L && !identical(meta$other_keys, y_other_keys)) {
+      meta$other_keys <- vctrs::vec_set_union(meta$other_keys, y_other_keys)
+    }
+
+    # Warn on metadata type mismatches
+    if (!has_na_essential) {
+      if (meta$geo_type != y_meta$geo_type) {
+        cli::cli_warn(c(
+          "Mismatched `geo_type` found in join.",
+          "i" = "x: {.val {meta$geo_type}}, y: {.val {y_meta$geo_type}}",
+          "!" = "Result will use x's `geo_type`: {.val {meta$geo_type}}."
+        ))
+      }
+      if (meta$time_type != y_meta$time_type) {
+        cli::cli_warn(c(
+          "Mismatched `time_type` found in join.",
+          "i" = "x: {.val {meta$time_type}}, y: {.val {y_meta$time_type}}",
+          "!" = "Result will use x's `time_type`: {.val {meta$time_type}}."
+        ))
+      }
+    }
   }
 
-  # Check if result is a valid epi_df with the merged keys
-  all_keys <- c("geo_value", "time_value", meta$other_keys)
-
-  # If any key columns are missing, decay to tibble
-  if (!all(all_keys %in% names(res))) {
-    missing_keys <- all_keys[!all_keys %in% names(res)]
+  # check other_keys
+  if (length(meta$other_keys) > 0L && !all(meta$other_keys %in% names(res))) {
     cli::cli_warn(c(
-      "Key column{?s} {.val {missing_keys}} {?is/are} missing
+      "Key column{?s} {.val {meta$other_keys[!meta$other_keys %in% names(res)]}} {?is/are} missing
        from the join result.",
       "!" = "Decaying to a `tibble`."
     ))
@@ -610,7 +633,8 @@ merge_epi_df_join <- function(res, x, y) {
   }
 
   # check for NAs in keys
-  if (anyMissing(res[all_keys])) {
+  has_na_other <- length(meta$other_keys) > 0L && anyMissing(res[meta$other_keys])
+  if (has_na_essential || has_na_other) {
     cli::cli_warn(c(
       "NA values found in key columns of the join result.",
       "i" = "This often happens when joining data with missing keys.",
@@ -621,15 +645,15 @@ merge_epi_df_join <- function(res, x, y) {
   }
 
   # Check uniqueness
-  is_unique <- check_ukey_unique(dplyr::ungroup(res), all_keys)
+  is_unique <- check_ukey_unique(dplyr::ungroup(res), c("geo_value", meta$other_keys, "time_value"))
 
   if (isTRUE(is_unique)) {
-    # Valid epi_df! Attach merged metadata
     attr(res, "metadata") <- meta
-    class(res) <- unique(c("epi_df", class(res)))
+    if (!inherits(res, "epi_df")) {
+      class(res) <- c("epi_df", class(res))
+    }
     return(res)
   } else {
-    # Not unique -> decay to tibble
     return(decay_epi_df(res))
   }
 }
