@@ -58,8 +58,9 @@ get_test_dataset <- function(n, time_type = "day", other_keys = FALSE) {
 test_data <- get_test_dataset(num_rows_per_group, "day")
 
 epi_slide_sum_test <- function(
-    .x,
-    .window_size = 7, .align = "right", .ref_time_values = NULL, .all_rows = FALSE) {
+  .x,
+  .window_size = 7, .align = "right", .ref_time_values = NULL, .all_rows = FALSE
+) {
   checkmate::assert_class(.x, "epi_df")
   if (!(checkmate::test_integerish(.window_size, lower = 1, upper = Inf) || identical(as.numeric(.window_size), Inf))) {
     cli::cli_abort("`.window_size` must be a positive integer or Inf.")

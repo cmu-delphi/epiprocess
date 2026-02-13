@@ -68,12 +68,13 @@
 #'       geo_value %in% c("ca", "fl", "ga", "ny"))
 #' )
 autoplot.epi_df <- function(
-    object, ...,
-    .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
-    .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
-    .base_color = "#3A448F",
-    .facet_filter = NULL,
-    .max_facets = deprecated()) {
+  object, ...,
+  .color_by = c("all_keys", "geo_value", "other_keys", ".response", "all", "none"),
+  .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
+  .base_color = "#3A448F",
+  .facet_filter = NULL,
+  .max_facets = deprecated()
+) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
@@ -175,7 +176,8 @@ autoplot.epi_df <- function(
 }
 
 autoplot_check_viable_response_vars <- function(
-    object, ..., non_key_cols, call = caller_env()) {
+  object, ..., non_key_cols, call = caller_env()
+) {
   allowed <- purrr::map_lgl(object[non_key_cols], is.numeric)
   allowed <- allowed[allowed]
   if (length(allowed) == 0 && rlang::dots_n(...) == 0L) {
@@ -214,7 +216,6 @@ autoplot_check_viable_response_vars <- function(
   }
   vars
 }
-
 
 
 #' @param .versions Select which versions will be displayed. By default,
