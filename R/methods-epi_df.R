@@ -592,7 +592,7 @@ merge_epi_df_join <- function(res, x, y) {
   # If y is also an epi_df, merge its keys
   if (is_epi_df(y)) {
     y_keys <- attr(y, "metadata")$other_keys
-    meta$other_keys <- union(meta$other_keys, y_keys)
+    meta$other_keys <- vec_set_union(meta$other_keys, y_keys)
   }
 
   # Check if result is a valid epi_df with the merged keys
