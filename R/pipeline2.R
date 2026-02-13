@@ -101,3 +101,18 @@ c(
 )
 
 # TODO ensemble, calibration, iterative forecasts
+
+# ensemble gets potentially messy... we want to define targets both
+# for evaluation and for models, but defining targets is also a
+# natural place to encode assumptions about semistability, which we
+# may want separate.  Perhaps methods can be encoded as assumptions
+# about target semistability + a fixed-relt set of feats&covars,
+# though seems awkward for it to be encoding info about a specific
+# target while pretending it's about an arbitrary target; could maybe,
+# similar to relt part, encode as some sort of mapping, but that may
+# get awkward as well... Perhaps could decompose methods into
+# target-feat encoding and the later parts...
+
+# potential issues with single archive for multiple methods having
+# epix_merge change the set of ukeys and causing methods on subset of
+# signals to change behavior
