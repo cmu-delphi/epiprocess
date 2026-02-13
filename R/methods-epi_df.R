@@ -610,25 +610,25 @@ merge_epi_df_join <- function(res, x, y) {
           "Mismatched `geo_type` found in join.",
           "i" = "x: {.val {meta$geo_type}}, y: {.val {y_meta$geo_type}}",
           "!" = "Result will use x's `geo_type`: {.val {meta$geo_type}}."
-        ))
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
       }
       if (meta$time_type != y_meta$time_type) {
         cli::cli_warn(c(
           "Mismatched `time_type` found in join.",
           "i" = "x: {.val {meta$time_type}}, y: {.val {y_meta$time_type}}",
           "!" = "Result will use x's `time_type`: {.val {meta$time_type}}."
-        ))
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
       }
     }
   }
 
   # check other_keys
-  if (length(meta$other_keys) > 0L && !all(meta$other_keys %in% names(res))) {
+  missing_keys <- meta$other_keys[!meta$other_keys %in% names(res)]
+  if (length(missing_keys) > 0L) {
     cli::cli_warn(c(
-      "Key column{?s} {.val {meta$other_keys[!meta$other_keys %in% names(res)]}} {?is/are} missing
-       from the join result.",
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the join result.",
       "!" = "Decaying to a `tibble`."
-    ))
+    ), class = "epiprocess__merge_epi_df_join__missing_keys")
     return(decay_epi_df(res))
   }
 
