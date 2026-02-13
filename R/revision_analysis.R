@@ -199,8 +199,6 @@ revision_analysis <- function(epi_arch,
 }
 
 
-
-
 #' Print a `revision_analysis` object
 #'
 #' @param x a `revision_analysis` object
