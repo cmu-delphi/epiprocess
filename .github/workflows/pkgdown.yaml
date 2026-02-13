@@ -41,6 +41,14 @@ jobs:
           extra-packages: any::pkgdown, local::., any::cli
           needs: website
 
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render benchmarks
+        run: |
+          if [ -f benchmarks/linelist_benchmark.qmd ]; then
+            quarto render benchmarks/linelist_benchmark.qmd --to html --embed-resources
+          fi
+
       - name: Build site
         # our versioning system+dev branch doesn't match the requirements for
         # develop mode = auto
@@ -59,6 +67,13 @@ jobs:
           pkgdown::build_site(pkg, preview = FALSE, install = FALSE, new_process = FALSE)
           pkgdown:::build_github_pages(pkg)
         shell: Rscript {0}
+
+      - name: Copy benchmarks into site
+        run: |
+          if [ -d benchmarks ] && ls benchmarks/*.html 1>/dev/null 2>&1; then
+            mkdir -p docs/benchmarks
+            cp benchmarks/*.html docs/benchmarks/
+          fi
 
       - name: Deploy to GitHub pages 🚀
         if: github.event_name != 'pull_request'
