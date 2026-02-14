@@ -46,12 +46,13 @@ revision_details <- revision_summary(dv_archive, percent_cli)
 revision_details
 ```
 
-We can see from the output that this data set has a lot of revisions: there are
-no keys that have no revision at all and 34% of the keys have a spread of more
-than 2.2 in their values when revised.
+We can see from the output that, as mentioned above, this data set has a lot of
+revisions: there are no keys that have no revision at all and 34% of the keys
+have a spread of more than 2.2 in their values when revised.
 
-To do more detailed analysis, we can inspect the returned `revision_details`
-tibble. Here we collect a number of statistics for each state:
+To do more detailed analysis than is possible with the above printing, we can
+inspect the returned `revision_details` tibble. Here we collect a number of
+statistics for each state:
 
 ```{r}
 revision_details$revision_behavior %>%
@@ -65,6 +66,11 @@ revision_details$revision_behavior %>%
         lag_near_latest = mean(lag_near_latest)
     )
 ```
+
+Most of the states have similar stats on most of these features, except for the
+`time_near_latest` stat, which is the amount of time that it takes for the
+revisions to converge to within 20% of the final value and stay there. It is the
+highest for CA and the lowest for TX.
 
 ## Producing snapshots in `epi_df` form
 
@@ -124,45 +130,6 @@ curve (look in particular at Florida close to the end of 2021), and at others
 they overestimate it (both states towards the beginning of 2021), though not
 quite as dramatically. Modeling the revision process, which is often called
 *backfill modeling*, is an important statistical problem in it of itself.
-
-## Summarizing revision behavior
-
-There are many ways to examine how signals change across revisions. We provide
-the convenient analysis wrapper `revision_summary()`, which computes simple
-summary statistics for each key (by default, `(geo_value,time_value)` pairs). In
-addition to the per key summary, it also returns an overall summary. Here is an
-a sample of the output:
-
-```{r}
-revision_details <- revision_summary(dv_archive, percent_cli)
-revision_details
-```
-
-We can see from the output that, as mentioned above, this data set has a lot of
-revisions: there are no keys that have no revision at all and 34% of the keys
-have a spread of more than 2.2 in their values when revised.
-
-To do more detailed analysis than is possible with the above printing, we can
-inspect the returned `revision_details` tibble. Here we collect a number of
-statistics for each state:
-
-```{r}
-revision_details$revision_behavior %>%
-    group_by(geo_value) %>%
-    summarize(
-        n_rev = mean(n_revisions),
-        min_lag = min(min_lag),
-        max_lag = max(max_lag),
-        spread = mean(spread),
-        rel_spread = mean(rel_spread),
-        lag_near_latest = mean(lag_near_latest)
-    )
-```
-
-Most of the states have similar stats on most of these features, except for the
-`time_near_latest` stat, which is the amount of time that it takes for the
-revisions to converge to within 20% of the final value and stay there. It is the
-highest for CA and the lowest for TX.
 
 ## Merging `epi_archive` objects
 

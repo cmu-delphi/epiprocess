@@ -46,7 +46,7 @@ library(ggplot2)
 
 # This fetches the raw data backing the archive_cases_dv_subset object.
 dv <- archive_cases_dv_subset$DT %>%
-    as_tibble()
+  as_tibble()
 ```
 
 The data can also be fetched from the Delphi Epidata API with the following query:
@@ -55,15 +55,15 @@ The data can also be fetched from the Delphi Epidata API with the following quer
 library(epidatr)
 
 dv <- pub_covidcast(
-    source = "doctor-visits",
-    signals = "smoothed_adj_cli",
-    geo_type = "state",
-    time_type = "day",
-    geo_values = "ca,fl,ny,tx",
-    time_values = epirange(20200601, 20211201),
-    issues = epirange(20200601, 20211201)
+  source = "doctor-visits",
+  signals = "smoothed_adj_cli",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
+  time_values = epirange(20200601, 20211201),
+  issues = epirange(20200601, 20211201)
 ) %>%
-    rename(version = issue, percent_cli = value)
+  rename(version = issue, percent_cli = value)
 ```
 
 An `epi_archive()` object can be constructed from a data frame, data table, or
@@ -83,8 +83,8 @@ format, with `issue` playing the role of `version`. We can now use
 
 ```{r}
 dv_archive <- dv %>%
-    select(geo_value, time_value, version, percent_cli) %>%
-    as_epi_archive()
+  select(geo_value, time_value, version, percent_cli) %>%
+  as_epi_archive()
 dv_archive
 ```
 
