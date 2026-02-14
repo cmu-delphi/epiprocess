@@ -186,7 +186,8 @@ dv <- archive_cases_dv_subset$DT %>%
 dv
 ```
 
-See `vignette("epi_archive")` for a more in-depth guide to `epi_archive` objects.
+See `vignette("epi_archive_construction")` and `vignette("epi_archive_usage")`
+for more in-depth guides to `epi_archive` objects.
 
 ## Data attribution
 

@@ -1,0 +1,113 @@
+---
+title: Constructing epi_archive objects
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Constructing epi_archive objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+source("_common.R")
+```
+
+The `epi_archive` data structure provided by `epiprocess` provides convenient
+ways to work with data sets that are subject to revision (a common occurrence in
+the public health space, as situational awareness improves). In comparison to an
+`epi_df` object, which can viewed as a data snapshot at a point in time, an
+`epi_archive` object stores the full version history of a data set. Paying
+attention to data revisions can be important for all sorts of downstream data
+analysis and modeling tasks.
+
+In this vignette we will:
+
+- construct an `epi_archive` object from a data frame,
+- discuss the required columns and structure.
+
+## Getting data into `epi_archive` format
+
+We will work with a signal on the percentage of doctor's visits with CLI
+(COVID-like illness) computed from medical insurance claims, available through
+the [COVIDcast
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). This
+signal is subject to very heavy and regular revision; you can read more about it
+on its [API documentation
+page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
+
+The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
+which is loaded along with `epiprocess`, and can be accessed with:
+
+```{r, message = FALSE, warning = FALSE}
+library(epiprocess)
+library(data.table)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+
+# This fetches the raw data backing the archive_cases_dv_subset object.
+dv <- archive_cases_dv_subset$DT %>%
+    as_tibble()
+```
+
+The data can also be fetched from the Delphi Epidata API with the following query:
+
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
+library(epidatr)
+
+dv <- pub_covidcast(
+    source = "doctor-visits",
+    signals = "smoothed_adj_cli",
+    geo_type = "state",
+    time_type = "day",
+    geo_values = "ca,fl,ny,tx",
+    time_values = epirange(20200601, 20211201),
+    issues = epirange(20200601, 20211201)
+) %>%
+    rename(version = issue, percent_cli = value)
+```
+
+An `epi_archive()` object can be constructed from a data frame, data table, or
+tibble, provided that it has (at least) the following columns:
+
+* `geo_value`: the geographic value associated with each row of measurements.
+* `time_value`: the time value associated with each row of measurements.
+* `version`: the time value specifying the version for each row of measurements.
+  For example, if in a given row the `version` is January 15, 2022 and
+  `time_value` is January 14, 2022, then this row contains the measurements of
+  the data for January 14, 2022 that were available one day later.
+
+As we can see from the above, the data frame returned by
+`epidatr::pub_covidcast()` has the columns required for the `epi_archive`
+format, with `issue` playing the role of `version`. We can now use
+`as_epi_archive()` to bring it into `epi_archive` format.
+
+```{r}
+dv_archive <- dv %>%
+    select(geo_value, time_value, version, percent_cli) %>%
+    as_epi_archive()
+dv_archive
+```
+
+See the `epi_archive()` documentation for more information about its internal
+structure.
+
+For more information on using `epi_archive` objects, see `vignette("epi_archive_usage")`.
+
+## Data attribution
+
+This document contains a dataset that is a modified part of the [COVID-19 Data
+Repository by the Center for Systems Science and Engineering (CSSE) at Johns
+Hopkins University](https://github.com/CSSEGISandData/COVID-19) as [republished
+in the COVIDcast Epidata
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html).
+This data set is licensed under the terms of the [Creative Commons Attribution
+4.0 International license](https://creativecommons.org/licenses/by/4.0/) by the
+Johns Hopkins University on behalf of its Center for Systems Science in
+Engineering. Copyright Johns Hopkins University 2020.
+
+The `percent_cli` data is a modified part of the [COVIDcast Epidata API Doctor
+Visits
+data](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
+This dataset is licensed under the terms of the [Creative Commons Attribution
+4.0 International license](https://creativecommons.org/licenses/by/4.0/).
+Copyright Delphi Research Group at Carnegie Mellon University 2020.

@@ -1,8 +1,8 @@
 ---
-title: Working with epi_archive objects and data revisions
+title: Using epi_archive version history
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Working with epi_archive objects and data revisions}
+  %\VignetteIndexEntry{Using epi_archive version history}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -10,89 +10,6 @@ vignette: >
 ```{r, include = FALSE}
 source("_common.R")
 ```
-
-The `epi_archive` data structure provided by `epiprocess` provides convenient
-ways to work with data sets that are subject to revision (a common occurrence in
-the public health space, as situational awareness improves). In comparison to an
-`epi_df` object, which can viewed as a data snapshot at a point in time, an
-`epi_archive` object stores the full version history of a data set. Paying
-attention to data revisions can be important for all sorts of downstream data
-analysis and modeling tasks.
-
-In this vignette we will:
-
-- construct an `epi_archive` object from a data frame,
-- summarize revision behavior in the archive,
-- produce snapshots of the data in `epi_df` form,
-- merge `epi_archive` objects together,
-- provide a link to a backtesting forecasting models vignette.
-
-## Getting data into `epi_archive` format
-
-We will work with a signal on the percentage of doctor's visits with CLI
-(COVID-like illness) computed from medical insurance claims, available through
-the [COVIDcast
-API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). This
-signal is subject to very heavy and regular revision; you can read more about it
-on its [API documentation
-page](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/doctor-visits.html).
-
-The data is included in the [`epidatasets` package](https://cmu-delphi.github.io/epidatasets/),
-which is loaded along with `epiprocess`, and can be accessed with:
-
-```{r, message = FALSE, warning = FALSE}
-library(epiprocess)
-library(data.table)
-library(dplyr)
-library(purrr)
-library(ggplot2)
-
-# This fetches the raw data backing the archive_cases_dv_subset object.
-dv <- archive_cases_dv_subset$DT %>%
-  as_tibble()
-```
-
-The data can also be fetched from the Delphi Epidata API with the following query:
-
-```{r, message = FALSE, warning = FALSE, eval = FALSE}
-library(epidatr)
-
-dv <- pub_covidcast(
-  source = "doctor-visits",
-  signals = "smoothed_adj_cli",
-  geo_type = "state",
-  time_type = "day",
-  geo_values = "ca,fl,ny,tx",
-  time_values = epirange(20200601, 20211201),
-  issues = epirange(20200601, 20211201)
-) %>%
-  rename(version = issue, percent_cli = value)
-```
-
-An `epi_archive()` object can be constructed from a data frame, data table, or
-tibble, provided that it has (at least) the following columns:
-
-* `geo_value`: the geographic value associated with each row of measurements.
-* `time_value`: the time value associated with each row of measurements.
-* `version`: the time value specifying the version for each row of measurements.
-  For example, if in a given row the `version` is January 15, 2022 and
-  `time_value` is January 14, 2022, then this row contains the measurements of
-  the data for January 14, 2022 that were available one day later.
-
-As we can see from the above, the data frame returned by
-`epidatr::pub_covidcast()` has the columns required for the `epi_archive`
-format, with `issue` playing the role of `version`. We can now use
-`as_epi_archive()` to bring it into `epi_archive` format.
-
-```{r}
-dv_archive <- dv %>%
-  select(geo_value, time_value, version, percent_cli) %>%
-  as_epi_archive()
-dv_archive
-```
-
-See the `epi_archive()` documentation for more information about its internal
-structure.
 
 ## Producing snapshots in `epi_df` form
 
@@ -122,28 +39,28 @@ edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end)
 max_version <- max(dv_archive$DT$version)
 versions <- seq(as.Date("2020-06-01"), max_version - 1, by = "1 month")
 monthly_snapshots <- map(versions, function(v) {
-  epix_as_of(dv_archive, v) %>% mutate(version = v)
+    epix_as_of(dv_archive, v) %>% mutate(version = v)
 }) %>%
-  bind_rows(
-    edf_latest %>% mutate(version = max_version)
-  ) %>%
-  mutate(latest = version == max_version)
+    bind_rows(
+        edf_latest %>% mutate(version = max_version)
+    ) %>%
+    mutate(latest = version == max_version)
 
 ggplot(
-  monthly_snapshots %>% filter(!latest),
-  aes(x = time_value, y = percent_cli)
+    monthly_snapshots %>% filter(!latest),
+    aes(x = time_value, y = percent_cli)
 ) +
-  geom_line(aes(color = factor(version)), na.rm = TRUE) +
-  geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
-  facet_wrap(~geo_value, scales = "free_y", ncol = 1) +
-  scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
-  labs(x = "Date", y = "% of doctor's visits with CLI") +
-  theme(legend.position = "none") +
-  geom_line(
-    data = monthly_snapshots %>% filter(latest),
-    aes(x = time_value, y = percent_cli),
-    inherit.aes = FALSE, color = "black", na.rm = TRUE
-  )
+    geom_line(aes(color = factor(version)), na.rm = TRUE) +
+    geom_vline(aes(color = factor(version), xintercept = version), lty = 2) +
+    facet_wrap(~geo_value, scales = "free_y", ncol = 1) +
+    scale_x_date(minor_breaks = "month", date_labels = "%b %y") +
+    labs(x = "Date", y = "% of doctor's visits with CLI") +
+    theme(legend.position = "none") +
+    geom_line(
+        data = monthly_snapshots %>% filter(latest),
+        aes(x = time_value, y = percent_cli),
+        inherit.aes = FALSE, color = "black", na.rm = TRUE
+    )
 ```
 
 We can see some interesting and highly nontrivial revision behavior: at some
@@ -176,15 +93,15 @@ statistics for each state:
 
 ```{r}
 revision_details$revision_behavior %>%
-  group_by(geo_value) %>%
-  summarize(
-    n_rev = mean(n_revisions),
-    min_lag = min(min_lag),
-    max_lag = max(max_lag),
-    spread = mean(spread),
-    rel_spread = mean(rel_spread),
-    lag_near_latest = mean(lag_near_latest)
-  )
+    group_by(geo_value) %>%
+    summarize(
+        n_rev = mean(n_revisions),
+        min_lag = min(min_lag),
+        max_lag = max(max_lag),
+        spread = mean(spread),
+        rel_spread = mean(rel_spread),
+        lag_near_latest = mean(lag_near_latest)
+    )
 ```
 
 Most of the states have similar stats on most of these features, except for the
@@ -208,16 +125,16 @@ rate scale (counts per 100,000 people in the population).
 library(epidatr)
 
 y <- pub_covidcast(
-  source = "jhu-csse",
-  signals = "confirmed_7dav_incidence_prop",
-  geo_type = "state",
-  time_type = "day",
-  geo_values = "ca,fl,ny,tx",
-  time_values = epirange(20200601, 20211201),
-  issues = epirange(20200601, 20211201)
+    source = "jhu-csse",
+    signals = "confirmed_7dav_incidence_prop",
+    geo_type = "state",
+    time_type = "day",
+    geo_values = "ca,fl,ny,tx",
+    time_values = epirange(20200601, 20211201),
+    issues = epirange(20200601, 20211201)
 ) %>%
-  select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
-  as_epi_archive()
+    select(geo_value, time_value, version = issue, case_rate_7d_av = value) %>%
+    as_epi_archive()
 
 dv_cases_archive <- epix_merge(dv_archive, y, sync = "locf")
 print(dv_cases_archive)
@@ -239,7 +156,7 @@ accurate model backtesting. See [`vignette("backtesting",
 package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
 for an in-depth demo, using a pre-built forecaster in that package.
 
-## Attribution
+## Data attribution
 
 This document contains a dataset that is a modified part of the [COVID-19 Data
 Repository by the Center for Systems Science and Engineering (CSSE) at Johns
