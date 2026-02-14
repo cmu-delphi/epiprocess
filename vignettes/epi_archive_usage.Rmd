@@ -11,19 +11,60 @@ vignette: >
 source("_common.R")
 ```
 
-Many data sets are subject to revisions. Tracking 
-these updates is crucial for accurate backtesting and real-time modeling, as 
-provisional data can often look quite different from the final version. Unlike 
-`epi_df` objects, which store data snapshots, an `epi_archive` object stores 
-the full version history of a dataset, allowing us to see what was known at 
-any point in time. 
+Once you have data in the `epi_archive` format (as discussed in
+`vignette("epi_archive_construction")`), you can use its version history for a
+variety of diagnostic and modeling tasks. This vignette demonstrates how to
+effectively use an `epi_archive` to analyze revision behavior, generate
+historical data snapshots, and merge multiple archives while maintaining
+version consistency.
 
-In this vignette we will:
+In particular, this vignette we will:
 
 - summarize revision behavior in an archive,
 - produce snapshots of the data in `epi_df` form,
 - merge `epi_archive` objects together,
 - discuss backtesting forecasting models.
+
+## Should I worry about reporting lag and revision behaviors?
+
+Before diving into complex analysis, it is often useful to understand how much
+and how often your data is being revised. In this context, `revision_summary()`
+computes simple summary statistics for each key (by default, 
+`(geo_value,time_value)` pairs).
+
+```{r, message = FALSE, warning = FALSE}
+library(epiprocess)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+
+# Load example archive
+dv_archive <- archive_cases_dv_subset$DT %>%
+    as_epi_archive()
+
+revision_details <- revision_summary(dv_archive, percent_cli)
+revision_details
+```
+
+We can see from the output that this data set has a lot of revisions: there are
+no keys that have no revision at all and 34% of the keys have a spread of more
+than 2.2 in their values when revised.
+
+To do more detailed analysis, we can inspect the returned `revision_details`
+tibble. Here we collect a number of statistics for each state:
+
+```{r}
+revision_details$revision_behavior %>%
+    group_by(geo_value) %>%
+    summarize(
+        n_rev = mean(n_revisions),
+        min_lag = min(min_lag),
+        max_lag = max(max_lag),
+        spread = mean(spread),
+        rel_spread = mean(rel_spread),
+        lag_near_latest = mean(lag_near_latest)
+    )
+```
 
 ## Producing snapshots in `epi_df` form
 
@@ -93,13 +134,13 @@ addition to the per key summary, it also returns an overall summary. Here is an
 a sample of the output:
 
 ```{r}
-revision_details <- revision_summary(dv_archive)
+revision_details <- revision_summary(dv_archive, percent_cli)
 revision_details
 ```
 
 We can see from the output that, as mentioned above, this data set has a lot of
 revisions: there are no keys that have no revision at all and 34% of the keys
-change by 10% or more when revised.
+have a spread of more than 2.2 in their values when revised.
 
 To do more detailed analysis than is possible with the above printing, we can
 inspect the returned `revision_details` tibble. Here we collect a number of
