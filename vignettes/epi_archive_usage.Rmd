@@ -11,6 +11,20 @@ vignette: >
 source("_common.R")
 ```
 
+Many data sets are subject to revisions. Tracking 
+these updates is crucial for accurate backtesting and real-time modeling, as 
+provisional data can often look quite different from the final version. Unlike 
+`epi_df` objects, which store data snapshots, an `epi_archive` object stores 
+the full version history of a dataset, allowing us to see what was known at 
+any point in time. 
+
+In this vignette we will:
+
+- summarize revision behavior in an archive,
+- produce snapshots of the data in `epi_df` form,
+- merge `epi_archive` objects together,
+- discuss backtesting forecasting models.
+
 ## Producing snapshots in `epi_df` form
 
 A key method of an `epi_archive` class is `epix_as_of()`, which generates a
