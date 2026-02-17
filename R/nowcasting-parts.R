@@ -720,7 +720,9 @@ pipeline <- function(...) {
 # geo-interactions, automatic outlier treatments / bad data
 # replacement, manual bad data replacements, AR 1d targ from 7dav
 # feats, iterative multi-horizon, baselinenowcast, Xueda's nowcaster,
-# AR w/ datetime versioning, per-capita AR, per-capita FV
+# AR w/ datetime versioning, per-capita AR, per-capita FV, manual data
+# replacements, week-to-week warm start fits?, filters?, nested FV
+# (caching)?
 
 # perhaps this is an opportunity to consider requiring specifying what
 # type of signal something is... count, rate, normalization,
@@ -728,3 +730,22 @@ pipeline <- function(...) {
 
 # or at least put some checks for similar geo signal ranges into
 # nowcaster if allow geo-pooling?
+
+# constraining steps to fit (x1) + apply (x2) (step prep + bake(x2))
+# might help detect weight non-usage violations, and can make things
+# spell out in-sample application vs. FV/CV; however, for variable
+# selection routines, this is both more code and more time/space, having to
+# re-prepare the training set (+code, +time/space) and test set (+code),
+# though perhaps it will give nice metainfo and potentially act a bit
+# of a sanity and consistency check.
+
+# to allow to work with just a normal pipe and map, perhaps it's
+# better to separate out the pipeline runner stuff into an orthogonal
+# thing for transforming pipelines?
+
+# transform + inverse transform... making a nested function makes
+# harder to inspect intermediate results within... plus we may not
+# even want to invert.  perhaps better to keep as two separate parts
+# in pipeline.  Column name management may still keep later processing
+# steps that do require inversion from working without including the
+# inversion step.

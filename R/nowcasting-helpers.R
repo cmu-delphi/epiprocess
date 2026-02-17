@@ -1040,3 +1040,10 @@ regression_nowcaster <- function(archive, settings, return_info = FALSE) {
 # have a backoff to select a shift of it; later could turn into actual
 # partial-week covariate prep to allow better handling of gaps or
 # maybe preferable ways of representing for regularization purposes
+
+# TODO some sort of (by-epikey) auto-normalization by default?  More
+# convenient and general than requiring tagging count vs. rate
+# vs. etc.; can be turned off if want something else.  Perhaps
+# normalize by something to do with the collection of flatline
+# residuals rather than the max value, to try to get something like
+# variance stabilization?
