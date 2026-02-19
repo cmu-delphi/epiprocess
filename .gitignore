@@ -9,13 +9,27 @@ docs
 /Meta/
 *.DS_Store
 
-# Delphi custom
+# *** Delphi custom: ***
+
+# R infra
 renv/
 renv.lock
 .Rprofile
+Rplots.pdf
+
+# Misc
 sandbox.R
+/backups/
+
 # Vignette caches
 *_cache/
 vignettes/*.html
 vignettes/*.R
 !vignettes/_common.R
+
+# Emacs lockfiles, autosaves, backups, ...
+.\#*
+\#*\#
+*~
+.dir-locals-2.el
+.pdf-view-restore

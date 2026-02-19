@@ -10,6 +10,7 @@
 #' @importFrom checkmate assert_string
 #' @importFrom checkmate assert_subset
 #' @importFrom checkmate assert_tibble
+#' @importFrom checkmate assert_true
 #' @importFrom checkmate check_atomic check_data_frame expect_class test_int
 #' @importFrom checkmate check_names
 #' @importFrom checkmate test_subset test_set_equal vname
@@ -23,6 +24,7 @@
 #' @importFrom dplyr arrange
 #' @importFrom dplyr grouped_df
 #' @importFrom dplyr is_grouped_df
+#' @importFrom dplyr pull
 #' @importFrom dplyr select
 #' @importFrom lifecycle deprecated
 #' @importFrom purrr list_rbind
