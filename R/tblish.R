@@ -25,30 +25,30 @@ tblish_head.default <- function(x, n) {
 
 
 
-tblish_extract <- function(x, name) UseMethod("tblish_extract")
+tblish_select <- function(x, name) UseMethod("tblish_select")
 #' @export
-tblish_extract.data.frame <- function(x, names) x[name]
+tblish_select.data.frame <- function(x, names) x[name]
 #' @export
-tblish_extract.default <- function(x, names) select(x, !!name)
+tblish_select.default <- function(x, names) select(x, !!name)
 
 
 
-tblish_extract2 <- function(x, name) UseMethod("tblish_extract2")
+tblish_col <- function(x, name) UseMethod("tblish_col")
 #' @export
-tblish_extract2.data.frame <- function(x, name) x[[name]]
+tblish_col.data.frame <- function(x, name) x[[name]]
 #' @export
-tblish_extract2.default <- function(x, name) pull(x, !!name)
+tblish_col.default <- function(x, name) pull(x, !!name)
 
 
 
-tblish_inset2 <- function(x, name, value) UseMethod("tblish_inset2")
+`tblish_col<-` <- function(x, name, value) UseMethod("tblish_col<-")
 #' @export
-tblish_inset2.data.frame <- function(x, name, value) {
+`tblish_col<-.data.frame` <- function(x, name, value) {
   x[[name]] <- value
   x
 }
 #' @export
-tblish_inset2.default <- function(x, name, value) {
+`tblish_col<-.default` <- function(x, name, value) {
   dplyr_col_modify(x, `names<-`(list(value), name))
 }
 
