@@ -25,11 +25,14 @@ tblish_head.default <- function(x, n) {
 
 
 
-tblish_select <- function(x, name) UseMethod("tblish_select")
+# XXX or tblish_cols? don't want to confuse with tblish_vars but if
+# want inset-ish then it'd seem most natural.  Or maybe use var*name*
+# & col(s)?
+tblish_select <- function(x, names) UseMethod("tblish_select")
 #' @export
-tblish_select.data.frame <- function(x, names) x[name]
+tblish_select.data.frame <- function(x, names) x[, names]
 #' @export
-tblish_select.default <- function(x, names) select(x, !!name)
+tblish_select.default <- function(x, names) select(x, all_of(names))
 
 
 
@@ -41,6 +44,7 @@ tblish_col.default <- function(x, name) pull(x, !!name)
 
 
 
+# XXX also provide a tblish_inset form?
 `tblish_col<-` <- function(x, name, value) UseMethod("tblish_col<-")
 #' @export
 `tblish_col<-.data.frame` <- function(x, name, value) {
