@@ -13,11 +13,23 @@ obj_is_tblish.default <- function(x) FALSE
 
 
 
+tblish_vars <- dplyr::tbl_vars
+
+
+
 tblish_head <- function(x, n) UseMethod("tblish_head")
 #' @export
 tblish_head.default <- function(x, n) {
   head(x, n)
 }
+
+
+
+tblish_extract <- function(x, name) UseMethod("tblish_extract")
+#' @export
+tblish_extract.data.frame <- function(x, names) x[name]
+#' @export
+tblish_extract.default <- function(x, names) select(x, !!name)
 
 
 
