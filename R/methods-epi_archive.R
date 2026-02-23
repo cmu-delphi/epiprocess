@@ -1,9 +1,7 @@
 #' Generate a snapshot from an `epi_archive` object
 #'
 #' Generates a snapshot in `epi_df` format from an `epi_archive` object, as of a
-#' given version. See the [archive
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/archive.html) for
-#' examples.
+#' given version. See `vignette("archive")` for examples.
 #'
 #' @param x An `epi_archive` object
 #' @param version Time value specifying the max version to permit in the
@@ -654,9 +652,8 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' ... and collect the results. This is useful for more accurately simulating
 #' how a forecaster, nowcaster, or other algorithm would have behaved in real
-#' time, factoring in reporting latency and data revisions; see
-#' \href{https://cmu-delphi.github.io/epipredict/articles/backtesting.html}{`vignette("backtesting",
-#' package="epipredict")`} for a walkthrough.
+#' [`vignette("backtesting", package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
+#' for a walkthrough.
 #'
 #' This is similar to looping over versions and calling [`epix_as_of`], but has
 #' some conveniences such as working naturally with [`grouped_epi_archive`]s,
@@ -738,48 +735,19 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   computation, and a column named according to the `.new_col_name` argument,
 #'   containing the slide values. It will be grouped by the grouping variables.
 #'
-#' @details A few key distinctions between the current function and `epi_slide()`:
-#'   1. In `.f` functions for `epix_slide`, one should not assume that the input
-#'   data to contain any rows with `time_value` matching the computation's
-#'   `.version`, due to reporting latency; for typical epidemiological
-#'   surveillance data, observations pertaining to a particular time period
-#'   (`time_value`) are first reported `as_of` some instant after that time
-#'   period has ended. No time window completion is performed as in
-#'   `epi_slide()`.
-#'   2. The input class and columns are similar but different: `epix_slide`
-#'   (with the default `.all_versions=FALSE`) keeps all columns and the
-#'   `epi_df`-ness of the first argument to each computation; `epi_slide` only
-#'   provides the grouping variables in the second input, and will convert the
-#'   first input into a regular tibble if the grouping variables include the
-#'   essential `geo_value` column. (With `.all_versions=TRUE`, `epix_slide`
-#'   will provide an `epi_archive` rather than an `epi-df` to each
-#'   computation.)
-#'   3. The output class and columns are similar but different: `epix_slide()`
-#'   returns a tibble containing only the grouping variables, `time_value`, and
-#'   the new column(s) from the slide computations, whereas `epi_slide()`
-#'   returns an `epi_df` with all original variables plus the new columns from
-#'   the slide computations. (Both will mirror the grouping or ungroupedness of
-#'   their input, with one exception: `epi_archive`s can have trivial
-#'   (zero-variable) groupings, but these will be dropped in `epix_slide`
-#'   results as they are not supported by tibbles.)
-#'   4. There are no size stability checks or element/row recycling to maintain
-#'   size stability in `epix_slide`, unlike in `epi_slide`. (`epix_slide` is
-#'   roughly analogous to [`dplyr::group_modify`], while `epi_slide` is roughly
-#'   analogous to [`dplyr::mutate`].)
-#'   5. `.all_rows` is not supported in `epix_slide`; since the slide
-#'   computations are allowed more flexibility in their outputs than in
-#'   `epi_slide`, we can't guess a good representation for missing computations
-#'   for excluded group-`.ref_time_value` pairs.
-#'   6. The `.versions` default for `epix_slide` is based on making an
-#'   evenly-spaced sequence out of the `version`s in the `DT` plus the
-#'   `versions_end`, rather than all unique `time_value`s.
-#'   7. `epix_slide()` computations can refer to the current element of
-#'   `.versions` as either `.version` or `.ref_time_value`, while `epi_slide()`
-#'   computations refer to the current element of `.ref_time_values` with
-#'   `.ref_time_value`.
+#' @details While `epix_slide()` is similar in flavor to `epi_slide()`, there
+#'   are a few key distinctions:
+#'   1. **Reporting latency**: `epix_slide()` does not assume that the input
+#'   data contains any rows with `time_value` matching the computation's
+#'   `.version`. No time window completion is performed.
+#'   2. **Input and Output**: `epix_slide()` returns a tibble containing only
+#'   the grouping variables, `version` (as `time_value`), and the new columns,
+#'   whereas `epi_slide()` returns an `epi_df` with all original variables.
+#'   3. **Flexibility**: `epix_slide()` is more analogous to
+#'   [`dplyr::group_modify`], allowing for complex outputs including data
+#'   frames, while `epi_slide()` is closer to [`dplyr::mutate`].
 #'
-#' Apart from the above distinctions, the interfaces between `epix_slide()` and
-#' `epi_slide()` are the same.
+#' For more details and examples, see `vignette("epi_archive_usage")`.
 #'
 #' @examples
 #' library(dplyr)
