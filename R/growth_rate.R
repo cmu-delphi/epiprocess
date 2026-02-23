@@ -1,9 +1,8 @@
 #' Estimate growth rate
 #'
 #' Estimates the growth rate of a signal at given points along the underlying
-#' sequence. Several methodologies are available; see the [growth rate
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.html)
-#' for examples.
+#' sequence. Several methodologies are available; see
+#' `vignette("growth_rate")` for examples.
 #'
 #' @param y Signal values.
 #' @param x Design points corresponding to the signal values `y`. Default is
@@ -105,10 +104,13 @@
 #'
 #' @export
 #' @examples
-#' # COVID cases growth rate by state using default method relative change
+#' # Basic usage (default method is relative change):
 #' cases_deaths_subset %>%
 #'   group_by(geo_value) %>%
 #'   mutate(cases_gr = growth_rate(x = time_value, y = cases))
+#'
+#' # For additional features and comparisons of estimation methods,
+#' # see `vignette("growth_rate")`.
 #'
 #' # Degree 3 polynomial and 5-fold cross validation on the log scale
 #' # some locations report 0 cases, so we replace these with 1
