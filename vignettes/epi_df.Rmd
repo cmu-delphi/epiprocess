@@ -23,6 +23,13 @@ perform common processing tasks. In this vignette, we will:
 
 For a general introduction to `epiprocess` and the `epi_df` class, please see `vignette("epiprocess")`.
 
+> [!NOTE] 
+> While `epi_df` is great for processing a single snapshot of data,
+> advanced tasks like nowcasting and backtesting require you to record
+> and look at your data's version history, as data often undergoes revisions. To
+> handle this, `{epiprocess}` provides the `epi_archive` structure. For more on
+> this, see `vignette("epi_archive_construction")`.
+
 ## Getting data into `epi_df` format
 
 As in `vignette("epiprocess")`, we will fetch daily reported COVID-19 cases from

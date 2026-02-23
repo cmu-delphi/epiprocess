@@ -26,6 +26,13 @@ do the following:
 - Get data into `epi_archive()` format and perform similar signal processing
   tasks
 
+> [!NOTE] 
+> In real-time data processing, indicators often undergo revisions. While
+> an `epi_df` contains a single snapshot of data, `{epiprocess}` also provides 
+> the `epi_archive` structure to record and analyze your data's full version 
+> history. This is crucial for tasks like backtesting and nowcasting. For more 
+> on this, see `vignette("epi_archive_construction")`.
+
 ## Getting data into `epi_df` format
 
 We'll start by getting data into `epi_df()` format, which is just a tibble with
