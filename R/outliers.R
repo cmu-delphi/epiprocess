@@ -57,7 +57,7 @@
 #'   )) %>%
 #'   unnest(outlier_info)
 #'
-#' For additional features, see `vignette("outliers")`.
+#' # For additional features, see `vignette("outliers")`.
 #'
 #' # Advanced usage with multiple detection methods and a combiner:
 #' detection_methods <- dplyr::bind_rows(

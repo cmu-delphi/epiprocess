@@ -652,7 +652,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' ... and collect the results. This is useful for more accurately simulating
 #' how a forecaster, nowcaster, or other algorithm would have behaved in real
-#' [`vignette("backtesting", package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
+#' `vignette("backtesting", package="epipredict")`
 #' for a walkthrough.
 #'
 #' This is similar to looping over versions and calling [`epix_as_of`], but has

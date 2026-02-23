@@ -1,10 +1,8 @@
 #' Compute correlations between variables in an `epi_df` object
 #'
 #' Computes correlations between variables in an `epi_df` object, allowing for
-#' grouping by geo value, time value, or any other variables. See the
-#' [correlation
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/correlation.html)
-#' for examples.
+#' grouping by geo value, time value, or any other variables. See
+#' `vignette("correlation")` for examples.
 #'
 #' @param x The `epi_df` object under consideration.
 #' @param var1,var2 The variables in `x` to correlate.
