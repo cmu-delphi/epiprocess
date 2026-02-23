@@ -2,9 +2,7 @@
 #'
 #' @description Applies one or more outlier detection methods to a given signal variable, and
 #' optionally aggregates the outputs to create a consensus result. See the
-#' [outliers
-#' vignette](https://cmu-delphi.github.io/epiprocess/articles/outliers.html) for
-#' examples.
+#' `vignette("outliers")` for detailed examples and comparisons.
 #'
 #' @param x Design points corresponding to the signal values `y`. Default is
 #'   `seq_along(y)` (that is, equally-spaced points from 1 to the length of
@@ -47,6 +45,21 @@
 #' @export
 #' @importFrom dplyr select
 #' @examples
+#' # By default, `detect_outlr()` uses the recommended rolling median method
+#' # (`detect_outlr_rm()`).
+#' # Basic usage:
+#' covid_incidence_outliers %>%
+#'   dplyr::select(geo_value, time_value, cases) %>%
+#'   as_epi_df() %>%
+#'   group_by(geo_value) %>%
+#'   mutate(outlier_info = detect_outlr(
+#'     x = time_value, y = cases
+#'   )) %>%
+#'   unnest(outlier_info)
+#'
+#' For additional features, see `vignette("outliers")`.
+#'
+#' # Advanced usage with multiple detection methods and a combiner:
 #' detection_methods <- dplyr::bind_rows(
 #'   dplyr::tibble(
 #'     method = "rm",
@@ -73,11 +86,11 @@
 #'       seasonal_period = 7,
 #'       seasonal_as_residual = TRUE
 #'     )),
-#'     abbr = "stl_reseasonal"
+#'     abbr = "stl_seasonal_as_residual"
 #'   )
 #' )
 #'
-#' x <- covid_incidence_outliers %>%
+#' covid_incidence_outliers %>%
 #'   dplyr::select(geo_value, time_value, cases) %>%
 #'   as_epi_df() %>%
 #'   group_by(geo_value) %>%
