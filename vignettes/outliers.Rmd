@@ -94,7 +94,7 @@ detection_methods <- bind_rows(
       seasonal_period = 7,
       seasonal_as_residual = TRUE
     )),
-    abbr = "stl_reseasonal"
+    abbr = "stl_seasonal_as_residual"
   )
 )
 
