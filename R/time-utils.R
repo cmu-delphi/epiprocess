@@ -184,9 +184,10 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
   } else if (is_bare_integerish(time_delta)) { # (allows infinite values)
     switch(time_type,
       day = ,
-      week = ,
       yearmonth = ,
       integer = time_delta,
+      week = cli_abort("Time deltas between weeks must be expressed using `difftime`s, not bare integerish objects.",
+                       class = "epiprocess__time_delta_to_n_steps__bare_integerish_for_week_delta"),
       cli_abort("Invalid or unsupported time_type {format_chr_with_quotes(time_type)}")
     )
   } else {

@@ -148,10 +148,8 @@ test_that("time_delta_to_approx_difftime works as expected", {
     time_delta_to_approx_difftime(3, "day"),
     as.difftime(3, units = "days")
   )
-  expect_equal(
-    time_delta_to_approx_difftime(3, "week"),
-    as.difftime(3, units = "weeks")
-  )
+  expect_error(time_delta_to_approx_difftime(3, "week"),
+               class = "epiprocess__time_delta_to_n_steps__bare_integerish_for_week_delta")
   expect_true(time_delta_to_approx_difftime(3, "yearmonth") %>%
     `units<-`("days") %>% # nolint: indentation_linter
     as.numeric() %>%
@@ -186,10 +184,6 @@ test_that("format_time_delta works as expected", {
   )
   expect_equal(
     format_time_delta(as.difftime(7, units = "days"), "week"),
-    "1 week"
-  )
-  expect_equal(
-    format_time_delta(1, "week"),
     "1 week"
   )
   expect_equal(
