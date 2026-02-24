@@ -2,18 +2,16 @@ library(dplyr)
 
 test_that("guess_period works", {
   # Error cases:
-  expect_error(guess_period(numeric(0L)), class = "epiprocess__guess_period__not_enough_times")
-  expect_error(guess_period(c(1)), class = "epiprocess__guess_period__not_enough_times")
+  expect_error(guess_period(numeric(0L)), class = "epiprocess__guess_period__not_enough_values")
+  expect_error(guess_period(c(1)), class = "epiprocess__guess_period__not_enough_values")
   # Different numeric classes and cases:
   expect_identical(guess_period(c(1, 8)), 7)
   expect_identical(guess_period(c(1, 8, 15)), 7)
   expect_identical(guess_period(c(1L, 8L, 15L)), 7L)
   expect_identical(guess_period(c(0, 7, 14, 15)), 1)
-  # We currently allow the guessed frequency to not appear in the diffs, but
-  # this might not be a good idea as it likely indicates an issue with the data
-  # (#485).
-  expect_identical(guess_period(c(0, 2, 5)), 1)
-  expect_identical(guess_period(c(0, 4, 10)), 2)
+  expect_error(guess_period(c(0, 2, 5)),
+               class = "epiprocess__guess_period__irregularly_spaced_values")
+  expect_identical(guess_period(c(0, 4, 10), fallback = 2), 2)
   # On Dates:
   daily_dates <- seq(as.Date("2020-01-01"), as.Date("2020-01-15"), by = "day")
   weekly_dates <- seq(as.Date("2020-01-01"), as.Date("2020-01-15"), by = "week")
