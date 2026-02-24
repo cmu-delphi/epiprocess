@@ -7,14 +7,11 @@
 #' @param x_arg Optional, string; name to give `x` in error
 #'   messages. Defaults to quoting the expression the caller fed into the
 #'   `x` argument.
-#' @param fallback Optional; period to use if we don't have enough
+#' @param fallback Optional; result to use if we don't have enough
 #'   information to reasonably guess.
 #' @param ... Should be empty, there to satisfy the S3 generic.
 #' @return length-1 vector; `r lifecycle::badge("experimental")` class will
-#'   either be the same class as [`base::diff()`] on such time values, an
-#'   integer, or a double, such that all `x` can be exactly obtained
-#'   by adding `k * result` for an integer k, and such that there is no smaller
-#'   `result` that can achieve this.
+#'   be the same class as [`base::diff()`].
 #'
 #' @keywords internal
 #' @export
@@ -51,18 +48,6 @@ guess_period.default <- function(x, x_arg = rlang::caller_arg(x), fallback = NUL
     }
   }
   vctrs::vec_restore(skips_data_min, skips)
-}
-
-# `full_seq()` doesn't like difftimes, so convert to the natural units of some time types:
-
-#' @export
-guess_period.Date <- function(x, x_arg = rlang::caller_arg(x), ...) {
-  as.numeric(NextMethod(), units = "days")
-}
-
-#' @export
-guess_period.POSIXt <- function(x, x_arg = rlang::caller_arg(x), ...) {
-  as.numeric(NextMethod(), units = "secs")
 }
 
 #' Validate `.before` or `.window_size` argument
