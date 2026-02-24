@@ -221,7 +221,7 @@ accurate model backtesting. See [`vignette("backtesting",
 package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
 for an in-depth demo, using a pre-built forecaster in that package.
 
-## Data attribution
+## Attribution
 
 This document contains a dataset that is a modified part of the [COVID-19 Data
 Repository by the Center for Systems Science and Engineering (CSSE) at Johns

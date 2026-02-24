@@ -196,7 +196,7 @@ dv
 See `vignette("epi_archive_construction")` and `vignette("epi_archive_usage")`
 for more in-depth guides to `epi_archive` objects.
 
-## Data attribution
+## Attribution
 
 This document contains a dataset that is a modified part of the [COVID-19 Data
 Repository by the Center for Systems Science and Engineering (CSSE) at Johns

@@ -93,7 +93,7 @@ structure.
 
 For more information on using `epi_archive` objects, see `vignette("epi_archive_usage")`.
 
-## Data attribution
+## Attribution
 
 This document contains a dataset that is a modified part of the [COVID-19 Data
 Repository by the Center for Systems Science and Engineering (CSSE) at Johns
