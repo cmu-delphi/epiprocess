@@ -102,4 +102,28 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol, ..
 # In production, there is the forecast time / the
 # "safe"/late-enough-to-have-data forecast time, then there is the
 # "real" version it uses.  Should we be finding analogues based on the
-# former or the latter?
+# former or the latter?  A shifting prediction schedule would be based
+# on target real updates.  We may not want to apply that leeway to
+# auxiliary covariates.  But for delayed forecasts we could also
+# benefit from later versions of covariates, though that should likely
+# be reflected in the test time characterization.  And this is about
+# getting training data.  Prediction schedule doesn't really matter.
+# Do we consider delayed target reporting valid for this purpose?
+#
+# Seems like may be forced into having analogue tvs be made via shifts
+# of tvs, filtered to after the first real version for the target
+# signal (so that predictor percentage availability metrics don't toss
+# everything).  Vs. starting with the "real" rtvs.  Though... if we
+# are judging by target signal anyway, perhaps can start with analogue
+# rtvs based on the target signal anyway...
+
+# Should default vtol be 3h or 3d?  Seems like may want to use floor
+# of 1/2 of median inter-real version gap.  Though for daily-weekly
+# need to make sure analogue rtvs are weekly, either via automatic
+# rule or manual wday matching rule.
+
+# How bad is large vtol?  Lining up with substantially more/less
+# accurate data?
+
+# Situation not just of data being more latent, but also less latent.
+# Might need backoff to stale version that actually know patterns of.
