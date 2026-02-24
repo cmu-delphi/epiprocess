@@ -21,6 +21,7 @@ version consistency.
 In particular, this vignette we will:
 
 - summarize revision behavior in an archive,
+- filter an archive by its keys,
 - produce snapshots of the data in `epi_df` form,
 - merge `epi_archive` objects together,
 - discuss backtesting forecasting models.
@@ -71,6 +72,48 @@ Most of the states have similar stats on most of these features, except for the
 `time_near_latest` stat, which is the amount of time that it takes for the
 revisions to converge to within 20% of the final value and stay there. It is the
 highest for CA and the lowest for TX.
+
+## Filtering an archive
+
+Once you have an understanding of your archive, you may want to focus your 
+analysis on a specific subset of the data. The `{epiprocess}` package provides a 
+`filter()` method for `epi_archive` objects that works much like `dplyr::filter()` 
+on a tibble, but with some extra protections.
+
+The most common use case is filtering by key variables (other than 
+`time_value`):
+
+```{r}
+# Filter to just California data
+ca_archive <- dv_archive %>%
+    filter(geo_value == "ca")
+
+print(ca_archive)
+```
+
+### Protections in `filter.epi_archive`
+
+Filtering an archive is different from filtering a standard data frame because 
+each row is a version of a signal. To prevent accidental data 
+leakage or confusing results, `filter.epi_archive` will by default throw an 
+error if you try to filter using the `version` column or any of the 
+measurement columns.
+
+For example, if you try to filter based on a value of `percent_cli`, you'll 
+get an error:
+
+```{r, error = TRUE}
+dv_archive %>%
+    filter(percent_cli > 10)
+```
+
+If you truly need to filter based on these columns (which is rare in archive 
+workflows), you can set `.format_aware = TRUE`. This disables the protections 
+and allows the filter to proceed as if it were a normal tibble.
+
+For time-based filtering, we generally recommend using `epix_as_of()` or 
+`epix_slide()` instead of `filter(time_value ...)`, as those functions are 
+designed to handle the versioning logic correctly.
 
 ## Producing snapshots in `epi_df` form
 
