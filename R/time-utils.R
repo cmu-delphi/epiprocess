@@ -338,6 +338,33 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
   )
 }
 
+#' Closest time_delta that's approximately less than or equal to given difftime
+#'
+#' `r lifecycle::badge("experimental")`
+#'
+#' @param difftime a difftime object
+#' @param time_type as in [`validate_slide_window_arg`]
+#' @return An object representing an integerish number (or vector of numbers) of
+#'   time steps between consecutive time_values of type `time_type`.
+#'
+#' @keywords internal
+difftime_approx_floor_time_delta <- function(difftime, time_type) {
+  assert_class(difftime, "difftime")
+  switch(time_type,
+    day = ,
+    week = {
+      units(difftime) <- paste0(time_type, "s")
+      floor(difftime)
+    },
+    yearmonth = {
+      units(difftime) <- "days"
+      floor(as.numeric(difftime) / 30)
+    },
+    integer = ,
+    cli_abort("Unsupported time_type for this operation: {time_type}")
+  )
+}
+
 #' Difference between two time value vectors in terms of number of time "steps"
 #'
 #' @param x a time_value (vector) of time type `time_type`

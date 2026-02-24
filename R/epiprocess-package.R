@@ -39,6 +39,7 @@
 #' @importFrom vctrs vec_order
 #' @importFrom vctrs vec_ptype
 #' @importFrom vctrs vec_rbind
+#' @importFrom vctrs vec_recycle
 #' @importFrom vctrs vec_recycle_common
 #' @importFrom vctrs vec_rep
 #' @importFrom vctrs vec_slice

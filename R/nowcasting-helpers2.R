@@ -1,71 +1,105 @@
 
-extract2_horizon <- function(x, ekvs, var, horizon, ...) UseMethod("extract2_horizon")
+# extract2_horizon <- function(x, ekvs, var, horizon, ...) UseMethod("extract2_horizon")
+
+# #' @export
+# extract2_horizon.epi_archive <- function(x, ekvs, var, horizon, ...) {
+#   assert_true(obj_is_tblish(ekvs))
+#   ekvs <- tblish_cast_cols(ekvs, x$DT[, key(x$DT)]) # FIXME minus the time_value
+#   assert_string(var) # XXX vs. tidyselect?
+#   assert_subset(var, names(x$DT))
+#   if (x$time_type == "week") {
+#     if (!inherits(horizon, "difftime")) {
+#       cli_abort("For weekly time_type, `horizon` must be a difftime.")
+#     }
+#     if (nrow(x$DT) == 0L) {
+#       assert_subset(units_horizon, c("days", "weeks"))
+#     } else {
+#       if (length(unique(as.double(x$DT$version) %% 7)) != 1L) {
+#         # FIXME this is probably going to eventually be pretty common,
+#         # along with datetime version... TODO go back and consider
+#         # adding the Hub version->reference_date concept.  Would have
+#         # to be supplied since we don't yet store enough metadata.
+#         # But then this would maybe handle this case and simplify the
+#         # other complicated reasoning below.
+#         cli_abort(c("`time_value`s are weekly, but `version`s are not; this is currently not supported",
+#                     ">" = "please thin out the versions to a weekly cadence, or use daily time values if possible"),
+#                   class = "epiprocess__extract2_horizon__weekly_time_nonweekly_version")
+#       }
+#       alignment_horizon_days_dbl <- as.double(x$DT$time_value[[1L]] - x$DT$version[[1L]]) %% 7
+#       if (units(horizon) == "days" && as.double(horizon) %% 7 != alignment_horizon_days_dbl) {
+#         cli_abort(c("`horizon` is requesting impossible `time_value`s",
+#                     "i" = 'horizon: {horizon} days',
+#                     "i" = '`time_value`s of `x` fall on {format(x$DT$time_value[[1L]], "%a")}',
+#                     "i" = '`version`s of `x` fall on {format(x$DT$version[[1L]], "%a")}',
+#                     "x" = "Adding {horizon} days to any `version` will not
+#                            correspond to any possible `time_value`",
+#                     "i" = "`epi_archive`s currently don't store enough information
+#                            about the weekly time values to know how to recover",
+#                     ">" = 'Update `horizon` so that adding it to a
+#                            {format(x$DT$version[[1L]], "%a")} will yield a
+#                            {format(x$DT$time_value[[1L]], "%a")}'
+#                     ),
+#                   class = "epiprocess__extract2_horizon__horizon_days_misaligned")
+#       } else if (units(horizon) == "weeks" && alignment_horizon_days_dbl != 0) {
+#         cli_abort(c("`horizon` is in terms of weeks, but `time_value`s and `version`s
+#                      fall on differing weekdays; not sure how to align them",
+#                     ">" = "provide `horizon` in terms of days instead"),
+#                   class = "epiprocess__extract2_horizon__horizon_weeks_misaligned")
+#       } else {
+#         valid_units <- if (alignment_horizon_days_dbl == 0L) c("days", "weeks") else "days"
+#         if (! units(horizon) %in% valid_units || ! rlang::is_integerish(as.double(horizon))) {
+#           cli_abort('`horizon` must be in terms of integer number of
+#                      {cli_vec(valid_units, style = list("vec-last" = " or "))}',
+#                   class = "epiprocess__extract2_horizon__horizon_bad_units_or_not_integer")
+#         }
+#       }
+#     }
+#   } else {
+#     validate_slide_window_arg(horizon, x$time_type, lower = -Inf, allow_inf = FALSE)
+#   }
+#   ektvs <- ekvs
+#   tblish_col(ektvs, "time_value") <- tblish_col(ektvs, "version") + horizon
+#   ektvs <- tblish_select(ektvs, key(x$DT)) # in case data.table relies on var order not names
+#   result <- x$DT[ektvs, var, on = key(x$DT), with = FALSE, roll = TRUE]
+#   result <- result[[var]]
+#   # We don't actually have observations for versions past versions_end.
+#   #
+#   # XXX perhaps we should instead base this on the max version with a
+#   # diff overall or by epikey.
+#   vec_slice(result, ektvs$version > x$versions_end) <- NA
+#   result
+# }
+
+# XXX mostly ditching tblish for now
+
+extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol, ...) UseMethod("extract2_tvshift")
 
 #' @export
-extract2_horizon.epi_archive <- function(x, ekvs, var, horizon, ...) {
-  assert_true(obj_is_tblish(ekvs))
-  ekvs <- tblish_cast_cols(ekvs, x$DT[, key(x$DT)])
-  assert_string(var) # XXX vs. tidyselect?
+extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol, ...) {
+  assert_class(ektvs, "tbl_df")
+  ektvs <- tblish_cast_cols(ektvs, x$DT[, key(x$DT)])
+  assert_string(var)
   assert_subset(var, names(x$DT))
-  if (x$time_type == "week") {
-    if (!inherits(horizon, "difftime")) {
-      cli_abort("For weekly time_type, `horizon` must be a difftime.")
-    }
-    if (nrow(x$DT) == 0L) {
-      assert_subset(units_horizon, c("days", "weeks"))
-    } else {
-      if (length(unique(as.double(x$DT$version) %% 7)) != 1L) {
-        # FIXME this is probably going to eventually be pretty common,
-        # along with datetime version... TODO go back and consider
-        # adding the Hub version->reference_date concept.  Would have
-        # to be supplied since we don't yet store enough metadata.
-        # But then this would maybe handle this case and simplify the
-        # other complicated reasoning below.
-        cli_abort(c("`time_value`s are weekly, but `version`s are not; this is currently not supported",
-                    ">" = "please thin out the versions to a weekly cadence, or use daily time values if possible"),
-                  class = "epiprocess__extract2_horizon__weekly_time_nonweekly_version")
-      }
-      alignment_horizon_days_dbl <- as.double(x$DT$time_value[[1L]] - x$DT$version[[1L]]) %% 7
-      if (units(horizon) == "days" && as.double(horizon) %% 7 != alignment_horizon_days_dbl) {
-        cli_abort(c("`horizon` is requesting impossible `time_value`s",
-                    "i" = 'horizon: {horizon} days',
-                    "i" = '`time_value`s of `x` fall on {format(x$DT$time_value[[1L]], "%a")}',
-                    "i" = '`version`s of `x` fall on {format(x$DT$version[[1L]], "%a")}',
-                    "x" = "Adding {horizon} days to any `version` will not
-                           correspond to any possible `time_value`",
-                    "i" = "`epi_archive`s currently don't store enough information
-                           about the weekly time values to know how to recover",
-                    ">" = 'Update `horizon` so that adding it to a
-                           {format(x$DT$version[[1L]], "%a")} will yield a
-                           {format(x$DT$time_value[[1L]], "%a")}'
-                    ),
-                  class = "epiprocess__extract2_horizon__horizon_days_misaligned")
-      } else if (units(horizon) == "weeks" && alignment_horizon_days_dbl != 0) {
-        cli_abort(c("`horizon` is in terms of weeks, but `time_value`s and `version`s
-                     fall on differing weekdays; not sure how to align them",
-                    ">" = "provide `horizon` in terms of days instead"),
-                  class = "epiprocess__extract2_horizon__horizon_weeks_misaligned")
-      } else {
-        valid_units <- if (alignment_horizon_days_dbl == 0L) c("days", "weeks") else "days"
-        if (! units(horizon) %in% valid_units || ! rlang::is_integerish(as.double(horizon))) {
-          cli_abort('`horizon` must be in terms of integer number of
-                     {cli_vec(valid_units, style = list("vec-last" = " or "))}',
-                  class = "epiprocess__extract2_horizon__horizon_bad_units_or_not_integer")
-        }
-      }
-    }
-  } else {
-    validate_slide_window_arg(horizon, x$time_type, lower = -Inf, allow_inf = FALSE)
-  }
-  ektvs <- ekvs
-  tblish_col(ektvs, "time_value") <- tblish_col(ektvs, "version") + horizon
-  ektvs <- tblish_select(ektvs, key(x$DT)) # in case data.table relies on var order not names
-  result <- x$DT[ektvs, var, on = key(x$DT), with = FALSE, roll = TRUE]
-  result <- result[[var]]
-  # We don't actually have observations for versions past versions_end.
-  #
-  # XXX perhaps we should instead base this on the max version with a
-  # diff overall or by epikey.
-  vec_slice(result, ektvs$version > x$versions_end) <- NA
-  result
+  tshift <- time_delta_standardize(tshift, x$time_type, "fast")
+  version_type <- guess_time_type(x$DT$version)
+  vshift <- time_delta_standardize(vshift, version_type, "fast")
+  vtol <- vec_recycle(vtol, 2L, x_arg = "vtol")
+  # TODO difftime -> approx floor delta?
+  vtol <- time_delta_standardize(vtol, version_type, "fast")
+  stop("TODO finish")
 }
+
+# XXX Reconsidering `vtol` arg... we are going to constrain ektvs to
+# "real" ones anyway... except if vshift is nonzero, then we need the
+# shifted version to be "real", not the anchor version to be "real".
+# But then if we don't constrain ektvs to be "real", then the extract2
+# approach may fall apart, and we will have to be joining tibbles
+# again...  Also, vtol may be useful for lag analysis.
+#
+# No, we need to constrain analogue ektvs to also be "real" for the
+# involved signal.  "Real" to "real".
+
+# In production, there is the forecast time / the
+# "safe"/late-enough-to-have-data forecast time, then there is the
+# "real" version it uses.  Should we be finding analogues based on the
+# former or the latter?
