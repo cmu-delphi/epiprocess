@@ -88,7 +88,7 @@ test_that("pivot_longer handles new keys", {
     expect_true("num" %in% attr(res3, "metadata")$other_keys)
     expect_false(".value" %in% attr(res3, "metadata")$other_keys)
 
-    # names_to should NOT be added if rows are already unique without it
+    # names_to should be added to keys even if rows are already unique without it
     x_sparse <- tibble(
         geo_value = c("ca", "ny"),
         time_value = as.Date("2020-01-01"),
@@ -97,11 +97,11 @@ test_that("pivot_longer handles new keys", {
     ) %>% as_epi_df()
 
     # After pivot with drop_na, we have (ca, 2020-01-01, val1, 1) and (ny, 2020-01-01, val2, 2)
-    # These are unique on geo_value alone. So 'name' shouldn't be a key.
+    # These are unique on geo_value alone. But 'name' should still be a key.
     res4 <- pivot_longer(x_sparse, cols = c(val1, val2), values_drop_na = TRUE)
 
     expect_s3_class(res4, "epi_df")
     expect_true("name" %in% names(res4))
-    expect_false("name" %in% attr(res4, "metadata")$other_keys)
+    expect_true("name" %in% attr(res4, "metadata")$other_keys)
     expect_equal(nrow(res4), 2)
 })
