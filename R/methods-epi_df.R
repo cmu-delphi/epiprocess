@@ -572,23 +572,18 @@ pivot_longer.epi_df <- function(data, ..., names_to = "name") {
   res <- NextMethod()
   res <- reconstruct_light_edf(res, data)
   if (inherits(res, "epi_df")) {
-    # If we haven't decayed, we check if we need to add the new key column
+    new_keys <- setdiff(names_to, ".value")
+    attr(res, "metadata")$other_keys <- unique(
+      c(attr(res, "metadata")$other_keys, new_keys)
+    )
+    # Check if adding the new keys solved the uniqueness problem
     current_keys <- key_colnames(res)
-    # Check if we have duplicates on the existing keys
     if (!isTRUE(check_ukey_unique(ungroup(res), current_keys))) {
-      new_keys <- setdiff(names_to, ".value")
-      attr(res, "metadata")$other_keys <- unique(
-        c(attr(res, "metadata")$other_keys, new_keys)
-      )
-      # Check if adding the new keys solved the uniqueness problem
-      current_keys <- key_colnames(res)
-      if (!isTRUE(check_ukey_unique(ungroup(res), current_keys))) {
-        cli::cli_warn(c(
-          "Result is not unique on keys.",
-          "!" = "Decaying to a `tibble`."
-        ))
-        res <- decay_epi_df(res)
-      }
+      cli::cli_warn(c(
+        "Result is not unique on keys.",
+        "!" = "Decaying to a `tibble`."
+      ))
+      res <- decay_epi_df(res)
     }
   }
   res
