@@ -90,7 +90,7 @@ print.epi_df <- function(x, ...) {
 latency_info_epi_df <- function(x) {
   md <- attr(x, "metadata")
   as_of <- md$as_of
-  as_of_valid <- !is.null(as_of) && !is.na(as_of) && length(as_of) > 0
+  as_of_valid <- !is.null(as_of) && !is.na(as_of) && (length(as_of) > 0)
 
   keys <- key_colnames(x)
   key_no_t <- setdiff(keys, "time_value")
@@ -104,63 +104,97 @@ latency_info_epi_df <- function(x) {
     dplyr::ungroup() %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(key_no_t))) %>%
     dplyr::summarize(dplyr::across(dplyr::all_of(sigs), ~ {
-      non_na_times <- time_value[!is.na(.x)]
-      if (length(non_na_times) == 0) {
-        return(time_value[1][NA])
-      }
-      max(non_na_times)
+      times <- time_value[!is.na(.x)]
+      if (length(times) == 0) time_value[1][NA] else max(times)
     }), .groups = "drop")
 
-  # Calculate lags for each signal if as_of is valid
-  lags <- if (as_of_valid) {
-    sapply(sigs, function(sig) {
-      v <- smry[[sig]]
-      v_ok <- v[!is.na(v)]
-      if (length(v_ok) == 0) {
-        return(NA)
-      }
-      om <- max(v_ok)
-      if (md$time_type %in% c("integer", "custom")) {
-        return(as.numeric(as_of) - as.numeric(om))
-      }
-      as.numeric(difftime(as.Date(as_of), as.Date(om), units = "days"))
+  # Calculate report lag for each signal relative to as_of
+  lags <- rep(NA_real_, length(sigs))
+  names(lags) <- sigs
+  if (as_of_valid) {
+    lags <- sapply(sigs, function(sig) {
+      om <- max(smry[[sig]], na.rm = TRUE)
+      tryCatch(
+        {
+          if (isTRUE(md$time_type %in% c("integer", "custom"))) {
+            as.numeric(as_of) - as.numeric(om)
+          } else {
+            as.numeric(as.Date(as_of) - as.Date(om), units = "days")
+          }
+        },
+        error = function(e) NA_real_
+      )
     })
-  } else {
-    rep(NA, length(sigs))
   }
-  lags_diff <- as_of_valid && length(unique(lags[!is.na(lags)])) > 1
+  # Calculate the mode of valid lags to identify typical reporting behavior
+  valid_lags <- lags[!is.na(lags)]
+  mode_lag <- if (length(valid_lags) > 0) {
+    ux <- unique(valid_lags)
+    ux[which.max(tabulate(match(valid_lags, ux)))]
+  } else {
+    NA_real_
+  }
 
   cat("Latency info:\n")
-  for (sig in head(sigs, 3)) {
+  max_sigs <- 3
+  any_notable <- FALSE
+
+  for (sig in head(sigs, max_sigs)) {
     v <- smry[[sig]]
-    if (all(is.na(v))) {
+    om <- max(v, na.rm = TRUE)
+    if (is.infinite(om)) {
       cat(sprintf("* %s: all NA\n", sig))
       next
     }
 
-    om <- max(v[!is.na(v)])
+    # Signal name and reporting lag
     lag <- lags[sig]
     out <- sprintf("* %s: ", sig)
-    if (as_of_valid) {
-      is_int <- md$time_type %in% c("integer", "custom")
-      lag_str <- paste0(as.integer(lag), if (is_int) "" else " days")
-      out <- paste0(out, sprintf("lag %s ", lag_str))
+    if (as_of_valid && !is.na(lag)) {
+      unit <- if (isTRUE(md$time_type %in% c("integer", "custom"))) "" else " days"
+      out <- paste0(out, sprintf("lag %d%s ", as.integer(lag), unit))
     }
     out <- paste0(out, sprintf("(max time %s)", as.character(om)))
 
     # Identify and format lagging keys
     lagging <- smry[!is.na(v) & v < om, key_no_t, drop = FALSE]
-    if ((n <- nrow(lagging)) > 0) {
-      key_txt <- if (n <= 3) paste(apply(lagging, 1, paste, collapse = "/"), collapse = ", ") else paste(n, "keys")
-      out <- paste0(out, "; lagging: ", key_txt)
+    if ((n_lagging <- nrow(lagging)) > 0) {
+      lag_keys_str <- apply(lagging, 1, paste, collapse = "/")
+      key_txt <- if (n_lagging <= max_sigs) {
+        paste(lag_keys_str, collapse = ", ")
+      } else {
+        sprintf("%d keys (e.g., %s)", n_lagging, paste(head(lag_keys_str, 2), collapse = ", "))
+      }
+      out <- paste0(out, "; lagging keys: ", key_txt)
     }
-    cat(out, if ((as_of_valid && lag > 7) || n > 0 || lags_diff) " !", "\n", sep = "")
+
+    # Flag notable latencies: lag > 7 units, lagging keys, or deviates from mode by > 7 units
+    diff_from_mode <- if (!is.na(lag) && !is.na(mode_lag)) abs(lag - mode_lag) else 0
+    is_notable <- (as_of_valid && isTRUE(lag > 7)) || (n_lagging > 0) || (as_of_valid && diff_from_mode > 7)
+
+    if (is_notable) {
+      out <- paste0(out, " (!)")
+      any_notable <- TRUE
+    }
+    cat(out, "\n", sep = "")
   }
 
   if ((n_more <- length(sigs) - max_sigs) > 0) {
     cat(sprintf("* ... and %d other signal%s\n", n_more, if (n_more == 1) "" else "s"))
   }
+  if (any_notable) {
+    unit_pl <- if (isTRUE(md$time_type %in% c("integer", "custom")) || is.null(md$time_type)) {
+      "units"
+    } else {
+      paste0(md$time_type, "s")
+    }
+    cat(sprintf(
+      "(!): notable latency (lag > 7 %s, lagging keys, or deviates from mode by > 7 %s)\n",
+      unit_pl, unit_pl
+    ))
+  }
 }
+
 
 #' Summarize `epi_df` object
 #'
