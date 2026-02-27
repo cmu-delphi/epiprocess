@@ -28,10 +28,16 @@
 #'   which are implicitly combined with `&`. When multiple variables are selected
 #'   with `...`, their names can be filtered in combination with other factors
 #'   by using `.response_name`. See the examples below.
+#' @param .max_keys Maximum number of key combinations to display. If the data
+#'   contains more key combinations than this limit, a random sample of size
+#'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
+#'   display all keys. Does not apply if `interactive = TRUE`. Default is 6.
+#' @param interactive Logical. If `TRUE`, returns an interactive
+#'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
+#'   This is especially useful for exploring datasets with many keys. Default is
+#'   `FALSE`.
 #'
-#'
-#'
-#' @return A [ggplot2::ggplot] object
+#' @return A [ggplot2::ggplot] object OR [plotly::plotly] object if `interactive = TRUE`
 #' @export
 #' @name autoplot-epi
 #'
@@ -73,11 +79,15 @@ autoplot.epi_df <- function(
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
+  .max_keys = 10,
+  interactive = FALSE,
   .max_facets = deprecated()
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
+  checkmate::assert_logical(interactive, len = 1L)
+  checkmate::assert_number(.max_keys, lower = 1)
 
   if (lifecycle::is_present(.max_facets)) {
     lifecycle::deprecate_warn(
@@ -141,9 +151,15 @@ autoplot.epi_df <- function(
       object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
     }
   }
+  object <- autoplot_subsample_keys(
+    object, geo_and_other_keys, .max_keys, interactive
+  )
 
-  p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value)) +
-    ggplot2::theme_bw()
+  p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value))
+
+  if (identical(ggplot2::theme_get(), ggplot2::theme_gray())) {
+    p <- p + ggplot2::theme_bw()
+  }
 
   if (".colours" %in% names(object)) {
     p <- p + ggplot2::geom_line(
@@ -159,7 +175,7 @@ autoplot.epi_df <- function(
       ggplot2::scale_colour_viridis_d(name = "")
   } else { # none
     p <- p +
-      ggplot2::geom_line(ggplot2::aes(y = .data$.response), color = .base_color)
+      ggplot2::geom_line(ggplot2::aes(y = .data$.response, group = interaction(!!!all_avail)), color = .base_color)
   }
 
   if (".facets" %in% names(object)) {
@@ -171,6 +187,9 @@ autoplot.epi_df <- function(
       ggplot2::ylab("")
   } else {
     p <- p + ggplot2::ylab(names(vars))
+  }
+  if (interactive) {
+    return(autoplot_interactive_df(p, object, .max_keys))
   }
   p
 }
@@ -217,6 +236,56 @@ autoplot_check_viable_response_vars <- function(
   vars
 }
 
+
+autoplot_subsample_keys <- function(
+  object, geo_and_other_keys, .max_keys, interactive
+) {
+  if (interactive || is.infinite(.max_keys)) {
+    return(object)
+  }
+
+  epikey_combinations <- rlang::inject(
+    interaction(!!!object[geo_and_other_keys], sep = " / ", drop = TRUE)
+  )
+  unique_epikeys <- levels(epikey_combinations)
+  num_epikeys <- length(unique_epikeys)
+
+  if (num_epikeys <= .max_keys) {
+    return(object)
+  }
+
+  max_keys_val <- .max_keys
+  sampled_epikeys <- sample(unique_epikeys, max_keys_val)
+  cli::cli_warn(
+    c("Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
+      i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
+      i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`.",
+      i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`."
+    ),
+    class = "epiprocess__autoplot_max_keys_exceeded"
+  )
+  object[epikey_combinations %in% sampled_epikeys, ]
+}
+
+
+autoplot_interactive_df <- function(p, object, .max_keys) {
+  rlang::check_installed("plotly")
+  p_plotly <- plotly::ggplotly(p)
+  if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
+    trace_names <- purrr::map_chr(p_plotly$x$data, function(tr) if (is.null(tr$name)) "" else tr$name)
+    unique_names <- unique(trace_names[trace_names != ""])
+    if (length(unique_names) > .max_keys) {
+      keep_names <- utils::head(unique_names, .max_keys)
+      for (i in seq_along(p_plotly$x$data)) {
+        t_name <- p_plotly$x$data[[i]]$name
+        if (!is.null(t_name) && t_name != "" && !(t_name %in% keep_names)) {
+          p_plotly$x$data[[i]]$visible <- "legendonly"
+        }
+      }
+    }
+  }
+  return(p_plotly)
+}
 
 #' @param .versions Select which versions will be displayed. By default,
 #'   a separate line will be shown with the data as it would have appeared on
@@ -301,8 +370,10 @@ autoplot.epi_archive <- function(object, ...,
   bp <- autoplot.epi_df(
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
-    .facet_filter = {{ .facet_filter }}, .color_by = "none"
+    .facet_filter = {{ .facet_filter }}, .color_by = "none",
+    interactive = FALSE, .max_keys = if (interactive) Inf else .max_keys
   ) + ggplot2::xlab("Date")
+
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
   all_avail <- rlang::syms(as.list(c(
     geo_and_other_keys,
@@ -327,7 +398,7 @@ autoplot.epi_archive <- function(object, ...,
   } else {
     snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
   }
-  snapshots <- snapshots %>%
+  apshots <- snapshots %>%
     dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
 
   bp <- bp +
