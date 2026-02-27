@@ -131,7 +131,7 @@ latency_info_epi_df <- function(x) {
   lags_diff <- as_of_valid && length(unique(lags[!is.na(lags)])) > 1
 
   cat("Latency info:\n")
-  for (sig in sigs) {
+  for (sig in head(sigs, 3)) {
     v <- smry[[sig]]
     if (all(is.na(v))) {
       cat(sprintf("* %s: all NA\n", sig))
@@ -155,6 +155,10 @@ latency_info_epi_df <- function(x) {
       out <- paste0(out, "; lagging: ", key_txt)
     }
     cat(out, if ((as_of_valid && lag > 7) || n > 0 || lags_diff) " !", "\n", sep = "")
+  }
+
+  if ((n_more <- length(sigs) - max_sigs) > 0) {
+    cat(sprintf("* ... and %d other signal%s\n", n_more, if (n_more == 1) "" else "s"))
   }
 }
 
