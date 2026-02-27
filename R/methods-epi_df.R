@@ -79,8 +79,83 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
+  # Latency info:
+  latency_info_epi_df(x)
   cat("\n")
   NextMethod()
+}
+
+
+# Internal helper for print.epi_df
+latency_info_epi_df <- function(x) {
+  md <- attr(x, "metadata")
+  as_of <- md$as_of
+  as_of_valid <- !is.null(as_of) && !is.na(as_of) && length(as_of) > 0
+
+  keys <- key_colnames(x)
+  key_no_t <- setdiff(keys, "time_value")
+  sigs <- setdiff(names(x), keys)
+  if (length(sigs) == 0) {
+    return(invisible(NULL))
+  }
+
+  # Summary of max non-NA time per signal and other-keys
+  smry <- x %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_no_t))) %>%
+    dplyr::summarize(dplyr::across(dplyr::all_of(sigs), ~ {
+      non_na_times <- time_value[!is.na(.x)]
+      if (length(non_na_times) == 0) {
+        return(time_value[1][NA])
+      }
+      max(non_na_times)
+    }), .groups = "drop")
+
+  # Calculate lags for each signal if as_of is valid
+  lags <- if (as_of_valid) {
+    sapply(sigs, function(sig) {
+      v <- smry[[sig]]
+      v_ok <- v[!is.na(v)]
+      if (length(v_ok) == 0) {
+        return(NA)
+      }
+      om <- max(v_ok)
+      if (md$time_type %in% c("integer", "custom")) {
+        return(as.numeric(as_of) - as.numeric(om))
+      }
+      as.numeric(difftime(as.Date(as_of), as.Date(om), units = "days"))
+    })
+  } else {
+    rep(NA, length(sigs))
+  }
+  lags_diff <- as_of_valid && length(unique(lags[!is.na(lags)])) > 1
+
+  cat("Latency info:\n")
+  for (sig in sigs) {
+    v <- smry[[sig]]
+    if (all(is.na(v))) {
+      cat(sprintf("* %s: all NA\n", sig))
+      next
+    }
+
+    om <- max(v[!is.na(v)])
+    lag <- lags[sig]
+    out <- sprintf("* %s: ", sig)
+    if (as_of_valid) {
+      is_int <- md$time_type %in% c("integer", "custom")
+      lag_str <- paste0(as.integer(lag), if (is_int) "" else " days")
+      out <- paste0(out, sprintf("lag %s ", lag_str))
+    }
+    out <- paste0(out, sprintf("(max time %s)", as.character(om)))
+
+    # Identify and format lagging keys
+    lagging <- smry[!is.na(v) & v < om, key_no_t, drop = FALSE]
+    if ((n <- nrow(lagging)) > 0) {
+      key_txt <- if (n <= 3) paste(apply(lagging, 1, paste, collapse = "/"), collapse = ", ") else paste(n, "keys")
+      out <- paste0(out, "; lagging: ", key_txt)
+    }
+    cat(out, if ((as_of_valid && lag > 7) || n > 0 || lags_diff) " !", "\n", sep = "")
+  }
 }
 
 #' Summarize `epi_df` object
