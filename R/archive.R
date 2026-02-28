@@ -402,13 +402,25 @@ validate_epi_archive <- function(x) {
 #' @param abs_tol numeric, >=0; absolute tolerance to use on numeric measurement
 #'   columns when determining whether something can be compactified away; see
 #'   [`is_locf`]
+#' @param init_nas_are_locf bool; do we treat [entirely-missing
+#'   values][vctrs::vec_detect_missing] in the initial measurement for
+#'   each epikey-time as LOCF?  Ordinarily `FALSE`, but `TRUE` if
+#'   we're trying to "invert" an [`epix_merge`], i.e., we've just
+#'   narrowed down the value column set and are trying to remove extra
+#'   `NA`s (and other rows) created by using [`epix_merge`] / the
+#'   `epi_archive` format.  Currently, this is ordinarily `FALSE` in
+#'   order to preserve explicit measurements of `NA` provided by the
+#'   user; this also matches "vanilla expectations", as outer joins /
+#'   the data frame format also promote some implicit NAs into
+#'   explicit ones, conflating their origins.  We're forced into a
+#'   judgment call here by the current `epi_archive` format.
 #'
 #' @importFrom data.table is.data.table key
 #' @importFrom dplyr arrange filter
 #' @importFrom vctrs vec_duplicate_any
 #'
 #' @keywords internal
-apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
+apply_compactify <- function(updates_df, ukey_names, abs_tol = 0, init_nas_are_locf = FALSE) {
   assert_data_frame(updates_df)
   assert_character(ukey_names)
   assert_subset(ukey_names, names(updates_df))
@@ -419,38 +431,40 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
     cli_abort('"version" must appear in `ukey_names` and must be last.')
   }
   assert_numeric(abs_tol, len = 1, lower = 0)
+  assert_logical(init_nas_are_locf, len = 1, any.missing = FALSE)
 
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df[!update_is_locf(updates_df, ukey_names, abs_tol), ]
+  updates_df[!update_is_locf(updates_df, ukey_names, abs_tol, init_nas_are_locf), ]
 }
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
-removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
+removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_locf = FALSE) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df[update_is_locf(updates_df, ukey_names, abs_tol), ]
+  updates_df[update_is_locf(updates_df, ukey_names, abs_tol, init_nas_are_locf), ]
 }
 
 #' Internal helper; lgl; which updates are LOCF
 #'
-#' (Not validated:) Must be called inside certain dplyr data masking verbs (e.g.,
-#' `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a data frame
+#' (Not validated:) Must be called on an `epi_archive`'s `DT` or a data frame
 #' formatted like one.
 #'
-#' @param arranged_updates_df an arranged update data frame like an `epi_archive` `DT`
+#' @param arranged_updates_df an arranged update data frame like an
+#'   `epi_archive` `DT`
 #' @param ukey_names (not validated:) chr; the archive/equivalent
 #'   [`key_colnames`]; must include `"version"`.
 #' @param abs_tol (not validated:) as in [`apply_compactify`]
+#' @param init_nas_are_locf (not validated:) as in [`apply_compactify`]
 #'
 #' @return lgl
 #'
 #' @keywords internal
-update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
+update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf) {
   # Use as.list to get a shallow "copy" in case of data.table, so that column
   # selection does not copy the column contents. Don't leak these column aliases
   # or it will break data.table ownership model.
@@ -460,8 +474,20 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   ekt_names <- ukey_names[ukey_names != "version"]
   val_names <- all_names[!all_names %in% ukey_names]
 
-  Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) &
-    Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE))
+  ekt_is_locf <-
+    Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) %||%
+    # 0-col case:
+    rep(TRUE, nrow(arranged_updates_df))
+  value_is_locf <- Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE)) %||%
+    # 0-col case:
+    rep(TRUE, nrow(arranged_updates_df))
+
+  if (init_nas_are_locf) {
+    value_is_missing <- vctrs::vec_detect_missing(vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df)))
+    fifelse(ekt_is_locf, value_is_locf, value_is_missing)
+  } else {
+    ekt_is_locf & value_is_locf
+  }
 }
 
 #' Checks to see if a value in a vector is LOCF

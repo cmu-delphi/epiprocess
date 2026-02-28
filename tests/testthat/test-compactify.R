@@ -213,3 +213,32 @@ test_that("Large compactify_abs_tol works on value columns", {
     )
   )
 })
+
+test_that("`init_nas_are_locf` works", {
+  DT <- tibble::tribble(
+    ~k, ~version, ~val1,
+    # NA
+    "A",       1,    NA,
+    # NA -> NA
+    "B",       1,    NA,
+    "B",       2,    NA,
+    # NA -> not
+    "C",       1,    NA,
+    "C",       2,    10,
+    # not -> NA
+    "D",       1,    10,
+    "D",       2,    NA,
+    # NA -> not -> NA
+    "E",       1,    NA,
+    "E",       2,    10,
+    "E",       3,    NA,
+    ) %>%
+    as.data.table(key = c("k", "version"))
+  # Treating initial NAs as LOCF, we remove all NA val1 rows except
+  # for when the value was already non-NA:
+  expect_equal(DT %>% apply_compactify(c("k", "version"), init_nas_are_locf = TRUE),
+               DT[.(k = c("C", "D", "D", "E", "E"), version = c(2, 1, 2, 2, 3))])
+  # If we don't, then the only row we can remove is the still-NA update in case B:
+  expect_equal(DT %>% apply_compactify(c("k", "version"), init_nas_are_locf = FALSE),
+               DT[!.(k = c("B"), version = c(2))])
+})
