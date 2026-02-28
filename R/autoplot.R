@@ -333,9 +333,13 @@ autoplot.epi_archive <- function(object, ...,
                                  .base_color = "black",
                                  .versions = NULL,
                                  .mark_versions = FALSE,
-                                 .facet_filter = NULL) {
+                                 .facet_filter = NULL,
+                                 .max_keys = 6,
+                                 interactive = FALSE) {
   time_type <- object$time_type
+  checkmate::assert_number(.max_keys, lower = 1)
   checkmate::assert_logical(.mark_versions, len = 1L)
+  checkmate::assert_logical(interactive, len = 1L)
   if (time_type == "custom") {
     cli_abort(
       "This `epi_archive` has custom `time_type`. This is currently unsupported.",
@@ -367,12 +371,20 @@ autoplot.epi_archive <- function(object, ...,
   vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
 
+  eff_max_keys <- if (interactive) Inf else .max_keys
+
   bp <- autoplot.epi_df(
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
     .facet_filter = {{ .facet_filter }}, .color_by = "none",
-    interactive = FALSE, .max_keys = if (interactive) Inf else .max_keys
+    .max_keys = eff_max_keys
   ) + ggplot2::xlab("Date")
+
+  if (interactive) {
+    # Override the facet layer so plotly doesn't generate empty grid panels.
+    # We still want `.facet_by = "all"` above to apply `.facet_filter` properly.
+    bp <- bp + ggplot2::facet_null()
+  }
 
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
   all_avail <- rlang::syms(as.list(c(
@@ -398,13 +410,25 @@ autoplot.epi_archive <- function(object, ...,
   } else {
     snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
   }
-  apshots <- snapshots %>%
-    dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
+  if (".facets" %in% names(bp$data)) {
+    snapshots <- snapshots %>%
+      dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
+  } else {
+    snapshots <- snapshots %>%
+      dplyr::filter(!is.na(.response))
+  }
+
+  if (interactive) {
+    return(autoplot_interactive_archive(
+      snapshots, .base_color, methods::is(.versions, "Date")
+    ))
+  }
+
 
   bp <- bp +
     ggplot2::geom_line(
       data = snapshots,
-      mapping = ggplot2::aes(y = .response, color = version, group = factor(version))
+      mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version))
     )
 
   if (methods::is(.versions, "Date")) {
@@ -425,7 +449,117 @@ autoplot.epi_archive <- function(object, ...,
   }
   # make the finalized layer last
   bp$layers <- rev(bp$layers)
+
   bp
+}
+
+autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_dates) {
+  rlang::check_installed("plotly")
+
+  # Build a native plotly plot instead of converting from ggplot.
+  # This gives us exact control over traces for the dropdown.
+  unique_groups <- levels(droplevels(as.factor(snapshots$.facets)))
+
+  # Build color palette: viridis for older versions, .base_color for the newest
+  all_versions <- sort(unique(snapshots$version))
+  n_versions <- length(all_versions)
+  if (n_versions == 1L) {
+    version_colors <- .base_color
+  } else {
+    version_colors <- c(
+      grDevices::hcl.colors(n_versions - 1L, palette = "viridis"),
+      .base_color
+    )
+  }
+  version_color_map <- stats::setNames(version_colors, as.character(all_versions))
+
+  # Pre-compute version labels
+  version_labels <- if (.versions_are_dates) {
+    stats::setNames(
+      as.character(as.Date(all_versions, origin = "1970-01-01")),
+      as.character(all_versions)
+    )
+  } else {
+    stats::setNames(as.character(all_versions), as.character(all_versions))
+  }
+
+  # Pre-build trace specifications as a list of lists.
+  # Each spec freezes index, data, color, label at creation time,
+  # avoiding R lazy-evaluation pitfalls in for-loops.
+  trace_specs <- list()
+  trace_group_idx <- integer(0)
+  for (gi in seq_along(unique_groups)) {
+    g <- unique_groups[gi]
+    g_data <- snapshots[snapshots$.facets == g, , drop = FALSE]
+    versions <- sort(unique(g_data$version))
+    for (vi in seq_along(versions)) {
+      v <- versions[vi]
+      v_data <- g_data[g_data$version == v, , drop = FALSE]
+      v_data <- v_data[order(v_data$time_value), , drop = FALSE]
+      lc <- unname(version_color_map[as.character(v)])
+      vl <- unname(version_labels[as.character(v)])
+      trace_specs[[length(trace_specs) + 1L]] <- list(
+        data = v_data, color = lc, label = vl, gi = gi
+      )
+      trace_group_idx <- c(trace_group_idx, gi)
+    }
+  }
+
+  # Build the plot by folding specs onto an empty plotly object.
+  # Each function call in Reduce gets its own scope so arguments won't drift.
+  p <- Reduce(function(p, spec) {
+    plotly::add_trace(p,
+      data = spec$data,
+      x = ~time_value, y = ~.response,
+      type = "scatter", mode = "lines",
+      line = list(color = spec$color, width = 1.5),
+      hoverinfo = "text",
+      text = ~ paste0(
+        "Key: ", .facets,
+        "<br>Version: ", version,
+        "<br>Date: ", time_value,
+        "<br>Value: ", round(.response, 3)
+      ),
+      name = spec$label,
+      legendgroup = spec$label,
+      showlegend = (spec$gi == 1),
+      visible = (spec$gi == 1)
+    )
+  }, trace_specs, init = plotly::plot_ly())
+
+  # Dropdown buttons: toggle both visible AND showlegend per group
+  # so legend persists when switching keys
+  buttons <- lapply(seq_along(unique_groups), function(gi) {
+    is_active <- trace_group_idx == gi
+    list(
+      method = "update",
+      args = list(
+        list(
+          visible = as.list(is_active),
+          showlegend = as.list(is_active)
+        ),
+        list(title = list(text = paste("Key:", unique_groups[gi])))
+      ),
+      label = unique_groups[gi]
+    )
+  })
+
+  p <- plotly::layout(p,
+    title = list(text = paste("Key:", unique_groups[1])),
+    xaxis = list(title = "Date"),
+    yaxis = list(title = ""),
+    legend = list(title = list(text = "Version")),
+    updatemenus = list(
+      list(
+        type = "dropdown",
+        active = 0,
+        buttons = buttons,
+        x = 0.05, y = 1.15
+      )
+    )
+  )
+
+  p
 }
 
 #' @export
