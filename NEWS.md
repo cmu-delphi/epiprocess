@@ -10,6 +10,7 @@ indicate development versions beyond 0.x.
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
 - `print.epi_df()` now includes a **Latency info** section that summarizes reporting 
   lags and identifies "lagging keys".
+- `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column

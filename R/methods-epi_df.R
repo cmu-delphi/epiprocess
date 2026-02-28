@@ -196,6 +196,78 @@ latency_info_epi_df <- function(x) {
 }
 
 
+# Internal helper for summary.epi_df to calculate and print time regularity/gaps
+epi_df_time_info <- function(x) {
+  if (nrow(x) == 0) {
+    return(invisible(NULL))
+  }
+
+  keys <- key_colnames(x)
+  key_no_t <- setdiff(keys, "time_value")
+  sigs <- setdiff(names(x), keys)
+  md <- attr(x, "metadata")
+
+  # Identify rows that are explicit gaps (all signals NA)
+  is_expl_gap <- if (length(sigs) > 0) {
+    rowSums(is.na(x[sigs])) == length(sigs)
+  } else {
+    rep(FALSE, nrow(x))
+  }
+
+  smry <- x %>%
+    dplyr::mutate(..is_expl = is_expl_gap) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_no_t))) %>%
+    dplyr::summarize(
+      # baseline range for evenness should be non-gap data
+      min_t = if (any(!.data$..is_expl)) min(time_value[!.data$..is_expl], na.rm = TRUE) else NA,
+      max_t = if (any(!.data$..is_expl)) max(time_value[!.data$..is_expl], na.rm = TRUE) else NA,
+      has_explicit = any(.data$..is_expl, na.rm = TRUE),
+      # n_t counts rows within the non-gap range (effectively detects internal missing rows)
+      n_t = if (any(!.data$..is_expl)) {
+        sum(time_value >= min(.data$min_t) & time_value <= max(.data$max_t))
+      } else {
+        0
+      },
+      .groups = "drop"
+    )
+
+  # Evenness
+  min_even <- length(unique(smry$min_t[!is.na(smry$min_t)])) <= 1
+  max_even <- length(unique(smry$max_t[!is.na(smry$max_t)])) <= 1
+
+  min_desc <- if (min_even) "even across epikeys" else "uneven across epikeys"
+  max_desc <- if (max_even) "even across epikeys" else "uneven across epikeys"
+
+  cat(sprintf("* %-27s = %s (%s)\n", "min time value", min(x$time_value), min_desc))
+  cat(sprintf("* %-27s = %s (%s)\n", "max time value", max(x$time_value), max_desc))
+  # Gaps
+  smry$expected_n <- tryCatch(
+    {
+      d <- if (inherits(x$time_value, c("POSIXt", "Date"))) {
+        diff <- as.numeric(as.Date(smry$max_t)) - as.numeric(as.Date(smry$min_t))
+        if (isTRUE(md$time_type == "week")) diff / 7 else diff
+      } else {
+        as.numeric(smry$max_t) - as.numeric(smry$min_t)
+      }
+      d + 1
+    },
+    error = function(e) rep(NA_real_, nrow(smry))
+  )
+
+  n_imp <- sum(!is.na(smry$expected_n) & (smry$n_t < smry$expected_n), na.rm = TRUE)
+  n_exp <- sum(smry$has_explicit, na.rm = TRUE)
+
+  gaps <- c()
+  if (n_imp > 0) gaps <- c(gaps, sprintf("implicit (in %d/%d epikeys)", n_imp, nrow(smry)))
+  if (n_exp > 0) gaps <- c(gaps, sprintf("explicit (in %d/%d epikeys)", n_exp, nrow(smry)))
+  gaps_str <- if (length(gaps) > 0) paste(gaps, collapse = ", ") else "none detected"
+
+  cat(sprintf("* %-27s = %s\n", "time gaps", gaps_str))
+
+  return(invisible(NULL))
+}
+
+
 #' Summarize `epi_df` object
 #'
 #' Prints a variety of summary statistics about the `epi_df` object, such as
@@ -219,8 +291,7 @@ summary.epi_df <- function(object, ...) {
   }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
-  cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
-  cat(sprintf("* %-27s = %s\n", "max time value", max(object$time_value)))
+  epi_df_time_info(object)
   cat(sprintf(
     "* %-27s = %i\n", "average rows per time value",
     as.integer(
