@@ -255,7 +255,6 @@ cases_deaths_subset \%>\%
   select(geo_value, time_value, slide_value)
 
 
-
 # Use the geo_value or the ref_time_value in the slide computation
 cases_deaths_subset \%>\%
   epi_slide(~ .x$geo_value[[1]], .window_size = 7)

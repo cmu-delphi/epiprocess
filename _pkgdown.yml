@@ -63,6 +63,7 @@ reference:
     desc: Constructors and information for `epi_archive` objects.
   - contents:
       - epi_archive
+      - linelist_to_archive
       - clone
       - group_by.epi_archive
 

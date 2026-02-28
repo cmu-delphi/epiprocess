@@ -271,12 +271,13 @@ next_after.Date <- function(x) x + 1L
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    x,
-    geo_type,
-    time_type,
-    other_keys,
-    clobberable_versions_start,
-    versions_end) {
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  clobberable_versions_start,
+  versions_end
+) {
   assert_data_frame(x)
   assert_string(geo_type)
   assert_string(time_type)
@@ -522,15 +523,16 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #'
 #' @export
 as_epi_archive <- function(
-    x,
-    geo_type = deprecated(),
-    time_type = deprecated(),
-    other_keys = character(),
-    compactify = TRUE,
-    compactify_abs_tol = 0,
-    clobberable_versions_start = NA,
-    .versions_end = max_version_with_row_in(x), ...,
-    versions_end = .versions_end) {
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(),
+  compactify = TRUE,
+  compactify_abs_tol = 0,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x), ...,
+  versions_end = .versions_end
+) {
   assert_data_frame(x)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
