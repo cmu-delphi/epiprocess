@@ -72,30 +72,59 @@
 
 # XXX mostly ditching tblish for now
 
-#' epikey-versions that added a non-NA measurement or changed a measurement for `vars`
+#' For each `ekt_var_set` key, the `version`s it had with a "real" diff for any `val_var_set`
 #'
-#' For each epikey, this tries to get the set of versions with "real"
-#' updates for the `vars` columns.  We can't just directly use
-#' `unique` because (i) more-available signals than `vars` may create
-#' spurious results, and (ii) `x` might not be compactified.
+#' Here, "real" means either (a) changing from unobserved to a non-NA
+#' initial estimate, or (b) changing from one estimate to a different
+#' estimate.  It does not count moving from unobserved to an NA
+#' initial estimate, as these are often not actually present in the
+#' underlying data and are simply present due to storing multiple val
+#' vars in the same archive.
+#'
+#' The choice of `ekt_var_set` is a tradeoff between (a) recognizing the
+#' maturity of estimates that remained the same between versions for
+#' reasons other than an outage, plus enabling models to treat more
+#' estimates as equally mature, vs. (b) recognizing the immaturity of
+#' estimates that remained the same between versions due to more
+#' complex types of outages.
+#'
+#' * If some epikeys (geodemographic groups) can have pauses in
+#'   reporting not shared by others, then you should probably include
+#'   `c("geo_value", x$other_keys)` in `ekt_var_set`.
+#'
+#' * If some `time_value`s can have pauses in reporting not shared by
+#'   others, then you should probably include `"time_value"` in
+#'   `ekt_var_set`.  Depending on how downstream models treat NAs, you
+#'   may be able to get away with not adding it if these pauses in
+#'   reporting simply mean that no new `time_value`s are being added
+#'   to the data set, but all previously-observed `time_value`s are
+#'   receiving revised estimates.
 #'
 #' @param x (unvalidated) an `epi_archive`
-#' @param vars (unvalidated) subset of `val_colnames(x)`
-#' @return tibble with names `key_colnames(x, exclude = "time_value")`
-epix_diff_ekvs <- function(x, vars = val_colnames(x)) {
-  ektv_vars <- c("geo_value", x$other_keys, "time_value", "version")
-  ekv_vars <- c("geo_value", x$other_keys, "version")
-  diff_ekvs <- x$DT[, c(ektv_vars, vars), with = FALSE] %>%
+#' @param ekt_var_set optional; (unvalidated) subset of
+#'   `key_colnames(x, exclude = "version")`; defaults to
+#'   `key_colnames(x, exclude = c("time_value" ,"version"))`
+#' @param val_var_set technically optional; (unvalidated) subset of
+#'   `val_colnames(x)`, but likely just a single var; defaults to
+#'   entire set
+#' @return tibble with names matching `ekt_var_set`; note that if you
+#'   want downstream code to adapt to the choice of `ekt_var_set`, you
+#'   will also need to pass `ekt_var_set` to later processing and may
+#'   need to specify `relationship = "many-to-{one,many}"` if joining
+#'   to other data.
+#'
+#' @keywords internal
+epix_diff_keys <- function(x,
+                           ekt_var_set = key_colnames(x, exclude = c("time_value" ,"version")),
+                           val_var_set = val_colnames(x)) {
+  ektv_vars <- key_colnames(x)
+  diff_keys <- x$DT[, c(ektv_vars, val_var_set), with = FALSE] %>%
     setDF() %>%
     as_tibble() %>%
     filter(!update_is_locf(., ektv_vars, 0, TRUE)) %>%
-    distinct(pick(all_of(ekv_vars)))
-  diff_ekvs
+    distinct(pick(all_of(c(ekt_var_set, "version"))))
+  diff_keys
 }
-
-# XXX some data sources will have outages for later time values and
-# not earlier ones, on an epikey by epikey basis; in these cases, we
-# may want to use diff ektvs.  Should make this configurable.
 
 extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
 
