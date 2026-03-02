@@ -464,7 +464,7 @@ epix_slide.grouped_epi_archive <- function(
       # Instead, go through an ordinary data frame, trying to avoid
       # copies.
       if (address(as_of_archive$DT) == address(.x$private$ungrouped$DT)) {
-        # `as_of` aliased its the full `$DT`; copy before mutating:
+        # `as_of` aliased the full `$DT`; copy before mutating:
         #
         # Note: this step is probably unneeded; we're fine with
         # aliasing of the DT or its columns: vanilla operations aren't

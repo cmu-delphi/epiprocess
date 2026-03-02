@@ -131,13 +131,29 @@ extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) Us
 #' @export
 extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) {
   assert_class(ektvs, "tbl_df")
-  ektvs <- tblish_cast_cols(ektvs, x$DT[, key(x$DT)])
+  ektvs <- tblish_cast_cols(ektvs, x$DT[, key_colnames(x)])
   assert_string(var)
   assert_subset(var, names(x$DT))
   tshift <- time_delta_standardize(tshift, x$time_type, "fast")
   version_type <- guess_time_type(x$DT$version)
   vshift <- time_delta_standardize(vshift, version_type, "fast")
   if (is.null(vtol)) {
+    ek_vars <- c("geo_value", x$other_keys)
+    x_var_diff_ekvs <- epix_diff_keys(x, ek_vars, var)
+    low_vgap <- x_var_diff_ekvs %>%
+      summarize(.by = all_of(ek_vars),
+                # re-using reserved name `version` for version gaps:
+                version = diff(sort(unique(version)))) %>%
+      .$version %>%
+      # Don't be too strict; if schedule isn't perfectly regular
+      # (e.g., there are delays around holidays) plus there are
+      # special data set overhauls, we don't want presence of the
+      # latter to make us balk at the former:
+      quantile(probs = 0.10) %>%
+      unname()
+    # TODO something like vtol_excl <- min(min_vgap, tspacing/2)
+    # except may need to standardize types, apply some sort of floor,
+    # etc.
     stop("TODO finish")
   } else {
     # TODO difftime -> approx floor delta?

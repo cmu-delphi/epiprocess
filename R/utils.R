@@ -939,7 +939,12 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
   }
 }
 
+# XXX probably should add the missing parts of the coercion hierarchy
+# below in preparation for datetime versions.
+
 #' Version of [`vctrs::vec_cast`] that allows chr <-> date
+#'
+#' Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
 #'
 #' @inheritParams vctrs::vec_cast
 vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
