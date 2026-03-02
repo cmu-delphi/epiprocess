@@ -93,6 +93,10 @@ epix_diff_ekvs <- function(x, vars = val_colnames(x)) {
   diff_ekvs
 }
 
+# XXX some data sources will have outages for later time values and
+# not earlier ones, on an epikey by epikey basis; in these cases, we
+# may want to use diff ektvs.  Should make this configurable.
+
 extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
 
 #' @export
