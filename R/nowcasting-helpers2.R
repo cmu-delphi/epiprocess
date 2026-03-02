@@ -72,10 +72,31 @@
 
 # XXX mostly ditching tblish for now
 
-extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol, ...) UseMethod("extract2_tvshift")
+#' epikey-versions that added a non-NA measurement or changed a measurement for `vars`
+#'
+#' For each epikey, this tries to get the set of versions with "real"
+#' updates for the `vars` columns.  We can't just directly use
+#' `unique` because (i) more-available signals than `vars` may create
+#' spurious results, and (ii) `x` might not be compactified.
+#'
+#' @param x (unvalidated) an `epi_archive`
+#' @param vars (unvalidated) subset of `val_colnames(x)`
+#' @return tibble with names `key_colnames(x, exclude = "time_value")`
+epix_diff_ekvs <- function(x, vars = val_colnames(x)) {
+  ektv_vars <- c("geo_value", x$other_keys, "time_value", "version")
+  ekv_vars <- c("geo_value", x$other_keys, "version")
+  diff_ekvs <- x$DT[, c(ektv_vars, vars), with = FALSE] %>%
+    setDF() %>%
+    as_tibble() %>%
+    filter(!update_is_locf(., ektv_vars, 0, TRUE)) %>%
+    distinct(pick(all_of(ekv_vars)))
+  diff_ekvs
+}
+
+extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
 
 #' @export
-extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol, ...) {
+extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) {
   assert_class(ektvs, "tbl_df")
   ektvs <- tblish_cast_cols(ektvs, x$DT[, key(x$DT)])
   assert_string(var)
@@ -83,9 +104,13 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol, ..
   tshift <- time_delta_standardize(tshift, x$time_type, "fast")
   version_type <- guess_time_type(x$DT$version)
   vshift <- time_delta_standardize(vshift, version_type, "fast")
-  vtol <- vec_recycle(vtol, 2L, x_arg = "vtol")
-  # TODO difftime -> approx floor delta?
-  vtol <- time_delta_standardize(vtol, version_type, "fast")
+  if (is.null(vtol)) {
+    stop("TODO finish")
+  } else {
+    # TODO difftime -> approx floor delta?
+    vtol <- time_delta_standardize(vtol, version_type, "fast")
+    stop("TODO finish")
+  }
   stop("TODO finish")
 }
 

@@ -131,3 +131,15 @@ key_colnames.epi_archive <- function(x, ..., exclude = character()) {
   assert_character(exclude)
   setdiff(c("geo_value", x$other_keys, "time_value", "version"), exclude)
 }
+
+val_colnames <- function(x, ...) UseMethod("val_colnames")
+
+#' @export
+val_colnames.default <- function(x, ...) {
+  vec_set_difference(names(x), key_colnames(x))
+}
+
+#' @export
+val_colnames.epi_archive <- function(x, ...) {
+  vec_set_difference(names(x$DT), key_colnames(x))
+}
