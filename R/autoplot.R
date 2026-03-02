@@ -151,9 +151,10 @@ autoplot.epi_df <- function(
       object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
     }
   }
+
   object <- autoplot_subsample_keys(
     object, geo_and_other_keys, .max_keys, interactive,
-    .facet_filter_used = !(.facet_filter %in% c(".response", "none"))
+    .facet_used = ".facets" %in% names(object)
   )
 
   p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value))
@@ -196,6 +197,17 @@ autoplot.epi_df <- function(
     p <- p + ggplot2::ylab(names(vars))
   }
   if (interactive) {
+    if (".facets" %in% names(object)) {
+      # Use the interactive helper with dropdowns.
+      trace_col <- if (".colours" %in% names(object)) ".colours" else if (nvars > 1) ".response_name" else NULL
+      return(autoplot_plotly_dropdown(
+        data = object,
+        group_col = ".facets",
+        trace_col = trace_col,
+        .base_color = .base_color,
+        yaxis_title = names(vars)[1]
+      ))
+    }
     return(autoplot_interactive_df(p, object, .max_keys))
   }
   p
@@ -245,7 +257,7 @@ autoplot_check_viable_response_vars <- function(
 
 
 autoplot_subsample_keys <- function(
-  object, geo_and_other_keys, .max_keys, interactive, .facet_filter_used
+  object, geo_and_other_keys, .max_keys, interactive, .facet_used
 ) {
   if (interactive || is.infinite(.max_keys)) {
     return(object)
@@ -269,7 +281,7 @@ autoplot_subsample_keys <- function(
     i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
     i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`."
   )
-  if (!.facet_filter_used) {
+  if (.facet_used) {
     msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
   }
 
@@ -277,6 +289,116 @@ autoplot_subsample_keys <- function(
   object[epikey_combinations %in% sampled_epikeys, ]
 }
 
+
+autoplot_plotly_dropdown <- function(
+  data, group_col, trace_col = NULL,
+  color_map = NULL, .base_color = "#3A448F",
+  xaxis_title = "Date", yaxis_title = "", legend_title = ""
+) {
+  rlang::check_installed("plotly")
+
+  unique_groups <- levels(droplevels(as.factor(data[[group_col]])))
+
+  # Prepare lines to be added to the plot
+  trace_specs <- list()
+  trace_group_idx <- integer(0)
+
+  # Identify each dropdown option
+  for (gi in seq_along(unique_groups)) {
+    g <- unique_groups[gi]
+    g_data <- data[data[[group_col]] == g, , drop = FALSE]
+
+    # Handle multiple lines within one dropdown selection
+    if (!is.null(trace_col) && trace_col %in% names(g_data)) {
+      sub_trace_vals <- unique(g_data[[trace_col]])
+      if (is.factor(sub_trace_vals)) {
+        sub_trace_vals <- levels(droplevels(sub_trace_vals))
+      } else {
+        sub_trace_vals <- sort(sub_trace_vals)
+      }
+    } else {
+      # one line per dropdown option
+      sub_trace_vals <- "default"
+    }
+
+    # Creates the individual lines for a single dropdown selection
+    for (si in seq_along(sub_trace_vals)) {
+      s_val <- sub_trace_vals[si]
+      s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, , drop = FALSE]
+      s_data <- s_data[order(s_data$time_value), , drop = FALSE]
+
+      # "metadata" for the specific line
+      lc <- if (!is.null(color_map)) {
+        unname(color_map[as.character(s_val)])
+      } else if (!is.null(trace_col) && trace_col %in% names(s_data)) {
+        NULL
+      } else {
+        .base_color
+      }
+
+      label <- if (identical(s_val, "default")) "" else as.character(s_val)
+
+      # Store the spec for later rendering
+      trace_specs[[length(trace_specs) + 1L]] <- list(
+        data = s_data, color = lc, label = label, gi = gi, s_val = s_val
+      )
+      trace_group_idx <- c(trace_group_idx, gi)
+    }
+  }
+
+
+  # Add the line to the plot
+  p <- Reduce(function(p, spec) {
+    plotly::add_trace(p,
+      data = spec$data,
+      x = ~time_value, y = ~.response,
+      type = "scatter", mode = "lines",
+      line = list(color = spec$color %||% .base_color, width = 1.5),
+      hoverinfo = "text",
+      text = ~ paste0(
+        "Key: ", .data[[group_col]],
+        if (!is.null(spec$label) && spec$label != "") paste0("<br>", spec$label) else "",
+        "<br>Date: ", time_value,
+        "<br>Value: ", round(.response, 3)
+      ),
+      name = spec$label,
+      legendgroup = spec$label,
+      showlegend = (spec$gi == 1),
+      visible = (spec$gi == 1)
+    )
+  }, trace_specs, init = plotly::plot_ly())
+
+  # Creates the buttons for the dropdown menu and updates the plot title
+  buttons <- lapply(seq_along(unique_groups), function(gi) {
+    is_active <- trace_group_idx == gi
+    list(
+      method = "update",
+      args = list(
+        list(visible = as.list(is_active), showlegend = as.list(is_active)),
+        list(title = list(text = paste("Key:", unique_groups[gi])))
+      ),
+      label = unique_groups[gi]
+    )
+  })
+
+  p <- plotly::layout(p,
+    title = list(text = paste("Key:", unique_groups[1])),
+    xaxis = list(title = xaxis_title),
+    yaxis = list(title = yaxis_title, fixedrange = TRUE),
+    legend = list(title = list(text = legend_title)),
+    updatemenus = list(
+      list(
+        type = "dropdown",
+        active = 0,
+        buttons = buttons,
+        x = 0.05, y = 1.15
+      )
+    )
+  ) %>%
+    plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"))
+
+  return(p)
+}
 
 autoplot_interactive_df <- function(p, object, .max_keys) {
   rlang::check_installed("plotly")
@@ -476,13 +598,7 @@ autoplot.epi_archive <- function(object, ...,
 }
 
 autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_dates) {
-  rlang::check_installed("plotly")
-
-  # Build a native plotly plot instead of converting from ggplot.
-  # This gives us exact control over traces for the dropdown.
-  unique_groups <- levels(droplevels(as.factor(snapshots$.facets)))
-
-  # Build color palette: viridis for older versions, .base_color for the newest
+  # Build color palette
   all_versions <- sort(unique(snapshots$version))
   n_versions <- length(all_versions)
   if (n_versions == 1L) {
@@ -493,100 +609,23 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_d
       .base_color
     )
   }
-  version_color_map <- stats::setNames(version_colors, as.character(all_versions))
+  color_map <- stats::setNames(version_colors, as.character(all_versions))
 
-  # Pre-compute version labels
-  version_labels <- if (.versions_are_dates) {
-    stats::setNames(
-      as.character(as.Date(all_versions, origin = "1970-01-01")),
-      as.character(all_versions)
-    )
+  # Formatted labels for the legend
+  if (.versions_are_dates) {
+    snapshots$version_label <- as.character(as.Date(snapshots$version, origin = "1970-01-01"))
   } else {
-    stats::setNames(as.character(all_versions), as.character(all_versions))
+    snapshots$version_label <- as.character(snapshots$version)
   }
 
-  # Pre-build trace specifications as a list of lists.
-  # Each spec freezes index, data, color, label at creation time,
-  # avoiding R lazy-evaluation pitfalls in for-loops.
-  trace_specs <- list()
-  trace_group_idx <- integer(0)
-  for (gi in seq_along(unique_groups)) {
-    g <- unique_groups[gi]
-    g_data <- snapshots[snapshots$.facets == g, , drop = FALSE]
-    versions <- sort(unique(g_data$version))
-    for (vi in seq_along(versions)) {
-      v <- versions[vi]
-      v_data <- g_data[g_data$version == v, , drop = FALSE]
-      v_data <- v_data[order(v_data$time_value), , drop = FALSE]
-      lc <- unname(version_color_map[as.character(v)])
-      vl <- unname(version_labels[as.character(v)])
-      trace_specs[[length(trace_specs) + 1L]] <- list(
-        data = v_data, color = lc, label = vl, gi = gi
-      )
-      trace_group_idx <- c(trace_group_idx, gi)
-    }
-  }
-
-  # Build the plot by folding specs onto an empty plotly object.
-  # Each function call in Reduce gets its own scope so arguments won't drift.
-  p <- Reduce(function(p, spec) {
-    plotly::add_trace(p,
-      data = spec$data,
-      x = ~time_value, y = ~.response,
-      type = "scatter", mode = "lines",
-      line = list(color = spec$color, width = 1.5),
-      hoverinfo = "text",
-      text = ~ paste0(
-        "Key: ", .facets,
-        "<br>Version: ", version,
-        "<br>Date: ", time_value,
-        "<br>Value: ", round(.response, 3)
-      ),
-      name = spec$label,
-      legendgroup = spec$label,
-      showlegend = (spec$gi == 1),
-      visible = (spec$gi == 1)
-    )
-  }, trace_specs, init = plotly::plot_ly())
-
-  # Dropdown buttons: toggle both visible AND showlegend per group
-  # so legend persists when switching keys
-  buttons <- lapply(seq_along(unique_groups), function(gi) {
-    is_active <- trace_group_idx == gi
-    list(
-      method = "update",
-      args = list(
-        list(
-          visible = as.list(is_active),
-          showlegend = as.list(is_active)
-        ),
-        list(title = list(text = paste("Key:", unique_groups[gi])))
-      ),
-      label = unique_groups[gi]
-    )
-  })
-
-  time_range <- range(snapshots$time_value, na.rm = TRUE)
-  p <- plotly::layout(p,
-    title = list(text = paste("Key:", unique_groups[1])),
-    xaxis = list(
-      title = "Date",
-      minallowed = as.character(time_range[1]),
-      maxallowed = as.character(time_range[2])
-    ),
-    yaxis = list(title = ""),
-    legend = list(title = list(text = "Version")),
-    updatemenus = list(
-      list(
-        type = "dropdown",
-        active = 0,
-        buttons = buttons,
-        x = 0.05, y = 1.15
-      )
-    )
+  # Use the generalized dropdown helper
+  autoplot_plotly_dropdown(
+    data = snapshots,
+    group_col = ".facets",
+    trace_col = "version",
+    color_map = color_map,
+    legend_title = "Version"
   )
-  p <- plotly::config(p, doubleClick = "reset")
-  p
 }
 
 
