@@ -152,7 +152,8 @@ autoplot.epi_df <- function(
     }
   }
   object <- autoplot_subsample_keys(
-    object, geo_and_other_keys, .max_keys, interactive
+    object, geo_and_other_keys, .max_keys, interactive,
+    .facet_filter_used = !(.facet_filter %in% c(".response", "none"))
   )
 
   p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value))
@@ -175,7 +176,13 @@ autoplot.epi_df <- function(
       ggplot2::scale_colour_viridis_d(name = "")
   } else { # none
     p <- p +
-      ggplot2::geom_line(ggplot2::aes(y = .data$.response, group = interaction(!!!all_avail)), color = .base_color)
+      ggplot2::geom_line(
+        ggplot2::aes(
+          y = .data$.response,
+          group = interaction(!!!all_avail)
+        ),
+        color = .base_color
+      )
   }
 
   if (".facets" %in% names(object)) {
@@ -238,7 +245,7 @@ autoplot_check_viable_response_vars <- function(
 
 
 autoplot_subsample_keys <- function(
-  object, geo_and_other_keys, .max_keys, interactive
+  object, geo_and_other_keys, .max_keys, interactive, .facet_filter_used
 ) {
   if (interactive || is.infinite(.max_keys)) {
     return(object)
@@ -256,34 +263,49 @@ autoplot_subsample_keys <- function(
 
   max_keys_val <- .max_keys
   sampled_epikeys <- sample(unique_epikeys, max_keys_val)
-  cli::cli_warn(
-    c("Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
-      i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
-      i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`.",
-      i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`."
-    ),
-    class = "epiprocess__autoplot_max_keys_exceeded"
+
+  msg <- c(
+    "Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
+    i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
+    i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`."
   )
+  if (!.facet_filter_used) {
+    msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
+  }
+
+  cli::cli_warn(msg, class = "epiprocess__autoplot_max_keys_exceeded")
   object[epikey_combinations %in% sampled_epikeys, ]
 }
 
 
 autoplot_interactive_df <- function(p, object, .max_keys) {
   rlang::check_installed("plotly")
+
   p_plotly <- plotly::ggplotly(p)
+
   if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
-    trace_names <- purrr::map_chr(p_plotly$x$data, function(tr) if (is.null(tr$name)) "" else tr$name)
-    unique_names <- unique(trace_names[trace_names != ""])
-    if (length(unique_names) > .max_keys) {
-      keep_names <- utils::head(unique_names, .max_keys)
-      for (i in seq_along(p_plotly$x$data)) {
-        t_name <- p_plotly$x$data[[i]]$name
-        if (!is.null(t_name) && t_name != "" && !(t_name %in% keep_names)) {
-          p_plotly$x$data[[i]]$visible <- "legendonly"
-        }
-      }
+    trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
+    keys <- unique(trace_names[trace_names != ""])
+    if (length(keys) > .max_keys) {
+      # Keys to keep
+      keep <- keys[seq_len(.max_keys)]
+      p_plotly$x$data <- purrr::map(p_plotly$x$data, \(tr) {
+        # Do not display keys that are not kept (still showing legend)
+        if ((tr$name %||% "") %in% setdiff(keys, keep)) tr$visible <- "legendonly"
+        tr
+      })
     }
   }
+
+  # Fix y-axis range
+  p_plotly <- p_plotly %>%
+    plotly::layout(
+      yaxis = list(fixedrange = T)
+    ) %>%
+    plotly::config(
+      modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")
+    )
+
   return(p_plotly)
 }
 
@@ -544,9 +566,14 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_d
     )
   })
 
+  time_range <- range(snapshots$time_value, na.rm = TRUE)
   p <- plotly::layout(p,
     title = list(text = paste("Key:", unique_groups[1])),
-    xaxis = list(title = "Date"),
+    xaxis = list(
+      title = "Date",
+      minallowed = as.character(time_range[1]),
+      maxallowed = as.character(time_range[2])
+    ),
     yaxis = list(title = ""),
     legend = list(title = list(text = "Version")),
     updatemenus = list(
@@ -558,9 +585,10 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_d
       )
     )
   )
-
+  p <- plotly::config(p, doubleClick = "reset")
   p
 }
+
 
 #' @export
 #' @rdname autoplot-epi
