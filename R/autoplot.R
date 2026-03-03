@@ -422,7 +422,7 @@ autoplot_interactive_df <- function(p, object, .max_keys) {
   # Fix y-axis range
   p_plotly <- p_plotly %>%
     plotly::layout(
-      yaxis = list(fixedrange = T)
+      yaxis = list(fixedrange = TRUE)
     ) %>%
     plotly::config(
       modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")
