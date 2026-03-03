@@ -137,10 +137,22 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
   tshift <- time_delta_standardize(tshift, x$time_type, "fast")
   version_type <- guess_time_type(x$DT$version)
   vshift <- time_delta_standardize(vshift, version_type, "fast")
+  # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
   if (is.null(vtol)) {
+    # We want default vtol to be reasonably large to in order to adapt
+    # to normal variance in pipeline schedules as well as transient
+    # pipeline issues and holiday-shifted schedules, which seem pretty
+    # common.
     ek_vars <- c("geo_value", x$other_keys)
     x_var_diff_ekvs <- epix_diff_keys(x, ek_vars, var)
-    low_vgap <- x_var_diff_ekvs %>%
+    # First, we want to prevent vnominal1 + vdeparture1 + vtol from
+    # regularly crossing vnominal2 + vdeparture2 (i.e., vactual1 +
+    # vtol < vactual2).  With vtol approach we're not going to try to
+    # infer the vnominals.  Let's just assume we've seen enough draws
+    # that we can just select vtol < vactual2 - vactual1 for all/most
+    # seen vactual1, vactual2.
+    low_vstride <-
+      x_var_diff_ekvs %>%
       summarize(.by = all_of(ek_vars),
                 # re-using reserved name `version` for version gaps:
                 version = diff(sort(unique(version)))) %>%
@@ -150,15 +162,27 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
       # special data set overhauls, we don't want presence of the
       # latter to make us balk at the former:
       quantile(probs = 0.10) %>%
-      unname()
-    # TODO something like vtol_excl <- min(min_vgap, tspacing/2)
-    # except may need to standardize types, apply some sort of floor,
-    # etc.
-    stop("TODO finish")
+      unname() %>%
+      time_delta_standardize(version_type)
+    # We also want to prevent version - lag from being ambiguous in
+    # what time it refers to, so something like preventing t1 + lag +
+    # vtol from crossing t2 + lag - vtol.  So choose vtol < (t2 -
+    # t1)/2 = unit_time_delta(time_type)/2.
+    approx_floor_half_tstride_in_vspace <-
+      unit_time_delta(x$time_type) %>%
+      time_delta_to_approx_difftime(x$time_type) %>%
+      `/`(2) %>%
+      difftime_approx_floor_time_delta(version_type) %>%
+      time_delta_standardize(version_type)
+    vtol_excl <- min(c(low_vstride, approx_floor_half_tstride_in_vspace))
+    # We want vtol inclusive so user could possibly say vtol = 0.  So
+    # we need some way to specify or bump down "exclusive" vtols.
+    vtol <- vtol_excl - unit_time_delta(version_type)
   } else {
-    # TODO difftime -> approx floor delta?
-    vtol <- time_delta_standardize(vtol, version_type, "fast")
-    stop("TODO finish")
+    if (is.difftime(vtol)) {
+      vtol <- difftime_approx_floor_time_delta(vtol, version_type)
+    }
+    vtol <- time_delta_standardize(vtol, version_type)
   }
   stop("TODO finish")
 }

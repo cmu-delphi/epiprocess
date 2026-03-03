@@ -940,7 +940,10 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
 }
 
 # XXX probably should add the missing parts of the coercion hierarchy
-# below in preparation for datetime versions.
+# below in preparation for datetime versions.  Though chr <->
+# POSIX{c,l}t may also need to accommodate actual datetime
+# formats... but would want to make sure this is actually
+# unambiguous and locale-independent.
 
 #' Version of [`vctrs::vec_cast`] that allows chr <-> date
 #'
