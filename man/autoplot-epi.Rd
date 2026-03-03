@@ -15,6 +15,8 @@
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
+  .max_keys = 10,
+  interactive = FALSE,
   .max_facets = deprecated()
 )
 
@@ -24,7 +26,9 @@
   .base_color = "black",
   .versions = NULL,
   .mark_versions = FALSE,
-  .facet_filter = NULL
+  .facet_filter = NULL,
+  .max_keys = 6,
+  interactive = FALSE
 )
 
 \method{plot}{epi_df}(x, ...)
@@ -67,6 +71,15 @@ which are implicitly combined with \code{&}. When multiple variables are selecte
 with \code{...}, their names can be filtered in combination with other factors
 by using \code{.response_name}. See the examples below.}
 
+\item{.max_keys}{Maximum number of key combinations to display. If the data
+contains more key combinations than this limit, a random sample of size
+\code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
+display all keys. Does not apply if \code{interactive = TRUE}.}
+
+\item{interactive}{Logical. If \code{TRUE}, returns an interactive
+\code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+This is especially useful for exploring datasets with many keys.}
+
 \item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 
 \item{.versions}{Select which versions will be displayed. By default,
@@ -86,7 +99,7 @@ of versions.}
 a vertical line. Note that displaying many versions can become busy.}
 }
 \value{
-A \link[ggplot2:ggplot]{ggplot2::ggplot} object
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object OR \link[plotly:plotly]{plotly::plotly} object if \code{interactive = TRUE}
 }
 \description{
 Automatically plot an epi_df or epi_archive

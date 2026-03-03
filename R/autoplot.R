@@ -31,7 +31,7 @@
 #' @param .max_keys Maximum number of key combinations to display. If the data
 #'   contains more key combinations than this limit, a random sample of size
 #'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `interactive = TRUE`. Default is 6.
+#'   display all keys. Does not apply if `interactive = TRUE`.
 #' @param interactive Logical. If `TRUE`, returns an interactive
 #'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
 #'   This is especially useful for exploring datasets with many keys. Default is
@@ -445,6 +445,13 @@ autoplot_interactive_df <- function(p, object, .max_keys) {
 #'   of versions.
 #' @param .mark_versions Logical. Indicate whether to mark each version with
 #'   a vertical line. Note that displaying many versions can become busy.
+#' @param .max_keys Maximum number of key combinations to display. If the data
+#'   contains more key combinations than this limit, a random sample of size
+#'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
+#'   display all keys. Does not apply if `interactive = TRUE`.
+#' @param interactive Logical. If `TRUE`, returns an interactive
+#'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
+#'   This is especially useful for exploring datasets with many keys.
 #'
 #' @export
 #' @rdname autoplot-epi
