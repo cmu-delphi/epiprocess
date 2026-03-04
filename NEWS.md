@@ -5,9 +5,14 @@ indicate development versions beyond 0.x.
 
 # epiprocess 0.12.1
 
+## New features
+
+- `plot_heatmap()` provides heatmap visualization for `epi_df` objects.
+
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
+- `autoplot()` now includes `.max_keys` and `interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown, improving both performance and readability. The `interactive` feature enables interactive plots using Plotly.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
