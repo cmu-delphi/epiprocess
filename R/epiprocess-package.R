@@ -11,8 +11,11 @@
 #' @importFrom checkmate assert_subset
 #' @importFrom checkmate assert_tibble
 #' @importFrom checkmate assert_true
+#' @importFrom checkmate assert_vector
 #' @importFrom checkmate check_atomic check_data_frame expect_class test_int
+#' @importFrom checkmate check_list
 #' @importFrom checkmate check_names
+#' @importFrom checkmate check_true
 #' @importFrom checkmate test_subset test_set_equal vname
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom cli pluralize

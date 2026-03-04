@@ -128,23 +128,27 @@ epix_diff_keys <- function(x,
 
 extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
 
+# XXX ekts & tvlag rather than ektvs & vrel?
+
 #' @export
-extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) {
+extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL, ...) {
+  # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
   assert_class(ektvs, "tbl_df")
-  ektvs <- tblish_cast_cols(ektvs, x$DT[, key_colnames(x)])
+  ektvs <- tblish_cast_cols(ektvs, x$DT[0L, key_colnames(x), with = FALSE])
   assert_string(var)
   assert_subset(var, names(x$DT))
-  tshift <- time_delta_standardize(tshift, x$time_type, "fast")
+  assert_vector(trel, len = 1L)
+  trel <- time_delta_standardize(trel, x$time_type, "fast")
   version_type <- guess_time_type(x$DT$version)
-  vshift <- time_delta_standardize(vshift, version_type, "fast")
-  # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
+  assert_vector(vrel, len = 1L)
+  vrel <- time_delta_standardize(vrel, version_type, "fast")
+  # We want default vtol to be reasonably large to in order to adapt
+  # to normal variance in pipeline schedules as well as transient
+  # pipeline issues and holiday-shifted schedules, which seem pretty
+  # common.
+  ek_vars <- c("geo_value", x$other_keys)
+  x_var_diff_ekvs <- epix_diff_keys(x, ek_vars, var)
   if (is.null(vtol)) {
-    # We want default vtol to be reasonably large to in order to adapt
-    # to normal variance in pipeline schedules as well as transient
-    # pipeline issues and holiday-shifted schedules, which seem pretty
-    # common.
-    ek_vars <- c("geo_value", x$other_keys)
-    x_var_diff_ekvs <- epix_diff_keys(x, ek_vars, var)
     # First, we want to prevent vnominal1 + vdeparture1 + vtol from
     # regularly crossing vnominal2 + vdeparture2 (i.e., vactual1 +
     # vtol < vactual2).  With vtol approach we're not going to try to
@@ -153,9 +157,9 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
     # seen vactual1, vactual2.
     low_vstride <-
       x_var_diff_ekvs %>%
-      summarize(.by = all_of(ek_vars),
-                # re-using reserved name `version` for version gaps:
-                version = diff(sort(unique(version)))) %>%
+      reframe(.by = all_of(ek_vars),
+              # re-using reserved name `version` for version gaps:
+              version = diff(sort(unique(version)))) %>%
       .$version %>%
       # Don't be too strict; if schedule isn't perfectly regular
       # (e.g., there are delays around holidays) plus there are
@@ -172,7 +176,8 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
       unit_time_delta(x$time_type) %>%
       time_delta_to_approx_difftime(x$time_type) %>%
       `/`(2) %>%
-      difftime_approx_floor_time_delta(version_type) %>%
+      difftime_approx_ceiling_time_delta(version_type) %>%
+      # ^ a < b   <==>   a < ceil(b),   for integer a
       time_delta_standardize(version_type)
     vtol_threshold <- min(c(low_vstride, approx_floor_half_tstride_in_vspace))
     vtol <- exclusive(vtol_threshold)
@@ -184,7 +189,35 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
     vtol_threshold <- time_delta_standardize(vtol_threshold, version_type)
     vtol$threshold <- vtol_threshold
   }
-  stop("TODO finish")
+  check_dots_empty()
+
+  lookup_ektvs <- ektvs %>%
+    mutate(time_value = time_value + trel, version = version + vrel)
+
+  # Find the closest "real" version for `var` for each lookup
+  ekv_vars <- c(ek_vars, "version")
+  setDT(x_var_diff_ekvs, key = ekv_vars)
+  lookup_versions_dtbl <- x_var_diff_ekvs[
+    as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
+    list(result = .SD[[var]], real_version = x.version, vdiff = x.version - i.version)
+  ]
+  # ^ `as.list` is needed to make `x.version` and `i.version` work
+
+  lookup_ektvs$version <- lookup_versions_dtbl$real_version
+  if (vtol$inclusive) {
+    lookup_ektvs <- lookup_ektvs[lookup_versions_dtbl[, abs(vdiff) <= vtol$threshold]]
+  } else {
+    lookup_ektvs <- lookup_ektvs[lookup_versions_dtbl[, abs(vdiff) < vtol$threshold]]
+  }
+  stop("FIXME this should not be a filter, but rather should change the result entries to NA")
+
+  result <- x$DT[
+    as.list(lookup_ektvs), on = key(x$DT), roll = TRUE,
+    var,
+    with = FALSE
+  ]
+
+  result
 }
 
 # XXX Reconsidering `vtol` arg... we are going to constrain ektvs to

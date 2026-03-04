@@ -7,6 +7,10 @@
 # XXX make all bound parameters throughout the package accept these
 # classes before exporting.
 
+# XXX if we want to implement some mathematical operations on this,
+# we'll need to constrain it to be either an upper bound or a lower
+# bound.
+
 #' Make a new epiprocess_bound wrapper object, with no input validation
 #'
 #' @keywords internal

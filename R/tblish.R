@@ -72,10 +72,12 @@ tblish_cast_cols <- function(x, cols_to) UseMethod("tblish_cast_cols")
 #' @export
 tblish_cast_cols.default <- function(x, cols_to) {
   assert_true(obj_is_tblish(x))
+  assert(check_true(obj_is_tblish(cols_to)),
+         check_list(cols_to, names = "named"))
   x_head <- tblish_head(x, 0L) # avoid collecting huge results into memory
   for (colname in names(cols_to)) {
     col_to <- cols_to[[colname]]
-    x <- tblish_inset2(x, colname, vec_cast_patched(x[[colname]], col_to))
+    tblish_col(x, colname) <- vec_cast_patched(tblish_col(x, colname), col_to)
   }
   x
 }
