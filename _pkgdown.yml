@@ -83,6 +83,7 @@ reference:
   - title: Basic analysis and visualization
   - contents:
       - starts_with("autoplot")
+      - plot_heatmap
       - starts_with("print")
       - revision_summary
 
