@@ -174,15 +174,15 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, tshift, vshift, vtol = N
       `/`(2) %>%
       difftime_approx_floor_time_delta(version_type) %>%
       time_delta_standardize(version_type)
-    vtol_excl <- min(c(low_vstride, approx_floor_half_tstride_in_vspace))
-    # We want vtol inclusive so user could possibly say vtol = 0.  So
-    # we need some way to specify or bump down "exclusive" vtols.
-    vtol <- vtol_excl - unit_time_delta(version_type)
+    vtol_threshold <- min(c(low_vstride, approx_floor_half_tstride_in_vspace))
+    vtol <- exclusive(vtol_threshold)
   } else {
-    if (is.difftime(vtol)) {
-      vtol <- difftime_approx_floor_time_delta(vtol, version_type)
+    vtol <- as_inclusive_if_not_bound(vtol)
+    if (is.difftime(vtol$threshold)) {
+      vtol$threshold <- difftime_approx_floor_time_delta(vtol$threshold, version_type)
     }
-    vtol <- time_delta_standardize(vtol, version_type)
+    vtol_threshold <- time_delta_standardize(vtol_threshold, version_type)
+    vtol$threshold <- vtol_threshold
   }
   stop("TODO finish")
 }

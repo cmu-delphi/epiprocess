@@ -99,6 +99,7 @@ Collate:
     'archive.R'
     'arx-nearcaster.R'
     'autoplot.R'
+    'bound.R'
     'correlation.R'
     'epi_df.R'
     'epi_df_forbidden_methods.R'

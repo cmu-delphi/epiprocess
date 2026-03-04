@@ -34,6 +34,7 @@
 #' @importFrom tools toTitleCase
 #' @importFrom utils str
 #' @importFrom vctrs new_data_frame
+#' @importFrom vctrs vec_as_location2
 #' @importFrom vctrs vec_cast
 #' @importFrom vctrs vec_data
 #' @importFrom vctrs vec_detect_missing
