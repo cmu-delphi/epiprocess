@@ -197,25 +197,23 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL,
   # Find the closest "real" version for `var` for each lookup
   ekv_vars <- c(ek_vars, "version")
   setDT(x_var_diff_ekvs, key = ekv_vars)
-  lookup_versions_dtbl <- x_var_diff_ekvs[
+  real_versions_info <- x_var_diff_ekvs[
     as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
-    list(result = .SD[[var]], real_version = x.version, vdiff = x.version - i.version)
+    list(real_version = x.version, vdiff = x.version - i.version)
   ]
   # ^ `as.list` is needed to make `x.version` and `i.version` work
 
-  lookup_ektvs$version <- lookup_versions_dtbl$real_version
-  if (vtol$inclusive) {
-    lookup_ektvs <- lookup_ektvs[lookup_versions_dtbl[, abs(vdiff) <= vtol$threshold]]
-  } else {
-    lookup_ektvs <- lookup_ektvs[lookup_versions_dtbl[, abs(vdiff) < vtol$threshold]]
-  }
-  stop("FIXME this should not be a filter, but rather should change the result entries to NA")
-
+  lookup_ektvs$version <- real_versions_info$real_version
   result <- x$DT[
     as.list(lookup_ektvs), on = key(x$DT), roll = TRUE,
     var,
     with = FALSE
   ]
+  if (vtol$inclusive) {
+    result[real_versions_info[, abs(vdiff) > vtol$threshold]] <- NA
+  } else {
+    result[real_versions_info[, abs(vdiff) >= vtol$threshold]] <- NA
+  }
 
   result
 }
