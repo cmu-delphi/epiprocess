@@ -552,7 +552,7 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "version", version_column_names())
 
   x <- pivot_epi_data(x, input_format, signal_var,
-    id_cols = c("geo_value", "time_value", "version", other_keys),
+    id_cols = c("geo_value", other_keys, "time_value", "version"),
     caller_name = "as_epi_archive"
   )
 

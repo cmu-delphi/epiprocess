@@ -255,7 +255,7 @@ as_epi_df.tbl_df <- function(
   x <- guess_column_name(x, "geo_value", geo_column_names())
 
   x <- pivot_epi_data(x, input_format, signal_var,
-    id_cols = c("geo_value", "time_value", other_keys),
+    id_cols = c("geo_value", other_keys, "time_value"),
     caller_name = "as_epi_df"
   )
 
