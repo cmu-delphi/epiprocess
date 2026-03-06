@@ -511,6 +511,14 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
+#' @param input_format One of "auto", "wide", or "long". If "auto" (the default),
+#'   the function will try to guess the format of the input data. If the data
+#'   contains a column that looks like a signal identifier (e.g., "signal",
+#'   "name", "signal_name", etc.), it will be treated as "long" format and
+#'   pivoted to "wide" format.
+#' @param signal_var If `input_format = "long"`, the name of the column that
+#'   contains the signal identifiers. If `input_format = "auto"`, the function
+#'   will try to guess this column.
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
@@ -530,14 +538,23 @@ as_epi_archive <- function(
   compactify = TRUE,
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
-  .versions_end = max_version_with_row_in(x), ...,
+  .versions_end = max_version_with_row_in(x),
+  input_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...,
   versions_end = .versions_end
 ) {
+  input_format <- rlang::arg_match(input_format)
   assert_data_frame(x)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
   x <- guess_column_name(x, "version", version_column_names())
+
+  x <- pivot_epi_data(x, input_format, signal_var,
+    id_cols = c("geo_value", "time_value", "version", other_keys),
+    caller_name = "as_epi_archive"
+  )
 
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
