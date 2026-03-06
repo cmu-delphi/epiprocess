@@ -226,12 +226,30 @@ autoplot_check_viable_response_vars <- function(
   }
   vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
-    vars <- tidyselect::eval_select(names(allowed)[1], object)
-    cli::cli_warn(
-      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
-      class = "epiprocess__unspecified_plot_var",
-      call = call
-    )
+    if (length(allowed) == 1L) {
+      vars <- tidyselect::eval_select(names(allowed)[1], object)
+      cli::cli_warn(
+        "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
+        class = "epiprocess__unspecified_plot_var",
+        call = call
+      )
+    } else if ("value" %in% names(allowed)) {
+      vars <- tidyselect::eval_select("value", object)
+      cli::cli_warn(
+        "Plot variable was unspecified. Automatically selecting {.var value}.",
+        class = "epiprocess__unspecified_plot_var",
+        call = call
+      )
+    } else {
+      cli::cli_abort(
+        c(
+          "Multiple candidate plot columns: {.var {names(allowed)}}.",
+          i = "Specify the column(s) to plot, e.g. `autoplot(x, {names(allowed)[1]})`."
+        ),
+        class = "epiprocess__multiple_plot_candidates",
+        call = call
+      )
+    }
   } else { # if variables were specified, ensure that they are numeric
     ok <- names(vars) %in% names(allowed)
     if (!any(ok)) {
