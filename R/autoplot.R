@@ -551,12 +551,6 @@ autoplot.epi_archive <- function(object, ...,
     .max_keys = eff_max_keys
   ) + ggplot2::xlab("Date")
 
-  if (interactive) {
-    # Override the facet layer so plotly doesn't generate empty grid panels.
-    # We still want `.facet_by = "all"` above to apply `.facet_filter` properly.
-    bp <- bp + ggplot2::facet_null()
-  }
-
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
   all_avail <- rlang::syms(as.list(c(
     geo_and_other_keys,
@@ -581,13 +575,9 @@ autoplot.epi_archive <- function(object, ...,
   } else {
     snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
   }
-  if (".facets" %in% names(bp$data)) {
-    snapshots <- snapshots %>%
-      dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
-  } else {
-    snapshots <- snapshots %>%
-      dplyr::filter(!is.na(.response))
-  }
+
+  snapshots <- snapshots %>%
+    dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
 
   if (interactive) {
     return(autoplot_interactive_archive(
