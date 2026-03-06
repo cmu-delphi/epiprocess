@@ -254,18 +254,20 @@ autoplot_check_viable_response_vars <- function(
     ok <- names(vars) %in% names(allowed)
     if (!any(ok)) {
       cli::cli_abort(
-        "None of the requested variables {.var {names(vars)}} are numeric.",
+        "{?The requested variable /None of the requested variables }{.var {names(vars)}} {?is not/are} numeric.",
         class = "epiprocess__all_requested_vars_not_numeric",
-        call = call
+        call = call,
+        qty = length(vars)
       )
     } else if (!all(ok)) {
       cli::cli_warn(
         c(
-          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
+          "{?The/Only the} requested variable{?s} {.var {names(vars)[ok]}} {?is/are} numeric.",
           i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
         ),
         class = "epiprocess__some_requested_vars_not_numeric",
-        call = call
+        call = call,
+        qty = sum(ok)
       )
       vars <- vars[ok]
     }
