@@ -8,11 +8,13 @@ indicate development versions beyond 0.x.
 ## New features
 
 - `plot_heatmap()` provides heatmap visualization for `epi_df` objects.
+- `as_epi_df()` and `as_epi_archive()` now support an `input_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect long-format data (e.g., from `covidcast`) and automatically pivot it to a wide format.
 
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
 - `autoplot()` now includes `.max_keys` and `interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown, improving both performance and readability. The `interactive` feature enables interactive plots using Plotly.
+- `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
