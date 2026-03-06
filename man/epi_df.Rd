@@ -22,14 +22,30 @@ as_epi_df(x, ...)
   time_type = deprecated(),
   as_of,
   other_keys = character(),
+  input_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...
 )
 
 \method{as_epi_df}{grouped_df}(x, ...)
 
-\method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
+\method{as_epi_df}{data.frame}(
+  x,
+  as_of,
+  other_keys = character(),
+  input_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...
+)
 
-\method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
+\method{as_epi_df}{tbl_ts}(
+  x,
+  as_of,
+  other_keys = character(),
+  input_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...
+)
 
 is_epi_df(x)
 
@@ -66,6 +82,16 @@ then the current day-time will be used.}
 
 \item{other_keys}{If your tibble has additional keys, be sure to specify them
 as a character vector here (typical examples are "age" or sub-geographies).}
+
+\item{input_format}{One of "auto", "wide", or "long". If "auto" (the default),
+the function will try to guess the format of the input data. If the data
+contains a column that looks like a signal identifier (e.g., "signal",
+"name", "signal_name", etc.), it will be treated as "long" format and
+pivoted to "wide" format.}
+
+\item{signal_var}{If \code{input_format = "long"}, the name of the column that
+contains the signal identifiers. If \code{input_format = "auto"}, the function
+will try to guess this column.}
 }
 \value{
 \itemize{
