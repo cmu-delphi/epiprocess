@@ -642,20 +642,37 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 
   cat_line(format_message(
     c(
-      ">" = if (class) "An `epi_archive` object, with metadata:",
+      ">" = if (class) "An `epi_archive` object, with:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
         "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
       "i" = if (nrow(x$DT) != 0L) {
-        "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}"
+        # \u00a0 is non-breaking space cli won't crush, to align with version range
+        line <- 'Time range:{strrep("\u00a0", 3)} {min(x$DT$time_value)} -- {max(x$DT$time_value)}'
+        if (time_type(x) %in% c("day", "week")) {
+          ending_lt_wday <- attr(time_type(x), "ending_lt_wday")
+          if (time_type(x) == "week" && !is.null(ending_lt_wday)) {
+            repr_lt_wday <- as.POSIXlt(x$DT$time_value[[1L]])$wday
+            line <- paste0(line, " (times are
+                                    {lt_wday_abbr((ending_lt_wday-6L)%%7L)}--{lt_wday_abbr(ending_lt_wday)}
+                                    weeks, represented by {lt_wday_abbr(repr_lt_wday)})")
+          } else {
+            line <- paste0(line, " (times are {time_type(x)}s)")
+          }
+        }
+        line
       },
       "i" = if (nrow(x$DT) != 0L) {
-        "First/last version with update: {min(x$DT$version)} / {max(x$DT$version)}"
+        max_update_version <- max(x$DT$version)
+        if (vec_equal(max_update_version, x$versions_end)) {
+          "Version range: {min(x$DT$version)} -- {max_update_version}"
+        } else {
+          "Version range: {min(x$DT$version)} -- {x$versions_end}, but no row updates recorded after {max_update_version}"
+        }
       },
       "i" = if (!is.na(x$clobberable_versions_start)) {
         "Clobberable versions start: {x$clobberable_versions_start}"
       },
-      "i" = "Versions end: {x$versions_end}",
       "i" = "A preview of the table ({nrow(x$DT)} rows x {ncol(x$DT)} columns):"
     )
   ))

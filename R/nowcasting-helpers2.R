@@ -126,6 +126,116 @@ epix_diff_keys <- function(x,
   diff_keys
 }
 
+time_type <- function(x) UseMethod("time_type")
+
+#' @export
+time_type.epi_df <- function(x) attr(x, "metadata")$time_type
+
+#' @export
+time_type.epi_archive <- function(x) x$time_type
+
+# Not making a `time_type<-` as that implies validation.
+
+set_time_type0 <- function(x, value) UseMethod("set_time_type0")
+
+#' @export
+set_time_type0.epi_df <- function(x, value) {
+  attr(x, "metadata")$time_type <- value
+  x
+}
+
+#' @export
+set_time_type0.epi_archive <- function(x, value) {
+  x$time_type <- value
+  x
+}
+
+as_lt_wday <- function(wday_name = NULL, lt_wday = NULL, call = caller_env()) {
+  provided <- names(which(!vapply(list(wday_name = wday_name, lt_wday = lt_wday), is.null, logical(1L))))
+  if (length(provided) == 0L) {
+      cli_abort("Either `wday_name` or `iso_wday` must be provided", call = call)
+  } else if (length(provided) > 1L) {
+      cli_abort("`wday_name` and `iso_wday` are mutually exclusive", call = call)
+  }
+  switch(provided,
+    wday_name = {
+      assert_string(wday_name)
+      switch(wday_name,
+        "Sun" = , "Sunday" = 0, # (dbl backing, since Dates are already dbl backed)
+        "Mon" = , "Monday" = 1,
+        "Tue" = , "Tuesday" = 2,
+        "Wed" = , "Wednesday" = 3,
+        "Thu" = , "Thursday" = 4,
+        "Fri" = , "Friday" = 5,
+        "Sat" = , "Saturday" = 6,
+        cli_abort("`wday_name` must be a English wday name or 3-letter abbreviation,
+                   not {format_chr_deparse(wday_name)}",
+                  call = call)
+      )
+    },
+    lt_wday = {
+      # (Accepts either dbl or int backing.)
+      assert_int(lt_wday, lower = 0, upper = 6)
+      lt_wday
+    }
+  )
+}
+
+lt_wday_abbr <- function(x) {
+  c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")[[x + 1L]]
+}
+
+set_time_week_end <- function(x, wday_name = NULL, ..., lt_wday = NULL) {
+  check_dots_empty()
+  if (is.null(wday_name) && is.null(lt_wday)) {
+    # Base on {lubridate}'s default.
+    lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
+    ending_lt_wday <- (lubridate_starting_iso_wday + 6) %% 7
+  } else {
+    ending_lt_wday <- as_lt_wday(wday_name, lt_wday)
+  }
+  time_type <- time_type(x)
+  if (time_type != "week") {
+    cli_abort('time_type of `x` must be "week", not {format_chr_deparse(time_type)}')
+  }
+  attr(time_type, "ending_lt_wday") <- ending_lt_wday
+  x <- set_time_type0(x, time_type)
+  x
+}
+
+# TODO infer_time_week_end / guess_time_week_end.... and integrate into guess_time_type?
+
+# TODO printing week end metadata
+
+time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
+  switch(
+    time_type,
+    day = ,
+    week = {
+      # XXX for week, we currently don't have the metadata to know the
+      # end of the week; so we'll have to measure relative to the
+      # representative wday.
+      if (inherits(version_ptype, "Date")) {
+        time_value
+      } else if (inherits(version_ptype, "POSIXt")) {
+        stop("TODO, carefully considering time zone issues")
+      } else {
+        cli_abort("For `time_type` {format_chr_deparse(time_type)},
+                   `version` must be a Date or POSIXt,
+                   not an object of class {format_chr_deparse(version_ptype)}")
+      }
+    },
+    yearmonth = {
+      assert_class(version_ptype, "yearmonth")
+      time_value
+    },
+    integer = {
+      assert_numeric(version_ptype)
+      time_value
+    }
+  )
+}
+
 extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
 
 # XXX ekts & tvlag rather than ektvs & vrel?
@@ -217,6 +327,8 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL,
 
   result
 }
+
+
 
 # XXX Reconsidering `vtol` arg... we are going to constrain ektvs to
 # "real" ones anyway... except if vshift is nonzero, then we need the

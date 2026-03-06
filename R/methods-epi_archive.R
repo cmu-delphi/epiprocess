@@ -128,7 +128,8 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
     as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::select(-"version") %>%
-    as_epi_df(as_of = version, other_keys = other_keys)
+    as_epi_df(as_of = version, other_keys = other_keys) %>%
+    set_time_type0(time_type(x))
 
   return(as_of_epi_df)
 }

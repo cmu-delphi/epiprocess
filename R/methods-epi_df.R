@@ -71,7 +71,18 @@ print.epi_df <- function(x, ...) {
     prettyNum(ncol(x), ","), "with metadata:\n"
   )
   cat(sprintf("* %-9s = %s\n", "geo_type", attributes(x)$metadata$geo_type))
-  cat(sprintf("* %-9s = %s\n", "time_type", attributes(x)$metadata$time_type))
+  x_time_type <- time_type(x)
+  ending_lt_wday <- attr(x_time_type, "ending_lt_wday")
+  if (x_time_type == "week" && !is.null(ending_lt_wday)) {
+    if (nrow(x) > 0L) {
+      repr_lt_wday <- as.POSIXlt(x$time_value[[1L]])$wday
+      cat(sprintf("* %-9s = %s (represented by %s, ending on %s)\n", "time_type", x_time_type, lt_wday_abbr(repr_lt_wday), lt_wday_abbr(ending_lt_wday)))
+    } else {
+      cat(sprintf("* %-9s = %s (ending on %s)\n", "time_type", x_time_type, lt_wday_abbr(ending_lt_wday)))
+    }
+  } else {
+    cat(sprintf("* %-9s = %s\n", "time_type", x_time_type))
+  }
   ok <- attributes(x)$metadata$other_keys
   if (length(ok) > 0) {
     cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))

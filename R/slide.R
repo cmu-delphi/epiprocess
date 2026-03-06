@@ -119,7 +119,6 @@
 #'   - .ref_time_value, which is the element of `.ref_time_values` that
 #'     determined the time window for the current computation.
 #'
-#' @importFrom lubridate days weeks
 #' @importFrom dplyr group_map group_vars filter select
 #' @importFrom rlang .data .env !! enquos sym env missing_arg
 #' @export
@@ -686,7 +685,6 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #' @importFrom glue glue
 #' @importFrom purrr map map_lgl
 #' @importFrom data.table frollmean frollsum frollapply
-#' @importFrom lubridate as.period
 #' @importFrom checkmate assert_function
 #' @importFrom slider slide_sum slide_prod slide_mean slide_min slide_max slide_all slide_any
 #' @export
