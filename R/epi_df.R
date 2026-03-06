@@ -208,6 +208,14 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #' @order 1
 #' @param x An `epi_df`, `data.frame`, [tibble::tibble], or [tsibble::tsibble]
 #'   to be converted
+#' @param input_format One of "auto", "wide", or "long". If "auto" (the default),
+#'   the function will try to guess the format of the input data. If the data
+#'   contains a column that looks like a signal identifier (e.g., "signal",
+#'   "name", "signal_name", etc.), it will be treated as "long" format and
+#'   pivoted to "wide" format.
+#' @param signal_var If `input_format = "long"`, the name of the column that
+#'   contains the signal identifiers. If `input_format = "auto"`, the function
+#'   will try to guess this column.
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example, `geo_value = STATEFP, time_value = end_date`.
 #' @return * Of `as_epi_df()`: an (ungrouped) `epi_df`
@@ -229,8 +237,6 @@ as_epi_df.epi_df <- function(x, ...) {
 #' @rdname epi_df
 #' @order 1
 #' @importFrom rlang .data
-#' @importFrom tidyselect any_of
-#' @importFrom cli cli_inform
 #' @method as_epi_df tbl_df
 #' @export
 as_epi_df.tbl_df <- function(
@@ -239,11 +245,20 @@ as_epi_df.tbl_df <- function(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
+  input_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...
 ) {
+  input_format <- rlang::arg_match(input_format)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
+
+  x <- pivot_epi_data(x, input_format, signal_var,
+    id_cols = c("geo_value", "time_value", other_keys),
+    caller_name = "as_epi_df"
+  )
+
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
       "Either columns `geo_value` and `time_value` or related columns
@@ -315,20 +330,30 @@ as_epi_df.grouped_df <- function(x, ...) {
 #' @order 1
 #' @method as_epi_df data.frame
 #' @export
-as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
-  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
+                                 input_format = c("auto", "wide", "long"),
+                                 signal_var = NULL, ...) {
+  as_epi_df(
+    x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
+    input_format = input_format, signal_var = signal_var, ...
+  )
 }
 
 #' @rdname epi_df
 #' @order 1
 #' @method as_epi_df tbl_ts
 #' @export
-as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
+as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(),
+                             input_format = c("auto", "wide", "long"),
+                             signal_var = NULL, ...) {
   tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) > 0) {
     other_keys <- unique(c(other_keys, tsibble_other_keys))
   }
-  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+  as_epi_df(
+    x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
+    input_format = input_format, signal_var = signal_var, ...
+  )
 }
 
 #' Test for `epi_df` format
