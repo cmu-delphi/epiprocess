@@ -51,6 +51,34 @@ test_that("autoplot warns when a variable is not specified, and lists the auto-s
   )
 })
 
+test_that("autoplot prefers `value` when multiple numeric columns are present", {
+  test_date <- as.Date("2020-01-01")
+  df <- dplyr::tibble(
+    geo_value = "ak", time_value = test_date + 1:5,
+    value = 11:15, other = 1:5
+  ) %>% as_epi_df()
+
+  expect_warning(
+    autoplot(df),
+    regexp = "Automatically selecting `value`",
+    class = "epiprocess__unspecified_plot_var"
+  )
+})
+
+test_that("autoplot errors when multiple numeric columns are present and no `value` exists", {
+  test_date <- as.Date("2020-01-01")
+  df <- dplyr::tibble(
+    geo_value = "ak", time_value = test_date + 1:5,
+    cases = 11:15, deaths = 1:5
+  ) %>% as_epi_df()
+
+  expect_error(
+    autoplot(df),
+    regexp = "Multiple candidate plot columns: `cases` and `deaths`",
+    class = "epiprocess__multiple_plot_candidates"
+  )
+})
+
 test_that("autoplot errors when all specified columns are not numeric, and lists column names", {
   expect_error(autoplot(ungrouped_chr, value),
     regexp = ".*value.*",
@@ -64,7 +92,7 @@ test_that("autoplot errors when all specified columns are not numeric, and lists
   )
 
   expect_error(autoplot(grouped_chr, value),
-    regexp = ".*variables `value` are.*",
+    regexp = "The requested variable `value` is not numeric.",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 })
@@ -72,13 +100,13 @@ test_that("autoplot errors when all specified columns are not numeric, and lists
 test_that("autoplot warns when some specified columns are not numeric, and lists column names", {
   testdf <- mutate(ungrouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*`value` are numeric.*cannot display `value2`.*",
+    regexp = ".*variable `value` is numeric.*cannot display `value2`.*",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 
   testdf <- mutate(grouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*`value` are numeric.*cannot display `value2`.*",
+    regexp = ".*variable `value` is numeric.*cannot display `value2`.*",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 })
