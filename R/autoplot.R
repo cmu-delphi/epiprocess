@@ -270,7 +270,7 @@ autoplot_subsample_keys <- function(
     return(object)
   }
 
-  max_keys_val <- .max_keys
+  max_keys_val <- .max_keys # {cli}-compatible name
   sampled_epikeys <- sample(unique_epikeys, max_keys_val)
 
   msg <- c(
@@ -282,7 +282,7 @@ autoplot_subsample_keys <- function(
     msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
   }
 
-  cli::cli_warn(msg, class = "epiprocess__autoplot_max_keys_exceeded")
+  cli::cli_warn(msg, class = "epiprocess__autoplot__max_keys_exceeded")
   object[epikey_combinations %in% sampled_epikeys, ]
 }
 

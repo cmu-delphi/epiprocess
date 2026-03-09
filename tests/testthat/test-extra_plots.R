@@ -57,5 +57,5 @@ test_that("plot_heatmap subsamples keys", {
 
 test_that("plot_heatmap errors on non-epi_df input", {
   df <- data.frame(a = 1, b = 2)
-  expect_error(plot_heatmap(df), class = "epiprocess__epi_plot_heatmap_invalid_x")
+  expect_error(plot_heatmap(df), class = "epiprocess__plot_heatmap__invalid_x")
 })

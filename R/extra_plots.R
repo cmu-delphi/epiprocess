@@ -17,7 +17,7 @@ plot_heatmap <- function(x, fill = NULL, ...,
   # Validate that x is an epi_df
   if (!inherits(x, "epi_df")) {
     cli::cli_abort("x must be an `epi_df` object.",
-      class = "epiprocess__epi_plot_heatmap_invalid_x"
+      class = "epiprocess__plot_heatmap__invalid_x"
     )
   }
 

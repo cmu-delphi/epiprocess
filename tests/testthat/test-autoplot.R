@@ -98,7 +98,7 @@ test_that("autoplot_subsample_keys warning", {
       df, "geo_value",
       .max_keys = 10, interactive = FALSE, .facet_used = FALSE
     ),
-    class = "epiprocess__autoplot_max_keys_exceeded"
+    class = "epiprocess__autoplot__max_keys_exceeded"
   )
   expect_equal(length(unique(sampled$geo_value)), 10)
 })
