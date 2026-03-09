@@ -509,7 +509,7 @@ autoplot.epi_archive <- function(object, ...,
   if (is.character(.versions) || length(.versions) == 1L) {
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version - 1, by = .versions)
-  } else if (methods::is(.versions, "Date") || is.numeric(.versions)) {
+  } else if (inherits(.versions, "Date") || is.numeric(.versions)) {
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
   } else {
     cli_abort(
@@ -564,7 +564,7 @@ autoplot.epi_archive <- function(object, ...,
 
   if (.interactive) {
     return(autoplot_interactive_archive(
-      snapshots, .base_color, methods::is(.versions, "Date")
+      snapshots, .base_color, inherits(.versions, "Date")
     ))
   }
 
@@ -575,7 +575,7 @@ autoplot.epi_archive <- function(object, ...,
       mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version))
     )
 
-  if (methods::is(.versions, "Date")) {
+  if (inherits(.versions, "Date")) {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version", trans = "date")
   } else {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
