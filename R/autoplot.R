@@ -37,18 +37,24 @@
 #'   This is especially useful for exploring datasets with many keys. Default is
 #'   `FALSE`.
 #'
-#' @return A [ggplot2::ggplot] object OR [plotly::plotly] object if `interactive = TRUE`
+#' @return A [`ggplot2::ggplot`] object, OR [`plotly::plotly`] object if `interactive = TRUE`
 #' @export
 #' @name autoplot-epi
 #'
 #' @examples
+#'
 #' # -- Use it on an `epi_df`
-#' autoplot(cases_deaths_subset, cases, death_rate_7d_av)
-#' autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
+#' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
+#'
+#' # Launch interactive version in web browser:
+#' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+#'          interactive = TRUE)
+#'
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .color_by = "none",
 #'   .facet_by = "geo_value"
 #' )
+#'
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .color_by = "none",
 #'   .base_color = "red", .facet_by = "geo_value"
@@ -66,6 +72,7 @@
 #'     (.response_name == "death_rate_7d_av" &
 #'       geo_value %in% c("ca", "fl", "ga", "ny"))
 #' )
+#'
 #' # Just an alias for convenience
 #' plot(cases_deaths_subset, cases, death_rate_7d_av,
 #'   .facet_by = "all",
