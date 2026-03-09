@@ -16,8 +16,7 @@
   .base_color = "#3A448F",
   .facet_filter = NULL,
   .max_keys = 10,
-  .interactive = FALSE,
-  .max_facets = deprecated()
+  .interactive = FALSE
 )
 
 \method{autoplot}{epi_archive}(
@@ -79,8 +78,6 @@ display all keys. Does not apply if \code{.interactive = TRUE}.}
 \item{.interactive}{Logical. If \code{TRUE}, returns an interactive
 \code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 This is especially useful for exploring datasets with many keys.}
-
-\item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 
 \item{.versions}{Select which versions will be displayed. By default,
 a separate line will be shown with the data as it would have appeared on
