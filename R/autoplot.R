@@ -295,8 +295,6 @@ autoplot_plotly_dropdown <- function(
   color_map = NULL, .base_color = "#3A448F",
   xaxis_title = "Date", yaxis_title = "", legend_title = ""
 ) {
-  rlang::check_installed("plotly")
-
   unique_groups <- levels(droplevels(as.factor(data[[group_col]])))
 
   # Prepare lines to be added to the plot
@@ -401,8 +399,6 @@ autoplot_plotly_dropdown <- function(
 }
 
 autoplot_interactive_df <- function(p, object, .max_keys) {
-  rlang::check_installed("plotly")
-
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
