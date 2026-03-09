@@ -16,7 +16,7 @@
   .base_color = "#3A448F",
   .facet_filter = NULL,
   .max_keys = 10,
-  interactive = FALSE,
+  .interactive = FALSE,
   .max_facets = deprecated()
 )
 
@@ -28,7 +28,7 @@
   .mark_versions = FALSE,
   .facet_filter = NULL,
   .max_keys = 6,
-  interactive = FALSE
+  .interactive = FALSE
 )
 
 \method{plot}{epi_df}(x, ...)
@@ -74,9 +74,9 @@ by using \code{.response_name}. See the examples below.}
 \item{.max_keys}{Maximum number of key combinations to display. If the data
 contains more key combinations than this limit, a random sample of size
 \code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Does not apply if \code{interactive = TRUE}.}
+display all keys. Does not apply if \code{.interactive = TRUE}.}
 
-\item{interactive}{Logical. If \code{TRUE}, returns an interactive
+\item{.interactive}{Logical. If \code{TRUE}, returns an interactive
 \code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 This is especially useful for exploring datasets with many keys.}
 
@@ -99,7 +99,7 @@ of versions.}
 a vertical line. Note that displaying many versions can become busy.}
 }
 \value{
-A \code{\link[ggplot2:ggplot]{ggplot2::ggplot}} object, OR \code{\link[plotly:plotly]{plotly::plotly}} object if \code{interactive = TRUE}
+A \code{\link[ggplot2:ggplot]{ggplot2::ggplot}} object, OR \code{\link[plotly:plotly]{plotly::plotly}} object if \code{.interactive = TRUE}
 }
 \description{
 Automatically plot an epi_df or epi_archive
@@ -111,7 +111,7 @@ autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
 
 # Launch interactive version in web browser:
 autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
-         interactive = TRUE)
+         .interactive = TRUE)
 
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",

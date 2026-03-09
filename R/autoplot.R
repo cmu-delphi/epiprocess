@@ -31,13 +31,13 @@
 #' @param .max_keys Maximum number of key combinations to display. If the data
 #'   contains more key combinations than this limit, a random sample of size
 #'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `interactive = TRUE`.
-#' @param interactive Logical. If `TRUE`, returns an interactive
+#'   display all keys. Does not apply if `.interactive = TRUE`.
+#' @param .interactive Logical. If `TRUE`, returns an interactive
 #'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
 #'   This is especially useful for exploring datasets with many keys. Default is
 #'   `FALSE`.
 #'
-#' @return A [`ggplot2::ggplot`] object, OR [`plotly::plotly`] object if `interactive = TRUE`
+#' @return A [`ggplot2::ggplot`] object, OR [`plotly::plotly`] object if `.interactive = TRUE`
 #' @export
 #' @name autoplot-epi
 #'
@@ -48,7 +48,7 @@
 #'
 #' # Launch interactive version in web browser:
 #' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
-#'          interactive = TRUE)
+#'          .interactive = TRUE)
 #'
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .color_by = "none",
@@ -87,13 +87,13 @@ autoplot.epi_df <- function(
   .base_color = "#3A448F",
   .facet_filter = NULL,
   .max_keys = 10,
-  interactive = FALSE,
+  .interactive = FALSE,
   .max_facets = deprecated()
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
-  checkmate::assert_logical(interactive, len = 1L)
+  checkmate::assert_logical(.interactive, len = 1L, any.missing = FALSE)
   checkmate::assert_number(.max_keys, lower = 1)
 
   if (lifecycle::is_present(.max_facets)) {
@@ -160,7 +160,7 @@ autoplot.epi_df <- function(
   }
 
   object <- autoplot_subsample_keys(
-    object, geo_and_other_keys, .max_keys, interactive,
+    object, geo_and_other_keys, .max_keys, .interactive,
     .facet_used = ".facets" %in% names(object)
   )
 
@@ -203,7 +203,7 @@ autoplot.epi_df <- function(
   } else {
     p <- p + ggplot2::ylab(names(vars))
   }
-  if (interactive) {
+  if (.interactive) {
     if (".facets" %in% names(object)) {
       # Use the interactive helper with dropdowns.
       trace_col <- if (".colours" %in% names(object)) ".colours" else if (nvars > 1) ".response_name" else NULL
@@ -264,9 +264,9 @@ autoplot_check_viable_response_vars <- function(
 
 
 autoplot_subsample_keys <- function(
-  object, geo_and_other_keys, .max_keys, interactive, .facet_used
+  object, geo_and_other_keys, .max_keys, .interactive, .facet_used
 ) {
-  if (interactive || is.infinite(.max_keys)) {
+  if (.interactive || is.infinite(.max_keys)) {
     return(object)
   }
 
@@ -286,7 +286,7 @@ autoplot_subsample_keys <- function(
   msg <- c(
     "Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
     i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
-    i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`."
+    i = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
   )
   if (.facet_used) {
     msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
@@ -451,8 +451,8 @@ autoplot_interactive_df <- function(p, object, .max_keys) {
 #' @param .max_keys Maximum number of key combinations to display. If the data
 #'   contains more key combinations than this limit, a random sample of size
 #'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `interactive = TRUE`.
-#' @param interactive Logical. If `TRUE`, returns an interactive
+#'   display all keys. Does not apply if `.interactive = TRUE`.
+#' @param .interactive Logical. If `TRUE`, returns an interactive
 #'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
 #'   This is especially useful for exploring datasets with many keys.
 #'
@@ -489,11 +489,11 @@ autoplot.epi_archive <- function(object, ...,
                                  .mark_versions = FALSE,
                                  .facet_filter = NULL,
                                  .max_keys = 6,
-                                 interactive = FALSE) {
+                                 .interactive = FALSE) {
   time_type <- object$time_type
   checkmate::assert_number(.max_keys, lower = 1)
-  checkmate::assert_logical(.mark_versions, len = 1L)
-  checkmate::assert_logical(interactive, len = 1L)
+  checkmate::assert_logical(.mark_versions, len = 1L, any.missing = FALSE)
+  checkmate::assert_logical(.interactive, len = 1L, any.missing = FALSE)
   if (time_type == "custom") {
     cli_abort(
       "This `epi_archive` has custom `time_type`. This is currently unsupported.",
@@ -525,7 +525,7 @@ autoplot.epi_archive <- function(object, ...,
   vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
 
-  eff_max_keys <- if (interactive) Inf else .max_keys
+  eff_max_keys <- if (.interactive) Inf else .max_keys
 
   bp <- autoplot.epi_df(
     finalized, ...,
@@ -562,7 +562,7 @@ autoplot.epi_archive <- function(object, ...,
   snapshots <- snapshots %>%
     dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
 
-  if (interactive) {
+  if (.interactive) {
     return(autoplot_interactive_archive(
       snapshots, .base_color, methods::is(.versions, "Date")
     ))

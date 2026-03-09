@@ -17,7 +17,7 @@ If NULL, the first numeric non-key column is used.}
 \item{.max_keys}{Maximum number of key combinations to display. If the data
 contains more key combinations than this limit, a random sample of size
 \code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Does not apply if \code{interactive = TRUE}.}
+display all keys. Does not apply if \code{.interactive = TRUE}.}
 }
 \value{
 A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
