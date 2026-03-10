@@ -96,7 +96,7 @@ test_that("autoplot_subsample_keys warning", {
   expect_warning(
     sampled <- epiprocess:::autoplot_subsample_keys(
       df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = FALSE
+      .max_keys = 10, .interactive = FALSE, .facet_used = FALSE
     ),
     class = "epiprocess__autoplot__max_keys_exceeded"
   )
@@ -116,7 +116,7 @@ test_that("autoplot_subsample_keys hint logic respects .facet_used", {
   expect_warning(
     epiprocess:::autoplot_subsample_keys(
       df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = TRUE
+      .max_keys = 10, .interactive = FALSE, .facet_used = TRUE
     ),
     regexp = "To plot specific keys, use `autoplot\\(..., .facet_filter = ...\\)`"
   )
@@ -125,7 +125,7 @@ test_that("autoplot_subsample_keys hint logic respects .facet_used", {
   w <- expect_warning(
     epiprocess:::autoplot_subsample_keys(
       df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = FALSE
+      .max_keys = 10, .interactive = FALSE, .facet_used = FALSE
     )
   )
   expect_false(grepl("To plot specific keys", w$message))
@@ -142,7 +142,7 @@ test_that("autoplot_plotly_dropdown is dispatched correctly for faceted plots", 
     as_epi_df()
 
   # Facet by geo_value triggers dropdown in interactive mode
-  p <- autoplot(df, cases, interactive = TRUE, .facet_by = "geo_value")
+  p <- autoplot(df, cases, .interactive = TRUE, .facet_by = "geo_value")
   pb <- plotly::plotly_build(p)
 
   expect_s3_class(p, "plotly")
@@ -162,7 +162,7 @@ test_that("autoplot_plotly_dropdown works for epi_archive", {
     mutate(cases = 1:6, version = time_value) %>%
     as_epi_archive()
 
-  p <- autoplot(df, cases, .versions = "day", interactive = TRUE)
+  p <- autoplot(df, cases, .versions = "day", .interactive = TRUE)
   pb <- plotly::plotly_build(p)
 
   expect_s3_class(p, "plotly")
