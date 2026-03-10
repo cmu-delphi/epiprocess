@@ -36,7 +36,7 @@ plot_heatmap <- function(x, fill = NULL, ...,
     x,
     geo_and_other_keys = geo_and_other_keys,
     .max_keys = .max_keys,
-    interactive = FALSE,
+    .interactive = FALSE,
     .facet_used = FALSE
   )
 
