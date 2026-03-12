@@ -337,6 +337,14 @@ autoplot_plotly_dropdown <- function(
   xaxis_title = "Date", yaxis_title = "", legend_title = "",
   dropdown_prefix = "Key: "
 ) {
+  # Initialize color map if trace_col is provided but map is not
+  if (is.null(color_map) && !is.null(trace_col) && trace_col %in% names(data)) {
+    all_trace_vals <- sample(levels(droplevels(as.factor(data[[trace_col]]))))
+    n_colors <- length(all_trace_vals)
+    colors <- grDevices::hcl.colors(n_colors, palette = "viridis")
+    color_map <- stats::setNames(colors, all_trace_vals)
+  }
+
   unique_groups <- levels(droplevels(as.factor(data[[group_col]])))
 
   # Prepare lines to be added to the plot
@@ -443,17 +451,27 @@ autoplot_plotly_dropdown <- function(
 autoplot_interactive_df <- function(p, object, .max_keys) {
   p_plotly <- plotly::ggplotly(p)
 
-  if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
+  if (!is.infinite(.max_keys) &&
+    (".colours" %in% names(object)) &&
+    inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
       # Keys to keep
-      keep <- keys[seq_len(.max_keys)]
+      keep <- sample(keys, .max_keys)
       p_plotly$x$data <- purrr::map(p_plotly$x$data, \(tr) {
         # Do not display keys that are not kept (still showing legend)
         if ((tr$name %||% "") %in% setdiff(keys, keep)) tr$visible <- "legendonly"
         tr
       })
+      cli::cli_alert(
+        c(
+          "Plotting {length(keys)} keys can be slow and hard to read. Additional keys can be selected in the legend on the right.\n",
+          "Showing a random subset of {( .max_keys )} keys by default.\n",
+          "To see all keys, use `plotly::style(p, visible = TRUE)` or set `.max_keys = Inf`."
+        ),
+        class = "epiprocess__autoplot_interactive_subsetting"
+      )
     }
   }
 
