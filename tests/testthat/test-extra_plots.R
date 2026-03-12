@@ -38,7 +38,10 @@ test_that("plot_heatmap functionality (standard, multi-key, auto-select)", {
 test_that("plot_heatmap edge cases (subsampling and errors)", {
   # Key subsampling
   set.seed(123)
-  expect_warning(p_sub <- plot_heatmap(test_df_many, val, .max_keys = 10), class = "epiprocess__autoplot__max_keys_exceeded")
+  expect_warning(
+    p_sub <- plot_heatmap(test_df_many, val, .max_keys = 10),
+    class = "epiprocess__autoplot__max_keys_exceeded"
+  )
   expect_snapshot(invisible(plot_heatmap(test_df_many, val, .max_keys = 10)))
   expect_equal(length(unique(p_sub$data$geo_value)), 10)
 

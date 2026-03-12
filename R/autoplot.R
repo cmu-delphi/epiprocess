@@ -141,6 +141,7 @@ autoplot.epi_df <- function(
     geo_value = rlang::expr(as.factor(geo_value)),
     other_keys = rlang::expr(interaction(!!!other_keys, sep = " / ")),
     all = rlang::expr(interaction(!!!all_avail, sep = " / ")),
+    .response = if (nvars > 1) rlang::expr(as.factor(.response_name)) else NULL,
     none = NULL
   )
 
@@ -225,7 +226,7 @@ autoplot.epi_df <- function(
       scales = "free_y",
       labeller = ggplot2::as_labeller(function(x) paste0(facets_prefix, x))
     ) +
-      ggplot2::ylab(names(vars))
+      ggplot2::ylab(paste(names(vars), collapse = ", "))
     if (.facet_by == "all") p <- p + ggplot2::ylab("")
   } else if ((length(vars) > 1 && .facet_by == ".response") && !(.interactive && .facet_to_dropdown)) {
     p <- p + ggplot2::facet_wrap(~.response_name,
@@ -234,7 +235,7 @@ autoplot.epi_df <- function(
     ) +
       ggplot2::ylab("")
   } else {
-    p <- p + ggplot2::ylab(names(vars))
+    p <- p + ggplot2::ylab(paste(names(vars), collapse = ", "))
   }
 
   if (.interactive) {

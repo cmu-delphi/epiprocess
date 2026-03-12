@@ -155,7 +155,11 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
     mutate(cases = rnorm(dplyr::n())) %>%
     as_epi_df(other_keys = "other", as_of = as.Date("2023-01-04"))
 
-  p2 <- autoplot(df_other, cases, .facet_by = "other_keys", .facet_to_dropdown = TRUE, .color_by = "none", .interactive = TRUE)
+  p2 <- autoplot(
+    df_other, cases,
+    .facet_by = "other_keys", .facet_to_dropdown = TRUE,
+    .color_by = "none", .interactive = TRUE
+  )
   pb2 <- plotly::plotly_build(p2)
   expect_snapshot(pb2$x$layout$updatemenus)
   expect_snapshot(purrr::map(pb2$x$data, ~ .x$visible))
