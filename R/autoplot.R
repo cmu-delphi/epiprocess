@@ -207,7 +207,7 @@ autoplot.epi_df <- function(
   }
 
   if (".facets" %in% names(object)) {
-    prefix <- switch(.facet_by,
+    facets_prefix <- switch(.facet_by,
       all_keys = "Keys: ",
       geo_value = "Geo: ",
       other_keys = "Other Keys: ",
@@ -216,7 +216,7 @@ autoplot.epi_df <- function(
     )
     p <- p + ggplot2::facet_wrap(~.facets,
       scales = "free_y",
-      labeller = ggplot2::as_labeller(function(x) paste0(prefix, x))
+      labeller = ggplot2::as_labeller(function(x) paste0(facets_prefix, x))
     ) +
       ggplot2::ylab(names(vars))
     if (.facet_by == "all") p <- p + ggplot2::ylab("")
@@ -464,11 +464,12 @@ autoplot_interactive_df <- function(p, object, .max_keys) {
         if ((tr$name %||% "") %in% setdiff(keys, keep)) tr$visible <- "legendonly"
         tr
       })
-      cli::cli_alert(
+      cli::cli_inform(
         c(
-          "Plotting {length(keys)} keys can be slow and hard to read. Additional keys can be selected in the legend on the right.\n",
-          "Showing a random subset of {( .max_keys )} keys by default.\n",
-          "To see all keys, use `plotly::style(p, visible = TRUE)` or set `.max_keys = Inf`."
+          "Plotting {.val {(length(keys))}} keys can be hard to read.",
+          "i" = "Showing a random subset of {.val {(.max_keys)}} keys by default.",
+          "i" = "Select additional keys in the legend on the right.",
+          "i" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
         ),
         class = "epiprocess__autoplot_interactive_subsetting"
       )
