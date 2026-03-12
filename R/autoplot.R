@@ -499,7 +499,7 @@ autoplot.epi_archive <- function(object, ...,
   if ((is.character(.versions) || rlang::is_bare_numeric(.versions)) && length(.versions) == 1L) {
     # Interpret `.versions` as a period (even if archive versions are also bare numeric...)
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
-    .versions <- seq(min_version, max_version - 1, by = .versions)
+    .versions <- seq(min_version, max_version, by = .versions)
   } else if (inherits(.versions, "Date") || inherits(.versions, "Date")) {
     old_n_versions <- length(.versions)
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
@@ -513,6 +513,10 @@ autoplot.epi_archive <- function(object, ...,
     )
   }
 
+  split_out_finalized <- !.interactive
+  if (split_out_finalized) {
+    .versions <- .versions[.versions != max_version]
+  }
 
   finalized <- epix_as_of(object, max_version)
   key_cols <- key_colnames(finalized)
@@ -522,7 +526,7 @@ autoplot.epi_archive <- function(object, ...,
 
   eff_max_keys <- if (.interactive) Inf else .max_keys
 
-  bp <- autoplot.epi_df(
+  bp <- autoplot(
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
     .facet_filter = {{ .facet_filter }}, .color_by = "none",
