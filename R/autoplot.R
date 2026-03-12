@@ -334,12 +334,14 @@ autoplot_plotly_dropdown <- function(
     color_map <- stats::setNames(colors, all_trace_vals)
   }
 
-  unique_groups <- levels(droplevels(as.factor(data[[group_col]])))
+  # Split data by the group column to avoid quadratic filtering performance
+  # We ensure it's a factor to maintain consistent ordering
+  data[[group_col]] <- droplevels(as.factor(data[[group_col]]))
+  unique_groups <- levels(data[[group_col]])
+  group_data_list <- data %>% dplyr::group_split(.data[[group_col]])
 
   # Identify each dropdown option and its traces
-  trace_specs <- purrr::map(unique_groups, function(g) {
-    g_data <- data[data[[group_col]] == g, , drop = FALSE]
-
+  trace_specs <- purrr::map2(group_data_list, unique_groups, function(g_data, g) {
     # Handle multiple lines within one dropdown selection
     if (!is.null(trace_col) && trace_col %in% names(g_data)) {
       sub_trace_vals <- if (is.factor(g_data[[trace_col]])) {
@@ -354,8 +356,8 @@ autoplot_plotly_dropdown <- function(
 
     # Creates the individual lines for a single dropdown selection
     purrr::map(sub_trace_vals, function(s_val) {
-      s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, , drop = FALSE]
-      s_data <- s_data[order(s_data$time_value), , drop = FALSE]
+      s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, ]
+      s_data <- s_data[order(s_data$time_value), ]
 
       # "metadata" for the specific line
       lc <- if (!is.null(color_map)) {
