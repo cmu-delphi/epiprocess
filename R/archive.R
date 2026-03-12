@@ -620,7 +620,6 @@ as_epi_archive <- function(
   result
 }
 
-
 #' Print information about an `epi_archive` object
 #'
 #' @param x An `epi_archive` object.
@@ -642,7 +641,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 
   cat_line(format_message(
     c(
-      ">" = if (class) "An `epi_archive` object, with:",
+      if (class) "An `epi_archive` object, with:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
         "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },

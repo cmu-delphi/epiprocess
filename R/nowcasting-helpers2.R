@@ -185,25 +185,59 @@ lt_wday_abbr <- function(x) {
   c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")[[x + 1L]]
 }
 
+# XXX end vs. ending
+default_week_end_lt_wday <- function() {
+  stop("TODO")
+}
+
 set_time_week_end <- function(x, wday_name = NULL, ..., lt_wday = NULL) {
   check_dots_empty()
-  if (is.null(wday_name) && is.null(lt_wday)) {
-    # Base on {lubridate}'s default.
-    lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
-    ending_lt_wday <- (lubridate_starting_iso_wday + 6) %% 7
-  } else {
-    ending_lt_wday <- as_lt_wday(wday_name, lt_wday)
-  }
   time_type <- time_type(x)
   if (time_type != "week") {
     cli_abort('time_type of `x` must be "week", not {format_chr_deparse(time_type)}')
+  }
+  if (is.null(wday_name) && is.null(lt_wday)) {
+    current_ending_lt_wday <- attr(time_type, "ending_lt_wday")
+    if (!is.null(current_ending_lt_wday)) {
+      return(x)
+    } else {
+      # Base on {lubridate}'s default.
+      lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
+      starting_lt_wday <- lubridate_starting_iso_wday %% 7
+      ending_lt_wday <- (starting_lt_wday + 6) %% 7
+      cli_inform(c(
+        'Guessing weeks are {lt_wday_abbr(starting_lt_wday)} to {lt_wday_abbr(ending_lt_wday)}
+         based on lubridate default ({.code getOption("lubridate.week.start", 7)}).',
+        ">" = "Override by calling {.code set_time_week_end} with the desired *ending* wday."
+      ), class = "epiprocess__set_time_week_end__guessing_default")
+    }
+  } else {
+    ending_lt_wday <- as_lt_wday(wday_name, lt_wday)
   }
   attr(time_type, "ending_lt_wday") <- ending_lt_wday
   x <- set_time_type0(x, time_type)
   x
 }
 
+session_tz <- function() {
+  tz <- Sys.getenv("TZ")
+  if (tz == "") {
+    tz <- Sys.timezone()
+  }
+  tz
+}
+
+set_version_tz <- function(x, tz = default_tz()) {
+  stop("TODO")
+  stop("except actually should be worrying about the time_value tz")
+}
+
 # TODO infer_time_week_end / guess_time_week_end.... and integrate into guess_time_type?
+
+# * time with no tz, version with no tz -> assume both use session tz
+# * time with no tz, version with tz -> assume time is version tz?
+# * time with tz, version with no tz -> we don't necessarily need to do anything? we can calc diffs without needing to set version tz
+# * time with tz, version with tz -> fine
 
 # TODO printing week end metadata
 
@@ -218,7 +252,26 @@ time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
       if (inherits(version_ptype, "Date")) {
         time_value
       } else if (inherits(version_ptype, "POSIXt")) {
-        stop("TODO, carefully considering time zone issues")
+        if (time_type == "week") {
+          ending_lt_wday <- attr(time_type, "ending_lt_wday")
+          if (is.null(ending_lt_wday)) {
+            cli_abort("`set_time_week_end` must be called first")
+          }
+          # TODO make set_time_week_end default emit message, and simply use it here?
+          time_value <- time_value + (ending_lt_wday - as.numeric(time_value)) %% 7
+        }
+        if (inherits(version_ptype, "Date")) {
+          time_value
+        } else if (inherits(version_ptype, "POSIXt")) {
+          # TODO since we are converting to essentially tz'd-date, we
+          # need a tz.  Balk or inform about assumption.  But what is
+          # our tz?  POSIXct seems to look at Sys.getenv("TZ"), but
+          # Sys.timezone() does not....
+          #
+          # note: vec_cast will ephemerally use current tz respecting
+          # TZ envvar, but not set it in the result.
+          stop("TODO, carefully considering time zone issues")
+        }
       } else {
         cli_abort("For `time_type` {format_chr_deparse(time_type)},
                    `version` must be a Date or POSIXt,
