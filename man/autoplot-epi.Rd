@@ -16,7 +16,8 @@
   .base_color = "#3A448F",
   .facet_filter = NULL,
   .max_keys = 10,
-  .interactive = FALSE
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{autoplot}{epi_archive}(
@@ -27,7 +28,8 @@
   .mark_versions = FALSE,
   .facet_filter = NULL,
   .max_keys = 6,
-  .interactive = FALSE
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{plot}{epi_df}(x, ...)
@@ -77,7 +79,13 @@ display all keys. Does not apply if \code{.interactive = TRUE}.}
 
 \item{.interactive}{Logical. If \code{TRUE}, returns an interactive
 \code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
-This is especially useful for exploring datasets with many keys.}
+This is especially useful for exploring datasets with many keys. Default is
+\code{FALSE}.}
+
+\item{.facet_to_dropdown}{Logical. If \code{TRUE}, and \code{.interactive = TRUE}, any
+facets will be converted into a dropdown menu. This is useful for
+maximizing screen real estate when there are many facets. Default is
+\code{FALSE}.}
 
 \item{.versions}{Select which versions will be displayed. By default,
 a separate line will be shown with the data as it would have appeared on
@@ -108,7 +116,13 @@ autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
 
 # Launch interactive version in web browser:
 autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
-         .interactive = TRUE)
+  .interactive = TRUE
+)
+
+# Use dropdowns instead of facets for interactive plots
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+  .interactive = TRUE, .facet_to_dropdown = TRUE
+)
 
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",
