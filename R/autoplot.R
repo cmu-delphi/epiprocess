@@ -549,11 +549,16 @@ autoplot.epi_archive <- function(object, ...,
 
   tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
   .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
-  if (is.character(.versions) || length(.versions) == 1L) {
+  if ((is.character(.versions) || rlang::is_bare_numeric(.versions)) && length(.versions) == 1L) {
+    # Interpret `.versions` as a period (even if archive versions are also bare numeric...)
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version, by = .versions)
-  } else if (inherits(.versions, "Date") || is.numeric(.versions)) {
+  } else if (inherits(.versions, "Date") || inherits(.versions, "Date")) {
+    old_n_versions <- length(.versions)
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
+    if (length(.versions) != old_n_versions) {
+      cli_inform("Removed entries from `.versions` that weren't in the range of archive versions with update rows.")
+    }
   } else {
     cli::cli_abort(
       "Requested `.versions` don't appear to match the available `time_type`.",
@@ -561,6 +566,10 @@ autoplot.epi_archive <- function(object, ...,
     )
   }
 
+  split_out_finalized <- !.interactive
+  if (split_out_finalized) {
+    .versions <- .versions[.versions != max_version]
+  }
 
   finalized <- epix_as_of(object, max_version)
   key_cols <- key_colnames(finalized)
@@ -570,7 +579,7 @@ autoplot.epi_archive <- function(object, ...,
 
   eff_max_keys <- if (.interactive) Inf else .max_keys
 
-  bp <- autoplot.epi_df(
+  bp <- autoplot(
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
     .facet_filter = {{ .facet_filter }}, .color_by = "none",
