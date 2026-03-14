@@ -43,7 +43,7 @@ plot_heatmap <- function(x, fill = NULL, ...,
   # We use interaction of all geo/other keys for the y-axis
   plot_df <- x %>%
     dplyr::mutate(
-      .y_axis = interaction(!!!rlang::syms(geo_and_other_keys), sep = " / ")
+      .y_axis = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
     )
 
   # Create plot

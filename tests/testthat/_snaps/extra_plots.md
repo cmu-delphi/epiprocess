@@ -3,8 +3,8 @@
     Code
       unique(p_multi$data$.y_axis)
     Output
-      [1] ak / adult ak / child al / adult al / child
-      Levels: ak / adult al / adult ak / child al / child
+      [1] ak; adult ak; child al; adult al; child
+      Levels: ak; adult al; adult ak; child al; child
 
 ---
 

@@ -137,10 +137,10 @@ autoplot.epi_df <- function(
   all_avail <- rlang::syms(all_avail_names)
 
   label_exprs <- list(
-    all_keys = rlang::expr(interaction(!!!all_keys, sep = " / ")),
+    all_keys = rlang::expr(interaction(!!!all_keys, sep = "; ")),
     geo_value = rlang::expr(as.factor(geo_value)),
-    other_keys = rlang::expr(interaction(!!!other_keys, sep = " / ")),
-    all = rlang::expr(interaction(!!!all_avail, sep = " / ")),
+    other_keys = rlang::expr(interaction(!!!other_keys, sep = "; ")),
+    all = rlang::expr(interaction(!!!all_avail, sep = "; ")),
     .response = if (nvars > 1) rlang::expr(as.factor(.response_name)) else NULL,
     none = NULL
   )
@@ -191,7 +191,7 @@ autoplot.epi_df <- function(
   } else if (length(vars) > 1 && .color_by == ".response") {
     plot_mappings$colour <- rlang::expr(.data$.response_name)
   } else {
-    plot_mappings$group <- rlang::expr(interaction(!!!rlang::syms(all_avail_names)))
+    plot_mappings$group <- rlang::expr(interaction(!!!rlang::syms(all_avail_names), sep = "; "))
   }
 
   p <- rlang::inject(ggplot2::ggplot(object, ggplot2::aes(
@@ -295,7 +295,7 @@ autoplot_subsample_keys <- function(
   }
 
   epikey_combinations <- rlang::inject(
-    interaction(!!!object[geo_and_other_keys], sep = " / ", drop = TRUE)
+    interaction(!!!object[geo_and_other_keys], sep = "; ", drop = TRUE)
   )
   unique_epikeys <- levels(epikey_combinations)
   num_epikeys <- length(unique_epikeys)
@@ -613,7 +613,7 @@ autoplot.epi_archive <- function(object, ...,
   all_avail <- rlang::syms(all_avail_names)
 
   snapshots <- snapshots %>%
-    dplyr::mutate(.facets = interaction(!!!all_avail, sep = " / "))
+    dplyr::mutate(.facets = interaction(!!!all_avail, sep = "; "))
 
   snapshots <- snapshots %>%
     dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
@@ -627,7 +627,7 @@ autoplot.epi_archive <- function(object, ...,
   bp <- bp +
     ggplot2::geom_line(
       data = snapshots,
-      mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version))
+      mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version, sep = "; "))
     )
 
   if (inherits(.versions, "Date")) {
