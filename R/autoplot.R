@@ -620,7 +620,7 @@ autoplot.epi_archive <- function(object, ...,
 
   if (.interactive && .facet_to_dropdown) {
     return(autoplot_interactive_archive(
-      snapshots, .base_color, inherits(.versions, "Date"), "all"
+      snapshots, .base_color, "all"
     ))
   }
 
@@ -656,7 +656,7 @@ autoplot.epi_archive <- function(object, ...,
   bp
 }
 
-autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_dates, .facet_by) {
+autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by) {
   # Build color palette
   all_versions <- sort(unique(snapshots$version))
   n_versions <- length(all_versions)
@@ -669,13 +669,6 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_d
     )
   }
   color_map <- stats::setNames(version_colors, as.character(all_versions))
-
-  # Formatted labels for the legend
-  if (.versions_are_dates) {
-    snapshots$version_label <- as.character(as.Date(snapshots$version, origin = "1970-01-01"))
-  } else {
-    snapshots$version_label <- as.character(snapshots$version)
-  }
 
   # Use the generalized dropdown helper
   prefix <- autoplot_get_prefix(.facet_by)
