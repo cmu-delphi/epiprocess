@@ -12,7 +12,9 @@ indicate development versions beyond 0.x.
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
-- `autoplot()` now includes `.max_keys` and `interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown, improving both performance and readability. The `interactive` feature enables interactive plots using Plotly.
+- `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
+- Added `plot_heatmap()` function to provide heatmap visualization for `epi_df` objects.
+- Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
