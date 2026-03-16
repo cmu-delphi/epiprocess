@@ -293,6 +293,13 @@ extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) Us
 
 # XXX ekts & tvlag rather than ektvs & vrel?
 
+# XXX holiday Fri -> Tue delays potentially problematic (or worse?
+# check ILINet history); Fri excluding Tue is fine, but Tue will
+# probably map to wrong training Fris?  Though... could this actually
+# be somewhat valid and okay?  If do want to change, probably need to
+# use the occasional-delays-never-early and/or source-actual ->
+# source-nominal approach.
+
 #' @export
 extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL, ...) {
   # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?

@@ -23,6 +23,7 @@
 #' @importFrom data.table as.data.table
 #' @importFrom data.table fifelse
 #' @importFrom data.table key
+#' @importFrom data.table setDT
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setnames
 #' @importFrom dplyr arrange
