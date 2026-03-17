@@ -1,10 +1,8 @@
 # Epitooling Development Guide
-{: .no_toc}
 
 This guide is more of a collection of what we've learned while building our toolset than a formal manual. While we follow the conventions of the [posit/tidyverse](https://www.tidyverse.org/) and [tidymodels](https://www.tidymodels.org/) ecosystems for programming in R, we've also adopted some specific practices and shared wisdom from our conversations and comments during PR reviews. As a result, we've compiled these practices and sources in one place.
 
 ## Table of Contents
-{: .no_toc}
 - [Epitooling Development Guide](#epitooling-development-guide)
   - [Table of Contents](#table-of-contents)
   - [Important References](#important-references)
@@ -62,7 +60,7 @@ Here are some resources that help to improve the quality of our code and better 
 ## R Development
 
 ### R Epitooling Data Structures
-When dealing with spatial and temporal signals, things get complex fast. We use a couple of specific structures to manage this:
+We use a couple of specific structures to deal with panel data.
 
 - `epi_df`. A snapshot of epi data. It must contain `geo_value` and `time_value`.
 - `epi_archive`. A full version history of data containing all updates to past values.
@@ -77,7 +75,7 @@ To keep things consistent across all our APIs and internal code, we expect colum
 
 ### Panel Data Implementation Patterns
 - Ensure that data objects are backed by a `tibble` or `data.table` to prevent dimensions from being dropped unexpectedly. Don't use `drop = FALSE` in subsetting operations.
-- Ensure windows are structured to be "complete" (padded with `NA`s) before the function is applied.
+- Ensure windows are structured to be "complete" before the function is applied.
 - Ensure data is properly grouped by `geo_value` and any `other_keys` before passing into sliding, scaling, or transformation functions.
 
 ### Infrastructure & Supporting Packages
@@ -95,7 +93,7 @@ The `rlang` package is fundamental for [metaprogramming](https://rlang.r-lib.org
 - Some of Delphi's packages include small "fragments" or standalone versions of `rlang` code internally. This helps us avoid heavy external dependencies for core logic and ensures that our internal tools (like special error handlers) remain stable even if the user has a different version of `rlang` installed.
 
 #### vctrs
-Provides robust vector operations and [custom S3 vector classes](https://vctrs.r-lib.org/articles/s3-vector.html) (using `vctrs::new_vctr()`) and formatting them neatly in tibbles via [pillar](https://vctrs.r-lib.org/articles/pillar.html). We rely on it for the following uses.
+Provides vector operations and [custom S3 vector classes](https://vctrs.r-lib.org/articles/s3-vector.html) (using `vctrs::new_vctr()`) and formatting in tibbles via [pillar](https://vctrs.r-lib.org/articles/pillar.html). We rely on it for the following uses.
 
 - `vec_data()` and `vec_restore()` are used to preserve `epi_df` metadata during manipulations.
 - `vec_rbind()`, `vec_cast()`, and `vec_recycle_common()` ensure consistent data types, especially when padding rows in `epi_slide()`.
