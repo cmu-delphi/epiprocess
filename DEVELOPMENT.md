@@ -5,8 +5,8 @@ This guide is more of a collection of what we've learned while building our tool
 ## Table of Contents
 - [Epitooling Development Guide](#epitooling-development-guide)
   - [Table of Contents](#table-of-contents)
-  - [Important References](#important-references)
   - [R Development](#r-development)
+    - [Important References](#important-references)
     - [R Epitooling Data Structures](#r-epitooling-data-structures)
     - [Data Standardization \& Column Ordering](#data-standardization--column-ordering)
     - [Panel Data Implementation Patterns](#panel-data-implementation-patterns)
@@ -43,7 +43,9 @@ This guide is more of a collection of what we've learned while building our tool
 
 ---
 
-## Important References
+## R Development
+
+### Important References
 
 Here are some resources that help to improve the quality of our code and better understand how to build a robust package. 
 
@@ -54,10 +56,6 @@ Here are some resources that help to improve the quality of our code and better 
   - We specifically recommend paying attention to the [dots prefix guide](https://design.tidyverse.org/dots-prefix.html) if you're writing functions that take `...`.
 - [Version Control](https://git-scm.com/book/en/v2). Official guide on version control. 
   - Also, it is available this refresher [course from Dr. McDonald](https://ubc-stat.github.io/stat-550/schedule/slides/git.html#/section) that covers the essentials.
-
----
-
-## R Development
 
 ### R Epitooling Data Structures
 We use a couple of specific structures to deal with panel data.
@@ -147,7 +145,7 @@ Here's a deprecation workflow:
 5. In `roxygen2`, add the `` `r lifecycle::badge("deprecated")` `` tag and provide clear `# Old:` vs `# New:` examples. It saves users a lot of grief.
 
 #### roxygen2
-We make extensive use of advanced `roxygen2` features across the packages. Here is important to point out that we try to reduce the maintenance burden of our documentation by avoiding repeateing parameters and other features in the documentation.
+We make extensive use of `roxygen2` features across the packages. Here is important to point out that we try to reduce the maintenance burden of our documentation by avoiding repeateing parameters and other features in the documentation.
 
 ##### Documentation Resilience & Reuse
 - Use `@inheritParams` to copy documentation from another function.
@@ -175,9 +173,9 @@ We use the [lintr package](https://lintr.r-lib.org) to maintain our style consis
 
 - Each package includes a [`.lintr` file](https://lintr.r-lib.org/articles/lintr.html) that defines the specific linters we use. If the linter yells at your PR, check this file to understand the rules.
 - Some standard linting checks are not relevant for Delphi packages and are disabled or modified in our configuration:
-  - `return_linter`: Often disabled to allow for more flexible (but still clear) function exits.
-  - `pipe_consistency_linter`: Disabled to avoid enforcing a specific pipe style during migrations.
-  - `line_length_linter(...)`: We allow lines up to certain number of characters to accommodate long data-processing chains.
+  - `return_linter`: Often disabled to allow for more flexible function exits.
+  - `pipe_consistency_linter`: Disabled to avoid enforcing a specific pipe style.
+  - `line_length_linter(...)`: We allow lines up to a certain number of characters to accommodate long data-processing chains.
   - `object_length_linter(length = 40L)`: We allow longer object names to ensure they are descriptive.
 
 ### Developing the Code & Local Environment
@@ -221,7 +219,7 @@ Rscript inst/pkgdown-watch.R
 ```
 
 ### CI/CD & Local Debugging
-We've all pushed a PR only to see the CI light up red. Fortunately, our `dev` branch checks are pretty comprehensive and exist purely to safeguard the main branch.
+ `dev` branch checks are pretty comprehensive and exist purely to safeguard the main branch.
 
 - A PR to `dev` will automatically trigger testing, linting, and docs checks via GitHub Actions.
 - When things break, look closely at the Action logs—they'll almost always point to the specific step that crashed.
