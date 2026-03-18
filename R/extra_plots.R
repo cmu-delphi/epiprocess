@@ -15,6 +15,13 @@
 #' @importFrom tidyselect all_of
 #' @importFrom cli cli_abort
 #' @export
+#'
+#' @examples
+#' # Use it on an `epi_df`
+#' plot_heatmap(cases_deaths_subset, case_rate_7d_av)
+#'
+#' # Plotting multiple variables
+#' plot_heatmap(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
 plot_heatmap <- function(x, ..., .max_keys = 60) {
   # Validate that x is an epi_df
   if (!inherits(x, "epi_df")) {

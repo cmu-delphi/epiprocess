@@ -26,3 +26,10 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Plot a heatmap for an epi_df
 }
+\examples{
+# Use it on an `epi_df`
+plot_heatmap(cases_deaths_subset, case_rate_7d_av)
+
+# Plotting multiple variables
+plot_heatmap(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
+}
