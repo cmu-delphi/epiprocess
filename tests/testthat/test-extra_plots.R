@@ -1,3 +1,4 @@
+set.seed(42)
 test_date <- as.Date("2020-01-01")
 
 test_df <- dplyr::tibble(
@@ -19,7 +20,15 @@ test_df_many <- dplyr::tibble(
   val = runif(200, 0, 15)
 ) %>% as_epi_df()
 
-test_that("plot_heatmap functionality (standard, multi-key, auto-select)", {
+test_df_multi_var <- dplyr::tibble(
+  geo_value = rep(letters[1:5], each = 10),
+  time_value = rep(test_date + 1:10, 5),
+  val = runif(50, 0, 15),
+  val2 = runif(50, 0, 5)
+) %>% as_epi_df()
+
+
+test_that("plot_heatmap functionality (standard, multi-key, auto-select, multi-var)", {
   # Standard heatmap
   p_std <- plot_heatmap(test_df, val)
   expect_s3_class(p_std, "ggplot")
@@ -33,6 +42,12 @@ test_that("plot_heatmap functionality (standard, multi-key, auto-select)", {
   expect_warning(p_auto <- plot_heatmap(test_df), class = "epiprocess__unspecified_plot_var")
   expect_snapshot(invisible(plot_heatmap(test_df)))
   expect_s3_class(p_auto, "ggplot")
+
+  # Multiple response variables (facets)
+  p_multi_var <- plot_heatmap(test_df_multi_var, val, val2)
+  expect_s3_class(p_multi_var, "ggplot")
+  expect_true(inherits(p_multi_var$facet, "FacetWrap"))
+  expect_snapshot(head(p_multi_var$data, 10))
 })
 
 test_that("plot_heatmap edge cases (subsampling and errors)", {
