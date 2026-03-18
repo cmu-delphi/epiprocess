@@ -90,7 +90,7 @@
       
       [[1]]$buttons[[1]]$args[[1]]$showlegend
       [[1]]$buttons[[1]]$args[[1]]$showlegend[[1]]
-      [1] TRUE
+      [1] FALSE
       
       [[1]]$buttons[[1]]$args[[1]]$showlegend[[2]]
       [1] FALSE
@@ -128,7 +128,7 @@
       [1] FALSE
       
       [[1]]$buttons[[2]]$args[[1]]$showlegend[[2]]
-      [1] TRUE
+      [1] FALSE
       
       
       
@@ -182,7 +182,7 @@
       
       [[1]]$buttons[[1]]$args[[1]]$showlegend
       [[1]]$buttons[[1]]$args[[1]]$showlegend[[1]]
-      [1] TRUE
+      [1] FALSE
       
       [[1]]$buttons[[1]]$args[[1]]$showlegend[[2]]
       [1] FALSE
@@ -220,7 +220,7 @@
       [1] FALSE
       
       [[1]]$buttons[[2]]$args[[1]]$showlegend[[2]]
-      [1] TRUE
+      [1] FALSE
       
       
       

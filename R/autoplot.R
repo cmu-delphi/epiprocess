@@ -108,7 +108,7 @@ autoplot.epi_df <- function(
   checkmate::assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
-  non_key_cols <- setdiff(names(object), key_cols)
+  non_key_cols <- vctrs::vec_set_difference(names(object), key_cols)
   geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
@@ -132,24 +132,42 @@ autoplot.epi_df <- function(
     geo_and_other_keys,
     if (nvars > 1) ".response_name" else NULL
   )
-  all_keys <- rlang::syms(geo_and_other_keys)
-  other_keys <- rlang::syms(setdiff(geo_and_other_keys, "geo_value"))
-  all_avail <- rlang::syms(all_avail_names)
+  facet_vars <- autoplot_resolve_vars(.facet_by, geo_and_other_keys, nvars, all_avail_names)
+  color_vars <- autoplot_resolve_vars(.color_by, geo_and_other_keys, nvars, all_avail_names)
 
-  label_exprs <- list(
-    all_keys = rlang::expr(interaction(!!!all_keys, sep = "; ")),
-    geo_value = rlang::expr(as.factor(geo_value)),
-    other_keys = rlang::expr(interaction(!!!other_keys, sep = "; ")),
-    all = rlang::expr(interaction(!!!all_avail, sep = "; ")),
-    .response = if (nvars > 1) rlang::expr(as.factor(.response_name)) else NULL,
-    none = NULL
-  )
+  # Augment color with .response_name when multiple responses exist
+  # but aren't separated into their own facets.
+  if (nvars > 1 && !(".response_name" %in% facet_vars)) {
+    color_vars <- vctrs::vec_set_union(color_vars, ".response_name")
+  }
+
+  # Exclude facet variables from color variables to avoid repetitive legends
+  color_vars <- vctrs::vec_set_difference(color_vars, facet_vars)
+
+  color_expr <- autoplot_make_interaction_expr(color_vars)
+  facet_expr <- autoplot_make_interaction_expr(facet_vars)
 
   object <- object %>%
     dplyr::mutate(
-      .colours = !!label_exprs[[.color_by]],
-      .facets = !!label_exprs[[.facet_by]]
+      .colours = !!color_expr,
+      .facets = !!facet_expr
     )
+
+  # Drop .colours when redundant (each facet panel has only one color level)
+  if (".colours" %in% names(object)) {
+    if (".facets" %in% names(object)) {
+      needs_color <- any(vapply(
+        split(object$.colours, object$.facets),
+        function(x) length(unique(x)) > 1L,
+        logical(1)
+      ))
+    } else {
+      needs_color <- length(unique(object$.colours)) > 1L
+    }
+    if (!needs_color) {
+      object$.colours <- NULL
+    }
+  }
 
   if (!rlang::quo_is_null(.facet_filter)) {
     object <- dplyr::filter(object, !!.facet_filter) %>%
@@ -164,7 +182,7 @@ autoplot.epi_df <- function(
     .facet_used = ".facets" %in% names(object)
   )
 
-  if (.interactive && .facet_to_dropdown && !is.null(label_exprs[[.facet_by]])) {
+  if (.interactive && .facet_to_dropdown && !is.null(facet_expr)) {
     trace_col <- if (".colours" %in% names(object)) {
       ".colours"
     } else if (length(vars) > 1 && .color_by == ".response") {
@@ -373,7 +391,8 @@ autoplot_plotly_dropdown <- function(
         data = s_data,
         color = lc %||% .base_color,
         label = if (identical(s_val, "default")) "" else as.character(s_val),
-        g_val = g
+        g_val = g,
+        show_legend = length(sub_trace_vals) > 1
       )
     })
   }) %>%
@@ -395,7 +414,7 @@ autoplot_plotly_dropdown <- function(
       ),
       name = spec$label,
       legendgroup = spec$label,
-      showlegend = (spec$g_val == unique_groups[1]),
+      showlegend = (spec$g_val == unique_groups[1]) && spec$show_legend,
       visible = (spec$g_val == unique_groups[1])
     )
   }, .init = plotly::plot_ly())
@@ -404,10 +423,11 @@ autoplot_plotly_dropdown <- function(
   trace_group_vals <- purrr::map_chr(trace_specs, ~ .x$g_val)
   buttons <- purrr::map(unique_groups, function(g) {
     is_active <- trace_group_vals == g
+    show_legend <- is_active & purrr::map_lgl(trace_specs, ~ .x$show_legend)
     list(
       method = "update",
       args = list(
-        list(visible = as.list(is_active), showlegend = as.list(is_active)),
+        list(visible = as.list(is_active), showlegend = as.list(show_legend)),
         list(title = list(text = paste0(dropdown_prefix, g)))
       ),
       label = g
@@ -432,6 +452,27 @@ autoplot_plotly_dropdown <- function(
     plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"))
 }
 
+autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_names) {
+  switch(opt,
+    all_keys = geo_and_other_keys,
+    geo_value = "geo_value",
+    other_keys = vctrs::vec_set_difference(geo_and_other_keys, "geo_value"),
+    .response = if (nvars > 1) ".response_name" else character(0),
+    all = all_avail_names,
+    none = character(0)
+  )
+}
+
+autoplot_make_interaction_expr <- function(vars) {
+  if (length(vars) == 0) {
+    return(NULL)
+  }
+  if (length(vars) == 1) {
+    return(rlang::expr(as.factor(!!rlang::sym(vars))))
+  }
+  rlang::expr(interaction(!!!rlang::syms(vars), sep = "; "))
+}
+
 autoplot_get_prefix <- function(type) {
   switch(type,
     all_keys = "Keys: ",
@@ -447,8 +488,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object)) &&
-        inherits(p$facet, "FacetNull")) {
+      (".colours" %in% names(object)) &&
+      inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
@@ -456,7 +497,7 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
       keep <- sample(keys, .max_keys)
       p_plotly$x$data <- purrr::map(p_plotly$x$data, \(tr) {
         # Do not display keys that are not kept (still showing legend)
-        if ((tr$name %||% "") %in% setdiff(keys, keep)) tr$visible <- "legendonly"
+        if ((tr$name %||% "") %in% vctrs::vec_set_difference(keys, keep)) tr$visible <- "legendonly"
         tr
       })
       cli::cli_inform(
@@ -471,11 +512,13 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
     }
   }
 
-  # Fix y-axis range
+  # Fix y-axis range for all facet panels (yaxis, yaxis2, yaxis3, ...)
+  yaxis_names <- grep("^yaxis", names(p_plotly$x$layout), value = TRUE)
+  if (length(yaxis_names) == 0L) yaxis_names <- "yaxis"
+  for (ax in yaxis_names) {
+    p_plotly$x$layout[[ax]]$fixedrange <- TRUE
+  }
   p_plotly <- p_plotly %>%
-    plotly::layout(
-      yaxis = list(fixedrange = TRUE)
-    ) %>%
     plotly::config(
       modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")
     )
@@ -573,7 +616,7 @@ autoplot.epi_archive <- function(object, ...,
 
   finalized <- epix_as_of(object, max_version)
   key_cols <- key_colnames(finalized)
-  non_key_cols <- setdiff(names(finalized), key_cols)
+  non_key_cols <- vctrs::vec_set_difference(names(finalized), key_cols)
   vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
 

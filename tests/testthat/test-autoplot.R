@@ -177,7 +177,51 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   pb3 <- plotly::plotly_build(p3)
   expect_snapshot(pb3$x$layout$updatemenus)
   expect_snapshot(pb3$x$layout$title$text)
+
+  # Test single-trace legend suppression
+  df_single <- dplyr::tibble(
+    geo_value = rep(c("ak", "al"), each = 5),
+    time_value = rep(as.Date("2023-01-01") + 0:4, 2),
+    cases = 1:10
+  ) %>% as_epi_df()
+  p4 <- autoplot(df_single, cases, .interactive = TRUE, .facet_by = "geo_value", .facet_to_dropdown = TRUE)
+  pb4 <- plotly::plotly_build(p4)
+  # All traces should have showlegend = FALSE because each panel has only 1 trace
+  expect_true(all(purrr::map_lgl(pb4$x$data, ~ !.x$showlegend)))
+  # Check button args
+  expect_true(all(purrr::map_lgl(pb4$x$layout$updatemenus[[1]]$buttons, ~ all(!unlist(.x$args[[1]]$showlegend)))))
 })
+
+test_that("autoplot distinguishes indicators when faceting by geo_value", {
+  df <- dplyr::tibble(
+    geo_value = "ak",
+    time_value = as.Date("2023-01-01") + 0:4,
+    v1 = 1:5,
+    v2 = 6:10
+  ) %>% as_epi_df()
+
+  # When faceting by geo_value with 2 responses, colors include .response_name
+  # and exclude the geo_value to avoid redundant legends.
+  p <- autoplot(df, v1, v2, .facet_by = "geo_value")
+  expect_true(".colours" %in% names(p$data))
+  expect_setequal(levels(p$data$.colours), c("v1", "v2"))
+  # Facets should stay as just geo_value
+  expect_setequal(levels(p$data$.facets), "ak")
+})
+
+test_that("autoplot drops color when redundant (one line per facet)", {
+  df <- dplyr::tibble(
+    geo_value = rep(c("ak", "al"), each = 5),
+    time_value = rep(as.Date("2023-01-01") + 0:4, 2),
+    cases = 1:10
+  ) %>% as_epi_df()
+
+  # When faceting by geo_value with only 1 response, each panel has 1 line.
+  # .colours should be dropped since it's redundant.
+  p <- autoplot(df, cases, .facet_by = "geo_value")
+  expect_false(".colours" %in% names(p$data))
+})
+
 
 test_that("interactive plot sampling warning", {
   set.seed(42)
