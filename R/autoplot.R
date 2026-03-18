@@ -169,6 +169,7 @@ autoplot.epi_df <- function(
     }
   }
 
+  # Apply facet filter if provided
   if (!rlang::quo_is_null(.facet_filter)) {
     object <- dplyr::filter(object, !!.facet_filter) %>%
       dplyr::mutate(dplyr::across(
@@ -177,6 +178,7 @@ autoplot.epi_df <- function(
       ))
   }
 
+  # Subsample keys if needed
   object <- autoplot_subsample_keys(
     object, geo_and_other_keys, .max_keys, .interactive,
     .facet_used = ".facets" %in% names(object)
@@ -191,7 +193,9 @@ autoplot.epi_df <- function(
       NULL
     }
 
+    # Set y-axis title based on facet variable
     yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(names(vars), collapse = ", ")
+
     return(autoplot_plotly_dropdown(
       data = object,
       group_col = ".facets",
@@ -488,8 +492,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-      (".colours" %in% names(object)) &&
-      inherits(p$facet, "FacetNull")) {
+    (".colours" %in% names(object)) &&
+    inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
