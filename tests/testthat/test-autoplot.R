@@ -144,7 +144,15 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
 
   # Simple epi_df dropdowns
   p1 <- autoplot(df, cases, .interactive = TRUE, .facet_by = "geo_value", .facet_to_dropdown = TRUE)
-  expect_snapshot(plotly::plotly_build(p1)$x$layout$updatemenus)
+
+  # Verify interactive plotly dropdowns in the .json snapshots. We look for:
+  # - `active`: index of the default active button.
+  # - `buttons`: dropdown options with their `label`, `method`, and `args`.
+  # - `args`: `visible` trace flags, `showlegend` flags, and the updated plot `title`.
+
+  tmp_p1 <- tempfile(fileext = ".json")
+  jsonlite::write_json(plotly::plotly_build(p1)$x$layout$updatemenus, tmp_p1, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p1, "p1_updatemenus.json")
 
   # Complex multi-key epi_df dropdowns
   df_other <- expand.grid(
@@ -161,7 +169,10 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
     .color_by = "none", .interactive = TRUE
   )
   pb2 <- plotly::plotly_build(p2)
-  expect_snapshot(pb2$x$layout$updatemenus)
+  # Check dropdown logic for complex multi-key epi_df
+  tmp_p2 <- tempfile(fileext = ".json")
+  jsonlite::write_json(pb2$x$layout$updatemenus, tmp_p2, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p2, "p2_updatemenus.json")
   expect_snapshot(purrr::map(pb2$x$data, ~ .x$visible))
   expect_snapshot(pb2$x$layout$yaxis)
 
@@ -175,7 +186,10 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
 
   p3 <- autoplot(df_arc, cases, .versions = "day", .interactive = TRUE, .facet_to_dropdown = TRUE)
   pb3 <- plotly::plotly_build(p3)
-  expect_snapshot(pb3$x$layout$updatemenus)
+  # Dropdown logic for epi_archive
+  tmp_p3 <- tempfile(fileext = ".json")
+  jsonlite::write_json(pb3$x$layout$updatemenus, tmp_p3, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p3, "p3_updatemenus.json")
   expect_snapshot(pb3$x$layout$title$text)
 
   # Test single-trace legend suppression
