@@ -173,7 +173,7 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   tmp_p2 <- tempfile(fileext = ".json")
   jsonlite::write_json(pb2$x$layout$updatemenus, tmp_p2, auto_unbox = TRUE, pretty = TRUE)
   expect_snapshot_file(tmp_p2, "p2_updatemenus.json")
-  expect_snapshot(purrr::map(pb2$x$data, ~ .x$visible))
+  expect_snapshot(purrr::map_lgl(pb2$x$data, ~ .x$visible))
   expect_snapshot(pb2$x$layout$yaxis)
 
   # epi_archive dropdowns
@@ -235,7 +235,6 @@ test_that("autoplot drops color when redundant (one line per facet)", {
   p <- autoplot(df, cases, .facet_by = "geo_value")
   expect_false(".colours" %in% names(p$data))
 })
-
 
 test_that("interactive plot sampling warning", {
   set.seed(42)

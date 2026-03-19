@@ -71,6 +71,7 @@ Suggests:
     epipredict,
     hardhat,
     here,
+    jsonlite,
     knitr,
     outbreaks,
     readr,

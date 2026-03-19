@@ -64,14 +64,9 @@
 # autoplot interactive dropdown logic (epi_df and epi_archive)
 
     Code
-      purrr::map(pb2$x$data, ~ .x$visible)
+      purrr::map_lgl(pb2$x$data, ~ .x$visible)
     Output
-      [[1]]
-      [1] TRUE
-      
-      [[2]]
-      [1] FALSE
-      
+      [1]  TRUE FALSE
 
 ---
 
