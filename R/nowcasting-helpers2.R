@@ -150,6 +150,9 @@ set_time_type0.epi_archive <- function(x, value) {
   x
 }
 
+# TODO consider standardizing this to any length integer vector
+# instead?  that's what we actually get out of POSIXlt.  Then add
+# length 1 checks where needed?
 as_lt_wday <- function(wday_name = NULL, lt_wday = NULL, call = caller_env()) {
   provided <- names(which(!vapply(list(wday_name = wday_name, lt_wday = lt_wday), is.null, logical(1L))))
   if (length(provided) == 0L) {
@@ -185,9 +188,17 @@ lt_wday_abbr <- function(x) {
   c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")[[x + 1L]]
 }
 
-# XXX end vs. ending
-default_week_end_lt_wday <- function() {
-  stop("TODO")
+default_week_ending_lt_wday <- function() {
+  # Base on {lubridate}'s default.
+  lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
+  starting_lt_wday <- lubridate_starting_iso_wday %% 7
+  ending_lt_wday <- (starting_lt_wday + 6) %% 7
+  cli_inform(c(
+    'Guessing weeks are {lt_wday_abbr(starting_lt_wday)} to {lt_wday_abbr(ending_lt_wday)}
+         based on lubridate default ({.code getOption("lubridate.week.start", 7)}).',
+    ">" = "Override by calling {.code set_time_week_end} with the desired *ending* wday."
+  ), class = "epiprocess__set_time_week_end__guessing_default")
+  ending_lt_wday
 }
 
 set_time_week_end <- function(x, wday_name = NULL, ..., lt_wday = NULL) {
@@ -200,23 +211,51 @@ set_time_week_end <- function(x, wday_name = NULL, ..., lt_wday = NULL) {
     current_ending_lt_wday <- attr(time_type, "ending_lt_wday")
     if (!is.null(current_ending_lt_wday)) {
       return(x)
-    } else {
-      # Base on {lubridate}'s default.
-      lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
-      starting_lt_wday <- lubridate_starting_iso_wday %% 7
-      ending_lt_wday <- (starting_lt_wday + 6) %% 7
-      cli_inform(c(
-        'Guessing weeks are {lt_wday_abbr(starting_lt_wday)} to {lt_wday_abbr(ending_lt_wday)}
-         based on lubridate default ({.code getOption("lubridate.week.start", 7)}).',
-        ">" = "Override by calling {.code set_time_week_end} with the desired *ending* wday."
-      ), class = "epiprocess__set_time_week_end__guessing_default")
     }
+    ending_lt_wday <- default_week_ending_lt_wday()
   } else {
     ending_lt_wday <- as_lt_wday(wday_name, lt_wday)
   }
   attr(time_type, "ending_lt_wday") <- ending_lt_wday
   x <- set_time_type0(x, time_type)
   x
+}
+
+version_obj <- function(x) UseMethod("version_obj")
+
+#' @export
+version_obj.epi_df <- function(x) {
+  attr(x, "metadata")$as_of
+}
+
+#' @export
+version_obj.epi_archive <- function(x) {
+  x$DT$version
+}
+
+ct_tzone <- function(x) UseMethod("ct_tzone")
+
+#' @export
+ct_tzone.POSIXct <- function(x) attr(x, "tzone")
+
+#' @export
+ct_tzone.POSIXlt <- function(x) {
+  # Turn length-3-or-length-1 character format into string; the time
+  # zone name or "".
+  result <- attr(x, "tzone")[[1L]]
+  if (result == "") {
+    # These are cursed objects that sometimes use $zone and other
+    # fields, and sometimes use tzone attr. and this isn't just for
+    # when tzone is "" / starts with ""; also similar with if tzone
+    # was changed to something real... "" just also introduces
+    # ambiguity in which time instant it refers to for some functions.
+    # Probably should just not allow POSIXlt; seems more for
+    # extracting info.
+    stop("FIXME maybe can't actually just turn this into NULL; lt actually seems to look at later entries?  though there is also some inconsistent timezone caching and/or ignorance of TZ env var going on... might just be saving in $zone... that seems fine")
+    NULL
+  } else {
+    result
+  }
 }
 
 session_tz <- function() {
@@ -227,7 +266,22 @@ session_tz <- function() {
   tz
 }
 
-set_version_tz <- function(x, tz = default_tz()) {
+set_time_tz <- function(x, tz = NULL) {
+  if (is.null(tz)) {
+    old_time_type <- time_type(x)
+    if (is.null(attr(old_time_type, "tzone"))) {
+      return(x)
+    }
+    if (is.null(tz)) {
+      if (!is.null(x_version_tz <- ct_tzone(version_obj(x)))) {
+        cli_inform("Setting `time_value` tz to {format_chr_deparse(x_version_tz)},
+                    in order to match as_of/versions of `x`")
+        tz <- x_version_tz
+      } else {
+        stop("TODO set based on session")
+      }
+    }
+  }
   stop("TODO")
   stop("except actually should be worrying about the time_value tz")
 }
@@ -238,6 +292,11 @@ set_version_tz <- function(x, tz = default_tz()) {
 # * time with no tz, version with tz -> assume time is version tz?
 # * time with tz, version with no tz -> we don't necessarily need to do anything? we can calc diffs without needing to set version tz
 # * time with tz, version with tz -> fine
+#
+# ... or just simplify and infer time to current tz by default, warn if different from version display tz?
+#
+# ... except perhaps lt's with tzone e.g., c("", "PST", "PDT")... is
+# it trying to specify an unambiguous time or not?
 
 # TODO printing week end metadata
 
