@@ -15,6 +15,14 @@ ungrouped_num <- as_epi_df(raw_df_num, as_of = test_date + 6)
 grouped_num <- ungrouped_num %>%
   group_by(geo_value)
 
+set.seed(42)
+df_many_keys <- expand.grid(
+  geo_value = letters[1:20],
+  time_value = as.Date("2023-01-01") + 0:2
+) %>%
+  mutate(cases = rnorm(dplyr::n())) %>%
+  as_epi_df(as_of = as.Date("2023-01-04"))
+
 test_that("autoplot fails if no non-key columns are numeric", {
   expect_error(autoplot(ungrouped_chr),
     class = "epiprocess__no_numeric_vars_available"
@@ -111,55 +119,48 @@ test_that("autoplot warns when some specified columns are not numeric, and lists
   )
 })
 
-test_that("autoplot_subsample_keys warning", {
-  set.seed(42)
-  df <- expand.grid(
-    geo_value = letters[1:20],
-    time_value = as.Date("2023-01-01") + 0:2
-  ) %>%
-    mutate(cases = rnorm(dplyr::n())) %>%
-    as_epi_df()
-
-  # Test with default .max_keys = 10
+test_that("autoplot_subsample_keys warning/hints", {
+  # Default .max_keys = 10 logic
   expect_warning(
     sampled <- epiprocess:::autoplot_subsample_keys(
-      df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = FALSE
+      df_many_keys, "geo_value",
+      .max_keys = 10, .interactive = FALSE, .facet_used = FALSE
     ),
-    class = "epiprocess__autoplot_max_keys_exceeded"
+    class = "epiprocess__autoplot__max_keys_exceeded"
   )
   expect_equal(length(unique(sampled$geo_value)), 10)
-})
 
-test_that("autoplot_subsample_keys hint logic respects .facet_used", {
-  set.seed(42)
-  df <- expand.grid(
-    geo_value = letters[1:20],
-    time_value = as.Date("2023-01-01") + 0:2
-  ) %>%
-    mutate(cases = rnorm(dplyr::n())) %>%
-    as_epi_df()
-
-  # Hint should appear if .facet_used = TRUE
+  # Hint logic respects .facet_used
   expect_warning(
     epiprocess:::autoplot_subsample_keys(
-      df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = TRUE
+      df_many_keys, "geo_value",
+      .max_keys = 10, .facet_used = TRUE, .interactive = FALSE
     ),
-    regexp = "To plot specific keys, use `autoplot\\(..., .facet_filter = ...\\)`"
+    class = "epiprocess__autoplot__max_keys_exceeded"
   )
-
-  # Hint should NOT appear if .facet_used = FALSE
-  w <- expect_warning(
+  expect_snapshot(
     epiprocess:::autoplot_subsample_keys(
-      df, "geo_value",
-      .max_keys = 10, interactive = FALSE, .facet_used = FALSE
+      df_many_keys, "geo_value",
+      .max_keys = 10, .facet_used = TRUE, .interactive = FALSE
     )
   )
-  expect_false(grepl("To plot specific keys", w$message))
+
+  expect_warning(
+    epiprocess:::autoplot_subsample_keys(
+      df_many_keys, "geo_value",
+      .max_keys = 10, .facet_used = FALSE, .interactive = FALSE
+    ),
+    class = "epiprocess__autoplot__max_keys_exceeded"
+  )
+  expect_snapshot(
+    epiprocess:::autoplot_subsample_keys(
+      df_many_keys, "geo_value",
+      .max_keys = 10, .facet_used = FALSE, .interactive = FALSE
+    )
+  )
 })
 
-test_that("autoplot_plotly_dropdown is dispatched correctly for faceted plots", {
+test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   skip_if_not_installed("plotly")
 
   df <- expand.grid(
@@ -169,31 +170,119 @@ test_that("autoplot_plotly_dropdown is dispatched correctly for faceted plots", 
     mutate(cases = 1:22) %>%
     as_epi_df()
 
-  # Facet by geo_value triggers dropdown in interactive mode
-  p <- autoplot(df, cases, interactive = TRUE, .facet_by = "geo_value")
-  pb <- plotly::plotly_build(p)
+  # Simple epi_df dropdowns
+  p1 <- autoplot(df, cases, .interactive = TRUE, .facet_by = "geo_value", .facet_to_dropdown = TRUE)
 
-  expect_s3_class(p, "plotly")
+  # Verify interactive plotly dropdowns in the .json snapshots. We look for:
+  # - `active`: index of the default active button.
+  # - `buttons`: dropdown options with their `label`, `method`, and `args`.
+  # - `args`: `visible` trace flags, `showlegend` flags, and the updated plot `title`.
 
-  # Check if it has the dropdown menu
-  expect_true(!is.null(pb$x$layout$updatemenus))
-  expect_match(pb$x$layout$title$text, "Key: ak")
-})
+  tmp_p1 <- tempfile(fileext = ".json")
+  jsonlite::write_json(plotly::plotly_build(p1)$x$layout$updatemenus, tmp_p1, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p1, "p1_updatemenus.json")
 
-test_that("autoplot_plotly_dropdown works for epi_archive", {
-  skip_if_not_installed("plotly")
+  # Complex multi-key epi_df dropdowns
+  df_other <- expand.grid(
+    geo_value = c("ak", "al"),
+    time_value = as.Date("2023-01-01") + 0:10,
+    other = c("x", "y")
+  ) %>%
+    mutate(cases = rnorm(dplyr::n())) %>%
+    as_epi_df(other_keys = "other", as_of = as.Date("2023-01-04"))
 
-  df <- expand.grid(
+  p2 <- autoplot(
+    df_other, cases,
+    .facet_by = "other_keys", .facet_to_dropdown = TRUE,
+    .color_by = "none", .interactive = TRUE
+  )
+  pb2 <- plotly::plotly_build(p2)
+  # Check dropdown logic for complex multi-key epi_df
+  tmp_p2 <- tempfile(fileext = ".json")
+  jsonlite::write_json(pb2$x$layout$updatemenus, tmp_p2, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p2, "p2_updatemenus.json")
+  expect_snapshot(purrr::map_lgl(pb2$x$data, ~ .x$visible))
+  expect_snapshot(pb2$x$layout$yaxis)
+
+  # epi_archive dropdowns
+  df_arc <- expand.grid(
     geo_value = c("ak", "al"),
     time_value = as.Date("2023-01-01") + 0:2
   ) %>%
     mutate(cases = 1:6, version = time_value) %>%
     as_epi_archive()
 
-  p <- autoplot(df, cases, .versions = "day", interactive = TRUE)
-  pb <- plotly::plotly_build(p)
+  p3 <- autoplot(df_arc, cases, .versions = "day", .interactive = TRUE, .facet_to_dropdown = TRUE)
+  pb3 <- plotly::plotly_build(p3)
+  # Dropdown logic for epi_archive
+  tmp_p3 <- tempfile(fileext = ".json")
+  jsonlite::write_json(pb3$x$layout$updatemenus, tmp_p3, auto_unbox = TRUE, pretty = TRUE)
+  expect_snapshot_file(tmp_p3, "p3_updatemenus.json")
+  expect_snapshot(pb3$x$layout$title$text)
 
-  expect_s3_class(p, "plotly")
-  expect_true(!is.null(pb$x$layout$updatemenus))
-  expect_match(pb$x$layout$title$text, "Key: ak")
+  # Test single-trace legend suppression
+  df_single <- dplyr::tibble(
+    geo_value = rep(c("ak", "al"), each = 5),
+    time_value = rep(as.Date("2023-01-01") + 0:4, 2),
+    cases = 1:10
+  ) %>% as_epi_df()
+  p4 <- autoplot(df_single, cases, .interactive = TRUE, .facet_by = "geo_value", .facet_to_dropdown = TRUE)
+  pb4 <- plotly::plotly_build(p4)
+  # All traces should have showlegend = FALSE because each panel has only 1 trace
+  expect_true(all(purrr::map_lgl(pb4$x$data, ~ !.x$showlegend)))
+  # Check button args
+  expect_true(all(purrr::map_lgl(pb4$x$layout$updatemenus[[1]]$buttons, ~ all(!unlist(.x$args[[1]]$showlegend)))))
+})
+
+test_that("autoplot distinguishes indicators when faceting by geo_value", {
+  df <- dplyr::tibble(
+    geo_value = "ak",
+    time_value = as.Date("2023-01-01") + 0:4,
+    v1 = 1:5,
+    v2 = 6:10
+  ) %>% as_epi_df()
+
+  # When faceting by geo_value with 2 responses, colors include .response_name
+  # and exclude the geo_value to avoid redundant legends.
+  p <- autoplot(df, v1, v2, .facet_by = "geo_value")
+  expect_true(".colours" %in% names(p$data))
+  expect_setequal(levels(p$data$.colours), c("v1", "v2"))
+  # Facets should stay as just geo_value
+  expect_setequal(levels(p$data$.facets), "ak")
+})
+
+test_that("autoplot drops color when redundant (one line per facet)", {
+  df <- dplyr::tibble(
+    geo_value = rep(c("ak", "al"), each = 5),
+    time_value = rep(as.Date("2023-01-01") + 0:4, 2),
+    cases = 1:10
+  ) %>% as_epi_df()
+
+  # When faceting by geo_value with only 1 response, each panel has 1 line.
+  # .colours should be dropped since it's redundant.
+  p <- autoplot(df, cases, .facet_by = "geo_value")
+  expect_false(".colours" %in% names(p$data))
+})
+
+test_that("interactive plot sampling warning", {
+  set.seed(42)
+  # Create a df with 20 keys
+  df <- expand.grid(
+    geo_value = letters[1:20],
+    time_value = as.Date("2023-01-01") + 0:2
+  ) %>%
+    mutate(cases = rnorm(dplyr::n())) %>%
+    as_epi_df()
+
+  # Non-faceted interactive plot should perform sampling and warn
+  expect_message(
+    p <- autoplot(df, cases, .interactive = TRUE, .max_keys = 5),
+    class = "epiprocess__autoplot_interactive_subsetting"
+  )
+  expect_snapshot(purrr::map_chr(plotly::plotly_build(p)$x$data, ~ .x$visible %||% "TRUE"))
+
+  # Faceted interactive plot does not perform sampling in interactive_df
+  expect_no_message(
+    autoplot(df, cases, .facet_by = "geo_value", .interactive = TRUE, .max_keys = 5)
+  )
 })

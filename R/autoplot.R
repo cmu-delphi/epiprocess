@@ -19,7 +19,6 @@
 #' @param .base_color Lines will be shown with this color if `.color_by == "none"`.
 #'  For example, with a single numeric variable and faceting by `geo_value`, all
 #'  locations would share the same color line.
-#' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a
 #'   <[`rlang`][rlang::args_data_masking]> expression along the lines of [dplyr::filter()].
@@ -31,24 +30,40 @@
 #' @param .max_keys Maximum number of key combinations to display. If the data
 #'   contains more key combinations than this limit, a random sample of size
 #'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `interactive = TRUE`.
-#' @param interactive Logical. If `TRUE`, returns an interactive
+#'   display all keys. Does not apply if `.interactive = TRUE`.
+#' @param .interactive Logical. If `TRUE`, returns an interactive
 #'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
 #'   This is especially useful for exploring datasets with many keys. Default is
 #'   `FALSE`.
+#' @param .facet_to_dropdown Logical. If `TRUE`, and `.interactive = TRUE`, any
+#'   facets will be converted into a dropdown menu. This is useful for
+#'   maximizing screen real estate when there are many facets. Default is
+#'   `FALSE`.
 #'
-#' @return A [ggplot2::ggplot] object OR [plotly::plotly] object if `interactive = TRUE`
+#' @return A [`ggplot2::ggplot`] object, OR [`plotly::plotly`] object if `.interactive = TRUE`
 #' @export
 #' @name autoplot-epi
 #'
 #' @examples
+#'
 #' # -- Use it on an `epi_df`
-#' autoplot(cases_deaths_subset, cases, death_rate_7d_av)
-#' autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
+#' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
+#'
+#' # Launch interactive version in web browser:
+#' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+#'   .interactive = TRUE
+#' )
+#'
+#' # Use dropdowns instead of facets for interactive plots
+#' autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+#'   .interactive = TRUE, .facet_to_dropdown = TRUE
+#' )
+#'
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .color_by = "none",
 #'   .facet_by = "geo_value"
 #' )
+#'
 #' autoplot(cases_deaths_subset, case_rate_7d_av,
 #'   .color_by = "none",
 #'   .base_color = "red", .facet_by = "geo_value"
@@ -66,6 +81,7 @@
 #'     (.response_name == "death_rate_7d_av" &
 #'       geo_value %in% c("ca", "fl", "ga", "ny"))
 #' )
+#'
 #' # Just an alias for convenience
 #' plot(cases_deaths_subset, cases, death_rate_7d_av,
 #'   .facet_by = "all",
@@ -80,26 +96,19 @@ autoplot.epi_df <- function(
   .base_color = "#3A448F",
   .facet_filter = NULL,
   .max_keys = 10,
-  interactive = FALSE,
-  .max_facets = deprecated()
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 ) {
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
-  checkmate::assert_logical(interactive, len = 1L)
+  checkmate::assert_logical(.interactive, len = 1L, any.missing = FALSE)
+  checkmate::assert_logical(.facet_to_dropdown, len = 1L, any.missing = FALSE)
   checkmate::assert_number(.max_keys, lower = 1)
-
-  if (lifecycle::is_present(.max_facets)) {
-    lifecycle::deprecate_warn(
-      "0.11.1",
-      "autoplot.epi_df(.max_facets = )",
-      "autoplot.epi_df(.facet_filter = )"
-    )
-  }
-  assert_character(.base_color, len = 1)
+  checkmate::assert_character(.base_color, len = 1)
 
   key_cols <- key_colnames(object)
-  non_key_cols <- setdiff(names(object), key_cols)
+  non_key_cols <- vctrs::vec_set_difference(names(object), key_cols)
   geo_and_other_keys <- key_colnames(object, exclude = "time_value")
 
   # --- check for numeric variables
@@ -119,96 +128,140 @@ autoplot.epi_df <- function(
   } else {
     object <- dplyr::rename(object[pos], .response := !!names(vars)) # nolint: object_usage_linter
   }
-  all_keys <- rlang::syms(as.list(geo_and_other_keys))
-  other_keys <- rlang::syms(as.list(setdiff(geo_and_other_keys, "geo_value")))
-  all_avail <- rlang::syms(as.list(c(
+  all_avail_names <- c(
     geo_and_other_keys,
     if (nvars > 1) ".response_name" else NULL
-  )))
+  )
+  facet_vars <- autoplot_resolve_vars(.facet_by, geo_and_other_keys, nvars, all_avail_names)
+  color_vars <- autoplot_resolve_vars(.color_by, geo_and_other_keys, nvars, all_avail_names)
+
+  # Augment color with .response_name when multiple responses exist
+  # but aren't separated into their own facets.
+  if (nvars > 1 && !(".response_name" %in% facet_vars)) {
+    color_vars <- vctrs::vec_set_union(color_vars, ".response_name")
+  }
+
+  # Exclude facet variables from color variables to avoid repetitive legends
+  color_vars <- vctrs::vec_set_difference(color_vars, facet_vars)
+
+  color_expr <- autoplot_make_interaction_expr(color_vars)
+  facet_expr <- autoplot_make_interaction_expr(facet_vars)
 
   object <- object %>%
     dplyr::mutate(
-      .colours = switch(.color_by,
-        all_keys = interaction(!!!all_keys, sep = " / "),
-        geo_value = .data$geo_value,
-        other_keys = interaction(!!!other_keys, sep = " / "),
-        all = interaction(!!!all_avail, sep = " / "),
-        NULL
-      ),
-      .facets = switch(.facet_by,
-        all_keys = interaction(!!!all_keys, sep = " / "),
-        geo_value = as.factor(.data$geo_value),
-        other_keys = interaction(!!!other_keys, sep = " / "),
-        all = interaction(!!!all_avail, sep = " / "),
-        NULL
-      )
+      .colours = !!color_expr,
+      .facets = !!facet_expr
     )
 
-  if (!rlang::quo_is_null(.facet_filter) && ".facets" %in% names(object)) {
-    object <- dplyr::filter(object, !!.facet_filter) %>%
-      dplyr::mutate(.facets = droplevels(.data$.facets))
-    if (".colours" %in% names(object)) {
-      object <- dplyr::mutate(object, .colours = droplevels(.data$.colours))
+  # Drop .colours when redundant (each facet panel has only one color level)
+  if (".colours" %in% names(object)) {
+    if (".facets" %in% names(object)) {
+      needs_color <- any(vapply(
+        split(object$.colours, object$.facets),
+        function(x) length(unique(x)) > 1L,
+        logical(1)
+      ))
+    } else {
+      needs_color <- length(unique(object$.colours)) > 1L
+    }
+    if (!needs_color) {
+      object$.colours <- NULL
     }
   }
 
+  # Apply facet filter if provided
+  if (!rlang::quo_is_null(.facet_filter)) {
+    object <- dplyr::filter(object, !!.facet_filter) %>%
+      dplyr::mutate(dplyr::across(
+        tidyselect::any_of(c(".facets", ".colours")),
+        droplevels
+      ))
+  }
+
+  # Subsample keys if needed
   object <- autoplot_subsample_keys(
-    object, geo_and_other_keys, .max_keys, interactive,
+    object, geo_and_other_keys, .max_keys, .interactive,
     .facet_used = ".facets" %in% names(object)
   )
 
-  p <- ggplot2::ggplot(object, ggplot2::aes(x = .data$time_value))
+  if (.interactive && .facet_to_dropdown && !is.null(facet_expr)) {
+    trace_col <- if (".colours" %in% names(object)) {
+      ".colours"
+    } else if (length(vars) > 1 && .color_by == ".response") {
+      ".response_name"
+    } else {
+      NULL
+    }
+
+    # Set y-axis title based on facet variable
+    yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(names(vars), collapse = ", ")
+
+    return(autoplot_plotly_dropdown(
+      data = object,
+      group_col = ".facets",
+      trace_col = trace_col,
+      .base_color = .base_color,
+      yaxis_title = yaxis_title,
+      dropdown_prefix = autoplot_get_prefix(.facet_by)
+    ))
+  }
+
+  # --- build mappings
+  plot_mappings <- list()
+  if (".colours" %in% names(object)) {
+    plot_mappings$colour <- rlang::expr(.data$.colours)
+  } else if (length(vars) > 1 && .color_by == ".response") {
+    plot_mappings$colour <- rlang::expr(.data$.response_name)
+  } else {
+    plot_mappings$group <- rlang::expr(interaction(!!!rlang::syms(all_avail_names), sep = "; "))
+  }
+
+  p <- rlang::inject(ggplot2::ggplot(object, ggplot2::aes(
+    x = .data$time_value,
+    y = .data$.response,
+    !!!plot_mappings
+  )))
 
   if (identical(ggplot2::theme_get(), ggplot2::theme_gray())) {
     p <- p + ggplot2::theme_bw()
   }
 
-  if (".colours" %in% names(object)) {
-    p <- p + ggplot2::geom_line(
-      ggplot2::aes(y = .data$.response, colour = .data$.colours),
+  # --- add layers
+  if (!is.null(plot_mappings$colour)) {
+    p <- p + suppressWarnings(ggplot2::geom_line(key_glyph = "timeseries")) +
+      ggplot2::scale_colour_viridis_d(name = "")
+  } else {
+    p <- p + suppressWarnings(ggplot2::geom_line(
+      color = .base_color,
       key_glyph = "timeseries"
-    ) +
-      ggplot2::scale_colour_viridis_d(name = "")
-  } else if (length(vars) > 1 && .color_by == ".response") {
-    p <- p +
-      ggplot2::geom_line(ggplot2::aes(
-        y = .data$.response, colour = .data$.response_name
-      )) +
-      ggplot2::scale_colour_viridis_d(name = "")
-  } else { # none
-    p <- p +
-      ggplot2::geom_line(
-        ggplot2::aes(
-          y = .data$.response,
-          group = interaction(!!!all_avail)
-        ),
-        color = .base_color
-      )
+    ))
   }
 
-  if (".facets" %in% names(object)) {
-    p <- p + ggplot2::facet_wrap(~.facets, scales = "free_y") +
-      ggplot2::ylab(names(vars))
+  facets_prefix <- if (".facets" %in% names(object)) {
+    autoplot_get_prefix(.facet_by)
+  } else {
+    ""
+  }
+
+  if (".facets" %in% names(object) && !(.interactive && .facet_to_dropdown)) {
+    p <- p + ggplot2::facet_wrap(~.facets,
+      scales = "free_y",
+      labeller = ggplot2::as_labeller(function(x) paste0(facets_prefix, x))
+    ) +
+      ggplot2::ylab(paste(names(vars), collapse = ", "))
     if (.facet_by == "all") p <- p + ggplot2::ylab("")
-  } else if ((length(vars) > 1 && .facet_by == ".response")) {
-    p <- p + ggplot2::facet_wrap(~.response_name, scales = "free_y") +
+  } else if ((length(vars) > 1 && .facet_by == ".response") && !(.interactive && .facet_to_dropdown)) {
+    p <- p + ggplot2::facet_wrap(~.response_name,
+      scales = "free_y",
+      labeller = ggplot2::as_labeller(function(x) paste0("Response: ", x))
+    ) +
       ggplot2::ylab("")
   } else {
-    p <- p + ggplot2::ylab(names(vars))
+    p <- p + ggplot2::ylab(paste(names(vars), collapse = ", "))
   }
-  if (interactive) {
-    if (".facets" %in% names(object)) {
-      # Use the interactive helper with dropdowns.
-      trace_col <- if (".colours" %in% names(object)) ".colours" else if (nvars > 1) ".response_name" else NULL
-      return(autoplot_plotly_dropdown(
-        data = object,
-        group_col = ".facets",
-        trace_col = trace_col,
-        .base_color = .base_color,
-        yaxis_title = names(vars)[1]
-      ))
-    }
-    return(autoplot_interactive_df(p, object, .max_keys))
+
+  if (.interactive) {
+    return(autoplot_interactive_df(p, object, .max_keys, .facet_by))
   }
   p
 }
@@ -277,14 +330,14 @@ autoplot_check_viable_response_vars <- function(
 
 
 autoplot_subsample_keys <- function(
-  object, geo_and_other_keys, .max_keys, interactive, .facet_used
+  object, geo_and_other_keys, .max_keys, .interactive, .facet_used
 ) {
-  if (interactive || is.infinite(.max_keys)) {
+  if (.interactive || is.infinite(.max_keys)) {
     return(object)
   }
 
   epikey_combinations <- rlang::inject(
-    interaction(!!!object[geo_and_other_keys], sep = " / ", drop = TRUE)
+    interaction(!!!object[geo_and_other_keys], sep = "; ", drop = TRUE)
   )
   unique_epikeys <- levels(epikey_combinations)
   num_epikeys <- length(unique_epikeys)
@@ -293,19 +346,19 @@ autoplot_subsample_keys <- function(
     return(object)
   }
 
-  max_keys_val <- .max_keys
+  max_keys_val <- .max_keys # {cli}-compatible name
   sampled_epikeys <- sample(unique_epikeys, max_keys_val)
 
   msg <- c(
     "Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
     i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
-    i = "To explore all keys interactively, use `autoplot(..., interactive = TRUE)`."
+    i = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
   )
   if (.facet_used) {
     msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
   }
 
-  cli::cli_warn(msg, class = "epiprocess__autoplot_max_keys_exceeded")
+  cli::cli_warn(msg, class = "epiprocess__autoplot__max_keys_exceeded")
   object[epikey_combinations %in% sampled_epikeys, ]
 }
 
@@ -313,28 +366,31 @@ autoplot_subsample_keys <- function(
 autoplot_plotly_dropdown <- function(
   data, group_col, trace_col = NULL,
   color_map = NULL, .base_color = "#3A448F",
-  xaxis_title = "Date", yaxis_title = "", legend_title = ""
+  xaxis_title = "Date", yaxis_title = "", legend_title = "",
+  dropdown_prefix = "Key: "
 ) {
-  rlang::check_installed("plotly")
+  # Initialize color map if trace_col is provided but map is not
+  if (is.null(color_map) && !is.null(trace_col) && trace_col %in% names(data)) {
+    all_trace_vals <- levels(droplevels(as.factor(data[[trace_col]])))
+    n_colors <- length(all_trace_vals)
+    colors <- grDevices::hcl.colors(n_colors, palette = "viridis")
+    color_map <- stats::setNames(colors, all_trace_vals)
+  }
 
-  unique_groups <- levels(droplevels(as.factor(data[[group_col]])))
+  # Split data by the group column to avoid quadratic filtering performance
+  # We ensure it's a factor to maintain consistent ordering
+  data[[group_col]] <- droplevels(as.factor(data[[group_col]]))
+  unique_groups <- levels(data[[group_col]])
+  group_data_list <- data %>% dplyr::group_split(.data[[group_col]])
 
-  # Prepare lines to be added to the plot
-  trace_specs <- list()
-  trace_group_idx <- integer(0)
-
-  # Identify each dropdown option
-  for (gi in seq_along(unique_groups)) {
-    g <- unique_groups[gi]
-    g_data <- data[data[[group_col]] == g, , drop = FALSE]
-
+  # Identify each dropdown option and its traces
+  trace_specs <- purrr::map2(group_data_list, unique_groups, function(g_data, g) {
     # Handle multiple lines within one dropdown selection
     if (!is.null(trace_col) && trace_col %in% names(g_data)) {
-      sub_trace_vals <- unique(g_data[[trace_col]])
-      if (is.factor(sub_trace_vals)) {
-        sub_trace_vals <- levels(droplevels(sub_trace_vals))
+      sub_trace_vals <- if (is.factor(g_data[[trace_col]])) {
+        levels(droplevels(g_data[[trace_col]]))
       } else {
-        sub_trace_vals <- sort(sub_trace_vals)
+        sort(unique(g_data[[trace_col]]))
       }
     } else {
       # one line per dropdown option
@@ -342,10 +398,9 @@ autoplot_plotly_dropdown <- function(
     }
 
     # Creates the individual lines for a single dropdown selection
-    for (si in seq_along(sub_trace_vals)) {
-      s_val <- sub_trace_vals[si]
-      s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, , drop = FALSE]
-      s_data <- s_data[order(s_data$time_value), , drop = FALSE]
+    purrr::map(sub_trace_vals, function(s_val) {
+      s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, ]
+      s_data <- s_data[order(s_data$time_value), ]
 
       # "metadata" for the specific line
       lc <- if (!is.null(color_map)) {
@@ -356,94 +411,138 @@ autoplot_plotly_dropdown <- function(
         .base_color
       }
 
-      label <- if (identical(s_val, "default")) "" else as.character(s_val)
-
-      # Store the spec for later rendering
-      trace_specs[[length(trace_specs) + 1L]] <- list(
-        data = s_data, color = lc, label = label, gi = gi, s_val = s_val
+      list(
+        data = s_data,
+        color = lc %||% .base_color,
+        label = if (identical(s_val, "default")) "" else as.character(s_val),
+        g_val = g,
+        show_legend = length(sub_trace_vals) > 1
       )
-      trace_group_idx <- c(trace_group_idx, gi)
-    }
-  }
-
+    })
+  }) %>%
+    purrr::list_flatten()
 
   # Add the line to the plot
-  p <- Reduce(function(p, spec) {
+  p <- purrr::reduce(trace_specs, function(p, spec) {
     plotly::add_trace(p,
       data = spec$data,
       x = ~time_value, y = ~.response,
       type = "scatter", mode = "lines",
-      line = list(color = spec$color %||% .base_color, width = 1.5),
+      line = list(color = spec$color, width = 1.5),
       hoverinfo = "text",
       text = ~ paste0(
-        "Key: ", .data[[group_col]],
-        if (!is.null(spec$label) && spec$label != "") paste0("<br>", spec$label) else "",
+        dropdown_prefix, get(group_col),
+        if (spec$label != "") paste0("<br>", spec$label) else "",
         "<br>Date: ", time_value,
         "<br>Value: ", round(.response, 3)
       ),
       name = spec$label,
       legendgroup = spec$label,
-      showlegend = (spec$gi == 1),
-      visible = (spec$gi == 1)
+      showlegend = (spec$g_val == unique_groups[1]) && spec$show_legend,
+      visible = (spec$g_val == unique_groups[1])
     )
-  }, trace_specs, init = plotly::plot_ly())
+  }, .init = plotly::plot_ly())
 
   # Creates the buttons for the dropdown menu and updates the plot title
-  buttons <- lapply(seq_along(unique_groups), function(gi) {
-    is_active <- trace_group_idx == gi
+  trace_group_vals <- purrr::map_chr(trace_specs, ~ .x$g_val)
+  buttons <- purrr::map(unique_groups, function(g) {
+    is_active <- trace_group_vals == g
+    show_legend <- is_active & purrr::map_lgl(trace_specs, ~ .x$show_legend)
     list(
       method = "update",
       args = list(
-        list(visible = as.list(is_active), showlegend = as.list(is_active)),
-        list(title = list(text = paste("Key:", unique_groups[gi])))
+        list(visible = as.list(is_active), showlegend = as.list(show_legend)),
+        list(title = list(text = paste0(dropdown_prefix, g)))
       ),
-      label = unique_groups[gi]
+      label = g
     )
   })
 
-  p <- plotly::layout(p,
-    title = list(text = paste("Key:", unique_groups[1])),
-    xaxis = list(title = xaxis_title),
-    yaxis = list(title = yaxis_title, fixedrange = TRUE),
-    legend = list(title = list(text = legend_title)),
-    updatemenus = list(
-      list(
-        type = "dropdown",
-        active = 0,
-        buttons = buttons,
-        x = 0.05, y = 1.15
+  p %>%
+    plotly::layout(
+      title = list(text = paste0(dropdown_prefix, unique_groups[1])),
+      xaxis = list(title = xaxis_title),
+      yaxis = list(title = yaxis_title, fixedrange = TRUE),
+      legend = list(title = list(text = legend_title)),
+      updatemenus = list(
+        list(
+          type = "dropdown",
+          active = 0,
+          buttons = buttons,
+          x = 0.05, y = 1.15
+        )
       )
-    )
-  ) %>%
+    ) %>%
     plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"))
-
-  return(p)
 }
 
-autoplot_interactive_df <- function(p, object, .max_keys) {
-  rlang::check_installed("plotly")
+autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_names) {
+  switch(opt,
+    all_keys = geo_and_other_keys,
+    geo_value = "geo_value",
+    other_keys = vctrs::vec_set_difference(geo_and_other_keys, "geo_value"),
+    .response = if (nvars > 1) ".response_name" else character(0),
+    all = all_avail_names,
+    none = character(0)
+  )
+}
 
+autoplot_make_interaction_expr <- function(vars) {
+  if (length(vars) == 0) {
+    return(NULL)
+  }
+  if (length(vars) == 1) {
+    return(rlang::expr(as.factor(!!rlang::sym(vars))))
+  }
+  rlang::expr(interaction(!!!rlang::syms(vars), sep = "; "))
+}
+
+autoplot_get_prefix <- function(type) {
+  switch(type,
+    all_keys = "Keys: ",
+    geo_value = "Geo: ",
+    other_keys = "Other Keys: ",
+    all = "All: ",
+    ""
+  )
+}
+
+
+autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
-  if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
+  if (!is.infinite(.max_keys) &&
+        (".colours" %in% names(object)) &&
+        inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
       # Keys to keep
-      keep <- keys[seq_len(.max_keys)]
+      keep <- sample(keys, .max_keys)
       p_plotly$x$data <- purrr::map(p_plotly$x$data, \(tr) {
         # Do not display keys that are not kept (still showing legend)
-        if ((tr$name %||% "") %in% setdiff(keys, keep)) tr$visible <- "legendonly"
+        if ((tr$name %||% "") %in% vctrs::vec_set_difference(keys, keep)) tr$visible <- "legendonly"
         tr
       })
+      cli::cli_inform(
+        c(
+          "Plotting {.val {(length(keys))}} keys can be hard to read.",
+          "i" = "Showing a random subset of {.val {(.max_keys)}} keys by default.",
+          "i" = "Select additional keys in the legend on the right.",
+          "i" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
+        ),
+        class = "epiprocess__autoplot_interactive_subsetting"
+      )
     }
   }
 
-  # Fix y-axis range
+  # Fix y-axis range for all facet panels (yaxis, yaxis2, yaxis3, ...)
+  yaxis_names <- grep("^yaxis", names(p_plotly$x$layout), value = TRUE)
+  if (length(yaxis_names) == 0L) yaxis_names <- "yaxis"
+  for (ax in yaxis_names) {
+    p_plotly$x$layout[[ax]]$fixedrange <- TRUE
+  }
   p_plotly <- p_plotly %>%
-    plotly::layout(
-      yaxis = list(fixedrange = TRUE)
-    ) %>%
     plotly::config(
       modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")
     )
@@ -465,13 +564,6 @@ autoplot_interactive_df <- function(p, object, .max_keys) {
 #'   of versions.
 #' @param .mark_versions Logical. Indicate whether to mark each version with
 #'   a vertical line. Note that displaying many versions can become busy.
-#' @param .max_keys Maximum number of key combinations to display. If the data
-#'   contains more key combinations than this limit, a random sample of size
-#'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `interactive = TRUE`.
-#' @param interactive Logical. If `TRUE`, returns an interactive
-#'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
-#'   This is especially useful for exploring datasets with many keys.
 #'
 #' @export
 #' @rdname autoplot-epi
@@ -506,13 +598,14 @@ autoplot.epi_archive <- function(object, ...,
                                  .mark_versions = FALSE,
                                  .facet_filter = NULL,
                                  .max_keys = 6,
-                                 interactive = FALSE) {
+                                 .interactive = FALSE,
+                                 .facet_to_dropdown = FALSE) {
   time_type <- object$time_type
   checkmate::assert_number(.max_keys, lower = 1)
-  checkmate::assert_logical(.mark_versions, len = 1L)
-  checkmate::assert_logical(interactive, len = 1L)
+  checkmate::assert_logical(.mark_versions, len = 1L, any.missing = FALSE)
+  checkmate::assert_logical(.interactive, len = 1L, any.missing = FALSE)
   if (time_type == "custom") {
-    cli_abort(
+    cli::cli_abort(
       "This `epi_archive` has custom `time_type`. This is currently unsupported.",
       class = "epiprocess__autoplot_archive_custom_time_type"
     )
@@ -523,39 +616,44 @@ autoplot.epi_archive <- function(object, ...,
 
   tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
   .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
-  if (is.character(.versions) || length(.versions) == 1L) {
+  if ((is.character(.versions) || rlang::is_bare_numeric(.versions)) && length(.versions) == 1L) {
+    # Interpret `.versions` as a period (even if archive versions are also bare numeric...)
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
-    .versions <- seq(min_version, max_version - 1, by = .versions)
-  } else if (methods::is(.versions, "Date") || is.numeric(.versions)) {
+    .versions <- seq(min_version, max_version, by = .versions)
+  } else if (inherits(.versions, "Date") || inherits(.versions, "Date")) {
+    old_n_versions <- length(.versions)
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
+    if (length(.versions) != old_n_versions) {
+      cli_inform("Removed entries from `.versions` that weren't in the range of archive versions with update rows.")
+    }
   } else {
-    cli_abort(
+    cli::cli_abort(
       "Requested `.versions` don't appear to match the available `time_type`.",
       class = "epiprocess__autoplot_archive_bad_versions"
     )
   }
 
+  split_out_finalized <- !.interactive
+  if (split_out_finalized) {
+    .versions <- .versions[.versions != max_version]
+  }
 
   finalized <- epix_as_of(object, max_version)
   key_cols <- key_colnames(finalized)
-  non_key_cols <- setdiff(names(finalized), key_cols)
+  non_key_cols <- vctrs::vec_set_difference(names(finalized), key_cols)
   vars <- autoplot_check_viable_response_vars(finalized, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
 
-  eff_max_keys <- if (interactive) Inf else .max_keys
+  eff_max_keys <- if (.interactive) Inf else .max_keys
 
-  bp <- autoplot.epi_df(
+  bp <- autoplot(
     finalized, ...,
     .base_color = .base_color, .facet_by = "all",
     .facet_filter = {{ .facet_filter }}, .color_by = "none",
-    .max_keys = eff_max_keys
+    .max_keys = eff_max_keys, .facet_to_dropdown = FALSE
   ) + ggplot2::xlab("Date")
 
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
-  all_avail <- rlang::syms(as.list(c(
-    geo_and_other_keys,
-    if (nvars > 1) ".response_name" else NULL
-  )))
 
   snapshots <- purrr::map(
     .versions,
@@ -563,8 +661,7 @@ autoplot.epi_archive <- function(object, ...,
       dplyr::mutate(epix_as_of(object, v), version = .env$v)
     }
   ) %>%
-    purrr::list_rbind() %>%
-    dplyr::mutate(.facets = interaction(!!!all_avail, sep = " / "))
+    purrr::list_rbind()
 
   if (nvars > 1) {
     snapshots <- tidyr::pivot_longer(
@@ -576,23 +673,31 @@ autoplot.epi_archive <- function(object, ...,
     snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
   }
 
+  all_avail_names <- c(
+    geo_and_other_keys,
+    if (nvars > 1) ".response_name" else NULL
+  )
+  all_avail <- rlang::syms(all_avail_names)
+
+  snapshots <- snapshots %>%
+    dplyr::mutate(.facets = interaction(!!!all_avail, sep = "; "))
+
   snapshots <- snapshots %>%
     dplyr::filter(!is.na(.response), .data$.facets %in% unique(bp$data$.facets))
 
-  if (interactive) {
+  if (.interactive && .facet_to_dropdown) {
     return(autoplot_interactive_archive(
-      snapshots, .base_color, methods::is(.versions, "Date")
+      snapshots, .base_color, "all"
     ))
   }
-
 
   bp <- bp +
     ggplot2::geom_line(
       data = snapshots,
-      mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version))
+      mapping = ggplot2::aes(y = .response, color = version, group = interaction(!!!all_avail, version, sep = "; "))
     )
 
-  if (methods::is(.versions, "Date")) {
+  if (inherits(.versions, "Date")) {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version", trans = "date")
   } else {
     bp <- bp + ggplot2::scale_color_viridis_c(name = "Version")
@@ -611,10 +716,14 @@ autoplot.epi_archive <- function(object, ...,
   # make the finalized layer last
   bp$layers <- rev(bp$layers)
 
+  if (.interactive) {
+    return(plotly::ggplotly(bp))
+  }
+
   bp
 }
 
-autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_dates) {
+autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by) {
   # Build color palette
   all_versions <- sort(unique(snapshots$version))
   n_versions <- length(all_versions)
@@ -628,20 +737,15 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .versions_are_d
   }
   color_map <- stats::setNames(version_colors, as.character(all_versions))
 
-  # Formatted labels for the legend
-  if (.versions_are_dates) {
-    snapshots$version_label <- as.character(as.Date(snapshots$version, origin = "1970-01-01"))
-  } else {
-    snapshots$version_label <- as.character(snapshots$version)
-  }
-
   # Use the generalized dropdown helper
+  prefix <- autoplot_get_prefix(.facet_by)
   autoplot_plotly_dropdown(
     data = snapshots,
     group_col = ".facets",
     trace_col = "version",
     color_map = color_map,
-    legend_title = "Version"
+    legend_title = "Version",
+    dropdown_prefix = prefix
   )
 }
 

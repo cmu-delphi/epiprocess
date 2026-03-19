@@ -4,7 +4,7 @@
 \alias{gcd_num}
 \title{Find the greatest common divisor of all entries in a numeric vector}
 \usage{
-gcd_num(dividends, ..., rrtol = 0.000001, pqlim = 1000000, irtol = 0.000001)
+gcd_num(dividends, ..., rrtol = 1e-06, pqlim = 1e+06, irtol = 1e-06)
 }
 \arguments{
 \item{dividends}{\code{is.numeric}, \code{length} > 0; the dividends for which to find

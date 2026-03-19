@@ -13,7 +13,8 @@ indicate development versions beyond 0.x.
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
-- `autoplot()` now includes `.max_keys` and `interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown, improving both performance and readability. The `interactive` feature enables interactive plots using Plotly.
+- `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
+- Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
 - `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
 
 ## Bug fixes
