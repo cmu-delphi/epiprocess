@@ -492,8 +492,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-    (".colours" %in% names(object)) &&
-    inherits(p$facet, "FacetNull")) {
+        (".colours" %in% names(object)) &&
+        inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
