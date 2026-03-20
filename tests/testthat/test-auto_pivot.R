@@ -8,9 +8,8 @@ test_that("as_epi_df auto-detects long format and pivots", {
   )
 
   # Auto detection
-  expect_message(
-    df <- as_epi_df(raw),
-    regexp = "pivoting long to wide"
+  expect_snapshot(
+    df <- as_epi_df(raw)
   )
   expect_s3_class(df, "epi_df")
   expect_true(all(c("cases", "deaths") %in% names(df)))
@@ -29,9 +28,8 @@ test_that("as_epi_df supports explicit long format via input_format and signal_v
   )
 
   # Explicit long format
-  expect_message(
-    df <- as_epi_df(raw, input_format = "long", signal_var = "custom_signal"),
-    regexp = "pivoting long to wide"
+  expect_snapshot(
+    df <- as_epi_df(raw, input_format = "long", signal_var = "custom_signal")
   )
   expect_true(all(c("a", "b") %in% names(df)))
 })
@@ -45,14 +43,14 @@ test_that("as_epi_df errors if signal_var or value column is missing in long for
     not_value = 1:5
   )
 
-  expect_error(
+  expect_snapshot(
     as_epi_df(raw, input_format = "long", signal_var = "signal"),
-    regexp = "requires a `value` column"
+    error = TRUE
   )
 
-  expect_error(
+  expect_snapshot(
     as_epi_df(raw, input_format = "long", signal_var = "nonexistent"),
-    regexp = "not found in `x`"
+    error = TRUE
   )
 })
 
@@ -66,9 +64,8 @@ test_that("as_epi_archive auto-detects long format and pivots", {
     value = 1:10
   )
 
-  expect_message(
-    arch <- as_epi_archive(raw),
-    regexp = "pivoting long to wide"
+  expect_snapshot(
+    arch <- as_epi_archive(raw)
   )
   expect_s3_class(arch, "epi_archive")
   expect_true(all(c("cases", "deaths") %in% names(arch$DT)))
@@ -100,7 +97,28 @@ test_that("as_epi_df drops extra metadata columns during auto-pivot", {
   )
 
   # Should pivot and drop 'direction'
-  expect_message(edf <- as_epi_df(df), "pivoting long to wide")
+  expect_snapshot(edf <- as_epi_df(df))
   expect_named(edf, c("geo_value", "time_value", "cases", "deaths"))
   expect_false("direction" %in% names(edf))
+})
+
+test_that("as_epi_archive handles long-format with LOCF during pivot", {
+  # Case provided by user
+  tib <- tibble::tibble(
+    geo_value = 1,
+    time_value = 1,
+    version = c(1, 1, 2),
+    signal = c("a", "b", "a"),
+    value = c(1, 11, 2)
+  )
+
+  expect_snapshot(
+    arch <- as_epi_archive(tib)
+  )
+
+  # Check that version 2 has both 'a' and 'b'
+  # 'a' should be updated to 2, 'b' should be carried forward as 11
+  expect_equal(nrow(arch$DT), 2)
+  expect_equal(arch$DT$a, c(1, 2))
+  expect_equal(arch$DT$b, c(11, 11))
 })

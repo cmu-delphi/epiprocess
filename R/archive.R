@@ -508,6 +508,68 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
   }
 }
 
+#' Pivot long format data to wide format specifically for epi_archive
+#' @keywords internal
+#' @noRd
+pivot_epi_archive <- function(x, input_format, signal_var, other_keys, compactify,
+                              compactify_abs_tol, clobberable_versions_start, versions_end,
+                              geo_type, time_type) {
+  if (input_format == "auto") {
+    candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+    if (length(candidates) > 0) {
+      input_format <- "long"
+      signal_var <- signal_var %||% candidates[1]
+    } else {
+      input_format <- "wide"
+    }
+  }
+
+  if (input_format == "long") {
+    if (is.null(signal_var)) {
+      cli::cli_abort("`signal_var` must be specified when `input_format = 'long'`.")
+    }
+    if (!(signal_var %in% names(x))) {
+      cli::cli_abort("Column {.var {signal_var}} not found in `x`.")
+    }
+    value_var <- "value"
+    if (!(value_var %in% names(x))) {
+      cli::cli_abort("Pivoting long to wide requires a {.var {value_var}} column.")
+    }
+
+    cli::cli_inform("as_epi_archive: converting long to wide by turning each signal into an archive separately and merging.")
+
+    archives <- x %>%
+      dplyr::group_split(!!rlang::sym(signal_var)) %>%
+      purrr::map(function(df) {
+        sig_name <- df[[signal_var]][1]
+        df <- df %>%
+          dplyr::select(tidyselect::any_of(c("geo_value", other_keys, "time_value", "version")), !!rlang::sym(value_var)) %>%
+          dplyr::rename(!!sig_name := !!rlang::sym(value_var))
+
+        new_epi_archive(
+          df,
+          geo_type = geo_type,
+          time_type = time_type,
+          other_keys = other_keys,
+          clobberable_versions_start = clobberable_versions_start,
+          versions_end = versions_end
+        )
+      })
+
+    return(Reduce(
+      function(x, y) {
+        epix_merge(x, y,
+          compactify = compactify,
+          compactify_abs_tol = compactify_abs_tol
+        )
+      },
+      archives
+    )$DT)
+  }
+
+  return(x)
+}
+
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
@@ -551,11 +613,6 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "geo_value", geo_column_names())
   x <- guess_column_name(x, "version", version_column_names())
 
-  x <- pivot_epi_data(x, input_format, signal_var,
-    id_cols = c("geo_value", other_keys, "time_value", "version"),
-    caller_name = "as_epi_archive"
-  )
-
   if (lifecycle::is_present(geo_type)) {
     cli_warn("epi_archive constructor argument `geo_type` is now ignored. Consider removing.")
   }
@@ -565,6 +622,12 @@ as_epi_archive <- function(
 
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
+
+  x <- pivot_epi_archive(
+    x, input_format, signal_var, other_keys, compactify,
+    compactify_abs_tol, clobberable_versions_start, versions_end,
+    geo_type, time_type
+  )
 
   result <- validate_epi_archive(new_epi_archive(
     x, geo_type, time_type, other_keys,
