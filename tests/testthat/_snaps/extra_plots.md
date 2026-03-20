@@ -40,8 +40,8 @@
     Condition
       Warning:
       Plotting 100 keys can be slow and hard to read. Subsampling to 10 keys.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
+      > To plot all keys, use `autoplot(..., .max_keys = Inf)`.
+      > To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
 
 ---
 

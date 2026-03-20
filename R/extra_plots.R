@@ -49,16 +49,17 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
 
   # Create a valid df to plot based on selected vars
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), x
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), x,
+    allow_rename = FALSE
   )
   if (nvars > 1) {
     x <- tidyr::pivot_longer(
-      x[pos], tidyselect::all_of(names(vars)),
+      x[pos], tidyselect::all_of(vars),
       values_to = ".response",
       names_to = ".response_name"
     )
   } else {
-    x <- dplyr::rename(x[pos], .response := !!names(vars)) # nolint: object_usage_linter
+    x <- dplyr::rename(x[pos], .response := !!vars) # nolint: object_usage_linter
   }
 
   # We use interaction of all geo/other keys for the y-axis

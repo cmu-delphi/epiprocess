@@ -89,13 +89,13 @@ test_that("autoplot errors when multiple numeric columns are present and no `val
 
 test_that("autoplot errors when all specified columns are not numeric, and lists column names", {
   expect_error(autoplot(ungrouped_chr, value),
-    regexp = ".*value.*",
+    regexp = "`value` is not numeric",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 
   testdf <- mutate(ungrouped_chr, value2 = "d")
   expect_error(autoplot(testdf, value, value2),
-    regexp = ".*variables `value` and `value2` are.*",
+    regexp = "None of the requested variables `value` and `value2` are numeric.",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 
@@ -108,13 +108,13 @@ test_that("autoplot errors when all specified columns are not numeric, and lists
 test_that("autoplot warns when some specified columns are not numeric, and lists column names", {
   testdf <- mutate(ungrouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*variable `value` is numeric.*cannot display `value2`.*",
+    regexp = "cannot display `value2`, as they are not numeric",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 
   testdf <- mutate(grouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*variable `value` is numeric.*cannot display `value2`.*",
+    regexp = "cannot display `value2`, as they are not numeric",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 })

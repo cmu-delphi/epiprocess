@@ -318,7 +318,7 @@ autoplot_check_viable_response_vars <- function(
       cli::cli_warn(
         c(
           "`autoplot()` cannot display {.var {vars[!ok]}}, as they are not numeric",
-          i = "Only plotting {.var {names(vars)[ok]}}."
+          ">" = "Only plotting {.var {vars[ok]}}."
         ),
         class = "epiprocess__some_requested_vars_not_numeric",
         call = call,
