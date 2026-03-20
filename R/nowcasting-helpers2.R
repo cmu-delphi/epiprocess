@@ -233,31 +233,6 @@ version_obj.epi_archive <- function(x) {
   x$DT$version
 }
 
-ct_tzone <- function(x) UseMethod("ct_tzone")
-
-#' @export
-ct_tzone.POSIXct <- function(x) attr(x, "tzone")
-
-#' @export
-ct_tzone.POSIXlt <- function(x) {
-  # Turn length-3-or-length-1 character format into string; the time
-  # zone name or "".
-  result <- attr(x, "tzone")[[1L]]
-  if (result == "") {
-    # These are cursed objects that sometimes use $zone and other
-    # fields, and sometimes use tzone attr. and this isn't just for
-    # when tzone is "" / starts with ""; also similar with if tzone
-    # was changed to something real... "" just also introduces
-    # ambiguity in which time instant it refers to for some functions.
-    # Probably should just not allow POSIXlt; seems more for
-    # extracting info.
-    stop("FIXME maybe can't actually just turn this into NULL; lt actually seems to look at later entries?  though there is also some inconsistent timezone caching and/or ignorance of TZ env var going on... might just be saving in $zone... that seems fine")
-    NULL
-  } else {
-    result
-  }
-}
-
 session_tz <- function() {
   tz <- Sys.getenv("TZ")
   if (tz == "") {
@@ -266,37 +241,51 @@ session_tz <- function() {
   tz
 }
 
-set_time_tz <- function(x, tz = NULL) {
+force_time_tz <- function(x, tz = NULL) {
   if (is.null(tz)) {
     old_time_type <- time_type(x)
-    if (is.null(attr(old_time_type, "tzone"))) {
+    if (!is.null(attr(old_time_type, "tzone"))) {
       return(x)
     }
-    if (is.null(tz)) {
-      if (!is.null(x_version_tz <- ct_tzone(version_obj(x)))) {
-        cli_inform("Setting `time_value` tz to {format_chr_deparse(x_version_tz)},
-                    in order to match as_of/versions of `x`")
-        tz <- x_version_tz
-      } else {
-        stop("TODO set based on session")
+    this_session_tz <- session_tz()
+    x_version_obj <- version_obj(x)
+    if (inherits(x_version_obj, "POSIXct")) {
+      x_version_tz <- attr(x_version_tz, "tzone")
+      if (!is.null(x_version_tz) && x_version_tz != tz) {
+        cli_abort(c("
+          This R session's default time zone is {format_chr_deparse(this_session_tz)},
+          but {.var x} has {.var version}/{.var as_of} set to display with {format_chr_deparse(x_version_tz)};
+          not sure which time zone to guess that {.var time_value}s are in terms of.
+        ",
+        ">" = "Manually call {.code force_time_tz(x, intended_time_value_time_zone)}, or",
+        ">" = 'Set the {.code "tzone"} {.code attr} of {.var version}/{.var as_of} to {.code NULL},
+               to let this function just guess the session time zone.'
+        ))
       }
     }
+    cli_inform("Guessing that times values should be interpreted
+                with a time zone of {.code {format_chr_deparse(this_session_tz)}},
+                based on this R session's timezone.")
+    tz <- this_session_tz
+  } else {
+    assert_string(tz)
   }
-  stop("TODO")
-  stop("except actually should be worrying about the time_value tz")
+  switch(
+    time_type(x),
+    day =, week =, yearmonth = {
+        if (! tz %in% OlsonNames()) {
+          cli_abort(c("{.var tz} must be a time zone listed in {.code OlsonNames()}, not {.code {format_chr_deparse(tz)}}"))
+        }
+        new_time_type <- old_time_type
+        attr(new_time_type, "tzone") <- tz
+        x <- set_time_type0(x, new_time_type)
+    },
+    cli_abort("Setting {.var time_value} time zone with a {.var time_type} of {format_chr_deparse(time_type)} is unsupported.")
+  )
+  x
 }
 
 # TODO infer_time_week_end / guess_time_week_end.... and integrate into guess_time_type?
-
-# * time with no tz, version with no tz -> assume both use session tz
-# * time with no tz, version with tz -> assume time is version tz?
-# * time with tz, version with no tz -> we don't necessarily need to do anything? we can calc diffs without needing to set version tz
-# * time with tz, version with tz -> fine
-#
-# ... or just simplify and infer time to current tz by default, warn if different from version display tz?
-#
-# ... except perhaps lt's with tzone e.g., c("", "PST", "PDT")... is
-# it trying to specify an unambiguous time or not?
 
 # TODO printing week end metadata
 

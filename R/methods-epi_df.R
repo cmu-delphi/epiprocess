@@ -76,13 +76,18 @@ print.epi_df <- function(x, ...) {
   if (x_time_type == "week" && !is.null(ending_lt_wday)) {
     if (nrow(x) > 0L) {
       repr_lt_wday <- as.POSIXlt(x$time_value[[1L]])$wday
-      cat(sprintf("* %-9s = %s (represented by %s, ending on %s)\n", "time_type", x_time_type, lt_wday_abbr(repr_lt_wday), lt_wday_abbr(ending_lt_wday)))
+      cat(sprintf("* %-9s = %s (represented by %s, ending on %s)", "time_type", x_time_type, lt_wday_abbr(repr_lt_wday), lt_wday_abbr(ending_lt_wday)))
     } else {
-      cat(sprintf("* %-9s = %s (ending on %s)\n", "time_type", x_time_type, lt_wday_abbr(ending_lt_wday)))
+      cat(sprintf("* %-9s = %s (ending on %s)", "time_type", x_time_type, lt_wday_abbr(ending_lt_wday)))
     }
   } else {
-    cat(sprintf("* %-9s = %s\n", "time_type", x_time_type))
+    cat(sprintf("* %-9s = %s", "time_type", x_time_type))
   }
+  x_time_tz <- attr(time_type(x), "tzone")
+  if (!is.null(x_time_tz)) {
+    cat(sprintf(sprintf(' (in %s time zone)', format_chr_deparse(x_time_tz))))
+  }
+  cat("\n")
   ok <- attributes(x)$metadata$other_keys
   if (length(ok) > 0) {
     cat(sprintf("* %-9s = %s\n", "other_keys", paste(ok, collapse = ", ")))

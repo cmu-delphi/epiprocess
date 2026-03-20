@@ -654,9 +654,15 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
             repr_lt_wday <- as.POSIXlt(x$DT$time_value[[1L]])$wday
             line <- paste0(line, " (times are
                                     {lt_wday_abbr((ending_lt_wday-6L)%%7L)}--{lt_wday_abbr(ending_lt_wday)}
-                                    weeks, represented by {lt_wday_abbr(repr_lt_wday)})")
+                                    weeks, represented by {lt_wday_abbr(repr_lt_wday)}")
           } else {
-            line <- paste0(line, " (times are {time_type(x)}s)")
+            line <- paste0(line, " (times are {time_type(x)}s")
+          }
+          time_tz <- attr(time_type(x), "tzone")
+          if (is.null(time_tz)) {
+            line <- paste0(line, ")")
+          } else {
+            line <- paste0(line, ', in {format_chr_deparse(time_tz)} time zone)')
           }
         }
         line
