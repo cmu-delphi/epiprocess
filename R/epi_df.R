@@ -255,8 +255,7 @@ as_epi_df.tbl_df <- function(
   x <- guess_column_name(x, "geo_value", geo_column_names())
 
   x <- pivot_epi_data(x, input_format, signal_var,
-    id_cols = c("geo_value", other_keys, "time_value"),
-    caller_name = "as_epi_df"
+    id_cols = c("geo_value", other_keys, "time_value")
   )
 
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
@@ -355,6 +354,48 @@ as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(),
     input_format = input_format, signal_var = signal_var, ...
   )
 }
+
+
+#' Pivot epi data from long to wide format
+#'
+#' @keywords internal
+#' @importFrom tidyr pivot_wider
+#' @importFrom cli cli_inform cli_abort
+#' @importFrom tidyselect any_of
+#' @importFrom dplyr all_of
+#' @noRd
+pivot_epi_data <- function(x, input_format, signal_var, value_var = "value",
+                           id_cols = NULL) {
+  if (input_format == "auto") {
+    candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+    if (length(candidates) == 0) return(x)
+    input_format <- "long"
+    signal_var <- signal_var %||% candidates[1]
+  }
+
+  if (input_format == "long") {
+    if (is.null(signal_var)) {
+      cli::cli_abort("`signal_var` must be specified when `input_format = 'long'`.")
+    }
+    if (!(signal_var %in% names(x))) {
+      cli::cli_abort("Column {.var {signal_var}} not found in `x`.")
+    }
+    if (!(value_var %in% names(x))) {
+      cli::cli_abort("Pivoting long to wide requires a {.var {value_var}} column.")
+    }
+
+    cli::cli_inform("as_epi_df: pivoting long to wide based on {.var {signal_var}} column.")
+    x <- tidyr::pivot_wider(
+      x,
+      id_cols = tidyselect::any_of(id_cols),
+      names_from = dplyr::all_of(signal_var),
+      values_from = dplyr::all_of(value_var)
+    )
+  }
+  x
+}
+
+
 
 #' Test for `epi_df` format
 #'
