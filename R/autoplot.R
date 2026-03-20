@@ -117,17 +117,17 @@ autoplot.epi_df <- function(
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object,
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), object,
     allow_rename = FALSE
   )
   if (nvars > 1) {
     object <- tidyr::pivot_longer(
-      object[pos], tidyselect::all_of(names(vars)),
+      object[pos], tidyselect::all_of(vars),
       values_to = ".response",
       names_to = ".response_name"
     )
   } else {
-    object <- dplyr::rename(object[pos], .response := !!names(vars)) # nolint: object_usage_linter
+    object <- dplyr::rename(object[pos], .response := !!vars) # nolint: object_usage_linter
   }
   all_avail_names <- c(
     geo_and_other_keys,
@@ -195,7 +195,7 @@ autoplot.epi_df <- function(
     }
 
     # Set y-axis title based on facet variable
-    yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(names(vars), collapse = ", ")
+    yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(vars, collapse = ", ")
 
     return(autoplot_plotly_dropdown(
       data = object,
@@ -249,7 +249,7 @@ autoplot.epi_df <- function(
       scales = "free_y",
       labeller = ggplot2::as_labeller(function(x) paste0(facets_prefix, x))
     ) +
-      ggplot2::ylab(paste(names(vars), collapse = ", "))
+      ggplot2::ylab(paste(vars, collapse = ", "))
     if (.facet_by == "all") p <- p + ggplot2::ylab("")
   } else if ((length(vars) > 1 && .facet_by == ".response") && !(.interactive && .facet_to_dropdown)) {
     p <- p + ggplot2::facet_wrap(~.response_name,
@@ -258,7 +258,7 @@ autoplot.epi_df <- function(
     ) +
       ggplot2::ylab("")
   } else {
-    p <- p + ggplot2::ylab(paste(names(vars), collapse = ", "))
+    p <- p + ggplot2::ylab(paste(vars, collapse = ", "))
   }
 
   if (.interactive) {
@@ -281,14 +281,14 @@ autoplot_check_viable_response_vars <- function(
   vars <- tidyselect::eval_select(rlang::expr(c(...)), object, allow_rename = FALSE)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
     if (length(allowed) == 1L) {
-      vars <- tidyselect::eval_select(names(allowed)[1], object, allow_rename = FALSE)
+      vars <- names(allowed)[1]
       cli::cli_warn(
-        "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
+        "Plot variable was unspecified. Automatically selecting {.var {vars}}.",
         class = "epiprocess__unspecified_plot_var",
         call = call
       )
     } else if ("value" %in% names(allowed)) {
-      vars <- tidyselect::eval_select("value", object, allow_rename = FALSE)
+      vars <- "value"
       cli::cli_warn(
         "Plot variable was unspecified. Automatically selecting {.var value}.",
         class = "epiprocess__unspecified_plot_var",
@@ -305,10 +305,11 @@ autoplot_check_viable_response_vars <- function(
       )
     }
   } else { # if variables were specified, ensure that they are numeric
-    ok <- names(vars) %in% names(allowed)
+    vars <- names(vars)
+    ok <- vars %in% names(allowed)
     if (!any(ok)) {
       cli::cli_abort(
-        "{?The requested variable /None of the requested variables }{.var {names(vars)}} {?is not/are} numeric.",
+        "{?The requested variable /None of the requested variables }{.var {vars}} {?is not/are} numeric.",
         class = "epiprocess__all_requested_vars_not_numeric",
         call = call,
         qty = length(vars)
@@ -316,8 +317,8 @@ autoplot_check_viable_response_vars <- function(
     } else if (!all(ok)) {
       cli::cli_warn(
         c(
-          "{?The/Only the} requested variable{?s} {.var {names(vars)[ok]}} {?is/are} numeric.",
-          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
+          "`autoplot()` cannot display {.var {vars[!ok]}}, as they are not numeric",
+          i = "Only plotting {.var {names(vars)[ok]}}."
         ),
         class = "epiprocess__some_requested_vars_not_numeric",
         call = call,
@@ -513,8 +514,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object)) &&
-        inherits(p$facet, "FacetNull")) {
+    (".colours" %in% names(object)) &&
+    inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
@@ -666,12 +667,12 @@ autoplot.epi_archive <- function(object, ...,
 
   if (nvars > 1) {
     snapshots <- tidyr::pivot_longer(
-      snapshots, tidyselect::all_of(names(vars)),
+      snapshots, tidyselect::all_of(vars),
       values_to = ".response",
       names_to = ".response_name"
     )
   } else {
-    snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
+    snapshots <- dplyr::rename(snapshots, .response := !!vars) # nolint: object_usage_linter
   }
 
   all_avail_names <- c(
