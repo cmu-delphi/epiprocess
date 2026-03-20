@@ -117,7 +117,8 @@ autoplot.epi_df <- function(
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object,
+    allow_rename = FALSE
   )
   if (nvars > 1) {
     object <- tidyr::pivot_longer(
@@ -277,17 +278,17 @@ autoplot_check_viable_response_vars <- function(
       call = call
     )
   }
-  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
+  vars <- tidyselect::eval_select(rlang::expr(c(...)), object, allow_rename = FALSE)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
     if (length(allowed) == 1L) {
-      vars <- tidyselect::eval_select(names(allowed)[1], object)
+      vars <- tidyselect::eval_select(names(allowed)[1], object, allow_rename = FALSE)
       cli::cli_warn(
         "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
         class = "epiprocess__unspecified_plot_var",
         call = call
       )
     } else if ("value" %in% names(allowed)) {
-      vars <- tidyselect::eval_select("value", object)
+      vars <- tidyselect::eval_select("value", object, allow_rename = FALSE)
       cli::cli_warn(
         "Plot variable was unspecified. Automatically selecting {.var value}.",
         class = "epiprocess__unspecified_plot_var",
@@ -297,7 +298,7 @@ autoplot_check_viable_response_vars <- function(
       cli::cli_abort(
         c(
           "Multiple candidate plot columns: {.var {names(allowed)}}.",
-          i = "Specify the column(s) to plot, e.g. `autoplot(x, {names(allowed)[1]})`."
+          ">" = "Specify the column(s) to plot, e.g. `autoplot(x, {names(allowed)[1]})`."
         ),
         class = "epiprocess__multiple_plot_candidates",
         call = call
@@ -351,11 +352,11 @@ autoplot_subsample_keys <- function(
 
   msg <- c(
     "Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
-    i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
-    i = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
+    ">" = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
+    ">" = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
   )
   if (.facet_used) {
-    msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
+    msg <- c(msg, ">" = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
   }
 
   cli::cli_warn(msg, class = "epiprocess__autoplot__max_keys_exceeded")
@@ -528,8 +529,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
         c(
           "Plotting {.val {(length(keys))}} keys can be hard to read.",
           "i" = "Showing a random subset of {.val {(.max_keys)}} keys by default.",
-          "i" = "Select additional keys in the legend on the right.",
-          "i" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
+          ">" = "Select additional keys in the legend on the right.",
+          ">" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
         ),
         class = "epiprocess__autoplot_interactive_subsetting"
       )

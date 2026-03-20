@@ -6,9 +6,9 @@
     Condition
       Warning:
       Plotting 20 keys can be slow and hard to read. Subsampling to 10 keys.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
-      i To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
+      > To plot all keys, use `autoplot(..., .max_keys = Inf)`.
+      > To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
+      > To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
     Output
       An `epi_df` object, 30 x 3 with metadata:
       * geo_type  = custom
@@ -38,8 +38,8 @@
     Condition
       Warning:
       Plotting 20 keys can be slow and hard to read. Subsampling to 10 keys.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
+      > To plot all keys, use `autoplot(..., .max_keys = Inf)`.
+      > To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
     Output
       An `epi_df` object, 30 x 3 with metadata:
       * geo_type  = custom
