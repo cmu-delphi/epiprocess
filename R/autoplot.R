@@ -19,6 +19,7 @@
 #' @param .base_color Lines will be shown with this color if `.color_by == "none"`.
 #'  For example, with a single numeric variable and faceting by `geo_value`, all
 #'  locations would share the same color line.
+#' @param .max_facets `r lifecycle::badge("deprecated")`
 #' @param .facet_filter Select which facets will be displayed. Especially
 #'   useful for when there are many `geo_value`'s or keys. This is a
 #'   <[`rlang`][rlang::args_data_masking]> expression along the lines of [dplyr::filter()].
@@ -95,6 +96,7 @@ autoplot.epi_df <- function(
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
+  .max_facets = deprecated(),
   .max_keys = 10,
   .interactive = FALSE,
   .facet_to_dropdown = FALSE
@@ -102,6 +104,14 @@ autoplot.epi_df <- function(
   .color_by <- rlang::arg_match(.color_by)
   .facet_by <- rlang::arg_match(.facet_by)
   .facet_filter <- rlang::enquo(.facet_filter)
+
+  if (lifecycle::is_present(.max_facets)) {
+    lifecycle::deprecate_warn(
+      "0.11.1",
+      "autoplot.epi_df(.max_facets = )",
+      "autoplot.epi_df(.facet_filter = )"
+    )
+  }
   checkmate::assert_logical(.interactive, len = 1L, any.missing = FALSE)
   checkmate::assert_logical(.facet_to_dropdown, len = 1L, any.missing = FALSE)
   checkmate::assert_number(.max_keys, lower = 1)
