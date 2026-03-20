@@ -351,27 +351,21 @@ autoplot_plotly_dropdown <- function(
 ) {
   # Initialize color map if trace_col is provided but map is not
   if (is.null(color_map) && !is.null(trace_col) && trace_col %in% names(data)) {
-    all_trace_vals <- levels(droplevels(as.factor(data[[trace_col]])))
+    all_trace_vals <- sort(unique(data[[trace_col]]))
     n_colors <- length(all_trace_vals)
     colors <- grDevices::hcl.colors(n_colors, palette = "viridis")
     color_map <- stats::setNames(colors, all_trace_vals)
   }
 
   # Split data by the group column to avoid quadratic filtering performance
-  # We ensure it's a factor to maintain consistent ordering
-  data[[group_col]] <- droplevels(as.factor(data[[group_col]]))
-  unique_groups <- levels(data[[group_col]])
+  unique_groups <- as.character(sort(unique(data[[group_col]])))
   group_data_list <- data %>% dplyr::group_split(.data[[group_col]])
 
   # Identify each dropdown option and its traces
   trace_specs <- purrr::map2(group_data_list, unique_groups, function(g_data, g) {
     # Handle multiple lines within one dropdown selection
     if (!is.null(trace_col) && trace_col %in% names(g_data)) {
-      sub_trace_vals <- if (is.factor(g_data[[trace_col]])) {
-        levels(droplevels(g_data[[trace_col]]))
-      } else {
-        sort(unique(g_data[[trace_col]]))
-      }
+      sub_trace_vals <- sort(unique(g_data[[trace_col]]))
     } else {
       # one line per dropdown option
       sub_trace_vals <- "default"
@@ -492,8 +486,8 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object)) &&
-        inherits(p$facet, "FacetNull")) {
+    (".colours" %in% names(object)) &&
+    inherits(p$facet, "FacetNull")) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
