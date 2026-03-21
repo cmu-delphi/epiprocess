@@ -91,7 +91,7 @@
     Code
       pb3$x$layout$title$text
     Output
-      [1] "All: ak"
+      [1] "Geo: ak"
 
 # interactive plot sampling warning
 

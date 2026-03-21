@@ -143,15 +143,7 @@ autoplot.epi_df <- function(
     if (nvars > 1) ".response_name" else NULL
   )
   facet_vars <- autoplot_resolve_vars(.facet_by, geo_and_other_keys, nvars, all_avail_names)
-  color_vars <- autoplot_resolve_vars(.color_by, geo_and_other_keys, nvars, all_avail_names)
-
-  # Augment color with .response_name when multiple responses exist
-  # but aren't separated into their own facets.
-  if (nvars > 1 && !(".response_name" %in% facet_vars)) {
-    color_vars <- vctrs::vec_set_union(color_vars, ".response_name")
-  }
-
-  # Exclude facet variables from color variables to avoid repetitive legends
+  color_vars <- autoplot_resolve_vars(.color_by, geo_and_other_keys, nvars, all_avail_names, color = TRUE)
   color_vars <- vctrs::vec_set_difference(color_vars, facet_vars)
 
   color_expr <- autoplot_make_interaction_expr(color_vars)
@@ -212,7 +204,7 @@ autoplot.epi_df <- function(
       trace_col = trace_col,
       .base_color = .base_color,
       yaxis_title = yaxis_title,
-      dropdown_prefix = autoplot_get_prefix(.facet_by)
+      dropdown_prefix = autoplot_get_label(.facet_by, facet_vars, format = "prefix")
     ))
   }
 
@@ -220,8 +212,6 @@ autoplot.epi_df <- function(
   plot_mappings <- list()
   if (".colours" %in% names(object)) {
     plot_mappings$colour <- rlang::expr(.data$.colours)
-  } else if (length(vars) > 1 && .color_by == ".response") {
-    plot_mappings$colour <- rlang::expr(.data$.response_name)
   } else {
     plot_mappings$group <- rlang::expr(interaction(!!!rlang::syms(all_avail_names), sep = "; "))
   }
@@ -239,7 +229,7 @@ autoplot.epi_df <- function(
   # --- add layers
   if (!is.null(plot_mappings$colour)) {
     p <- p + suppressWarnings(ggplot2::geom_line(key_glyph = "timeseries")) +
-      ggplot2::scale_colour_viridis_d(name = "")
+      ggplot2::scale_colour_viridis_d(name = autoplot_get_label(.color_by, color_vars, format = "none"))
   } else {
     p <- p + suppressWarnings(ggplot2::geom_line(
       color = .base_color,
@@ -247,28 +237,19 @@ autoplot.epi_df <- function(
     ))
   }
 
-  facets_prefix <- if (".facets" %in% names(object)) {
-    autoplot_get_prefix(.facet_by)
-  } else {
-    ""
+  # Faceting and subtitle should only happen for non-dropdown cases
+  is_faceted <- ".facets" %in% names(object)
+  use_facets <- is_faceted && !(.interactive && .facet_to_dropdown)
+
+  if (use_facets) {
+    p <- p + ggplot2::facet_wrap(~.facets, scales = "free_y")
+    p <- p + ggplot2::labs(subtitle = autoplot_get_label(.facet_by, facet_vars, format = "facet"))
   }
 
-  if (".facets" %in% names(object) && !(.interactive && .facet_to_dropdown)) {
-    p <- p + ggplot2::facet_wrap(~.facets,
-      scales = "free_y",
-      labeller = ggplot2::as_labeller(function(x) paste0(facets_prefix, x))
-    ) +
-      ggplot2::ylab(paste(names(vars), collapse = ", "))
-    if (.facet_by == "all") p <- p + ggplot2::ylab("")
-  } else if ((length(vars) > 1 && .facet_by == ".response") && !(.interactive && .facet_to_dropdown)) {
-    p <- p + ggplot2::facet_wrap(~.response_name,
-      scales = "free_y",
-      labeller = ggplot2::as_labeller(function(x) paste0("Response: ", x))
-    ) +
-      ggplot2::ylab("")
-  } else {
-    p <- p + ggplot2::ylab(paste(names(vars), collapse = ", "))
-  }
+  # Set ylab based on whether we are faceting by response name (which shows name in strip)
+  y_label <- if (use_facets && (.facet_by %in% c(".response", "all"))) "" else paste(names(vars), collapse = ", ")
+  p <- p + ggplot2::ylab(y_label)
+
 
   if (.interactive) {
     return(autoplot_interactive_df(p, object, .max_keys, .facet_by))
@@ -460,8 +441,8 @@ autoplot_plotly_dropdown <- function(
     plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"))
 }
 
-autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_names) {
-  switch(opt,
+autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_names, color = FALSE) {
+  vars <- switch(opt,
     all_keys = geo_and_other_keys,
     geo_value = "geo_value",
     other_keys = vctrs::vec_set_difference(geo_and_other_keys, "geo_value"),
@@ -469,6 +450,11 @@ autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_name
     all = all_avail_names,
     none = character(0)
   )
+
+  if (color && nvars > 1) {
+    vars <- vctrs::vec_set_union(vars, ".response_name")
+  }
+  vars
 }
 
 autoplot_make_interaction_expr <- function(vars) {
@@ -481,15 +467,44 @@ autoplot_make_interaction_expr <- function(vars) {
   rlang::expr(interaction(!!!rlang::syms(vars), sep = "; "))
 }
 
-autoplot_get_prefix <- function(type) {
-  switch(type,
-    all_keys = "Keys: ",
-    geo_value = "Geo: ",
-    other_keys = "Other Keys: ",
-    all = "All: ",
-    ""
-  )
+autoplot_get_label <- function(type, vars = character(0), format = c("none", "prefix", "facet")) {
+  format <- rlang::arg_match(format)
+  if (type == "none" || length(vars) == 0) {
+    return(if (format == "facet") NULL else "")
+  }
+
+  has_resp <- ".response_name" %in% vars
+  keys <- vctrs::vec_set_difference(vars, ".response_name")
+
+  if (length(keys) == 0) {
+    label <- "Indicator"
+  } else {
+    if (length(keys) == 1 && keys == "geo_value") {
+      key_label <- if (format == "prefix") "Geo" else "Location"
+    } else if (length(keys) == 1) {
+      key_label <- keys
+    } else {
+      key_label <- if (type == "other_keys") paste(keys, collapse = " ; ") else "Keys"
+    }
+
+    if (has_resp) {
+      label <- paste0(key_label, " \u00d7 Indicator(s)")
+    } else {
+      label <- key_label
+    }
+  }
+
+  if (format == "prefix") {
+    return(paste0(label, ": "))
+  }
+  if (format == "facet") {
+    return(paste0("Facet by: ", label))
+  }
+
+  label
 }
+
+
 
 
 autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
@@ -671,7 +686,8 @@ autoplot.epi_archive <- function(object, ...,
 
   if (.interactive && .facet_to_dropdown) {
     return(autoplot_interactive_archive(
-      snapshots, .base_color, "all"
+      snapshots, .base_color, "all",
+      facet_vars = all_avail_names
     ))
   }
 
@@ -701,13 +717,13 @@ autoplot.epi_archive <- function(object, ...,
   bp$layers <- rev(bp$layers)
 
   if (.interactive) {
-    return(plotly::ggplotly(bp))
+    return(autoplot_interactive_df(bp, snapshots, .max_keys, .facet_by = "all"))
   }
 
   bp
 }
 
-autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by) {
+autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by, facet_vars = character(0)) {
   # Build color palette
   all_versions <- sort(unique(snapshots$version))
   n_versions <- length(all_versions)
@@ -722,7 +738,7 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by) {
   color_map <- stats::setNames(version_colors, as.character(all_versions))
 
   # Use the generalized dropdown helper
-  prefix <- autoplot_get_prefix(.facet_by)
+  prefix <- autoplot_get_label(.facet_by, facet_vars, format = "prefix")
   autoplot_plotly_dropdown(
     data = snapshots,
     group_col = ".facets",
