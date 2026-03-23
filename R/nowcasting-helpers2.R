@@ -221,6 +221,26 @@ set_time_week_end <- function(x, wday_name = NULL, ..., lt_wday = NULL) {
   x
 }
 
+time_value_obj <- function(x) UseMethod("time_value_obj")
+
+#' @export
+time_value_obj.epi_df <- function(x) {
+  x$time_value
+}
+
+#' @export
+time_value_obj.epi_archive <- function(x) {
+  x$DT$time_value
+}
+
+session_tz <- function() {
+  tz <- Sys.getenv("TZ")
+  if (tz == "") {
+    tz <- Sys.timezone()
+  }
+  tz
+}
+
 version_obj <- function(x) UseMethod("version_obj")
 
 #' @export
@@ -231,14 +251,6 @@ version_obj.epi_df <- function(x) {
 #' @export
 version_obj.epi_archive <- function(x) {
   x$DT$version
-}
-
-session_tz <- function() {
-  tz <- Sys.getenv("TZ")
-  if (tz == "") {
-    tz <- Sys.timezone()
-  }
-  tz
 }
 
 force_time_tz <- function(x, tz = NULL) {
@@ -331,6 +343,70 @@ time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
     } else {
       cli_abort("time_type {format_chr_deparse(time_type)} with version class {format_chr_deparse(class(version_ptype))}")
     }
+  }
+}
+
+version_get_containing_time_value <- function(version, dat) UseMethod("version_get_containing_time_value")
+
+#' @export
+version_get_containing_time_value.numeric <- function(version, dat) {
+  time_type <- time_type(dat)
+  if (time_type == "integer") {
+    version
+  } else {
+    cli_abort("Unsupported time_type x version class:
+               {format_chr_deparse(time_type)} x {format_chr_deparse(class(version))}")
+  }
+}
+
+#' @export
+version_get_containing_time_value.yearmonth <- function(version, dat) {
+  time_type <- time_type(dat)
+  if (time_type == "yearmonth") {
+    version
+  } else {
+    cli_abort("Unsupported time_type x version class:
+               {format_chr_deparse(time_type)} x {format_chr_deparse(class(version))}")
+  }
+}
+
+#' @export
+version_get_containing_time_value.Date <- function(version, dat) {
+  # XXX not storing repr_lt_wday in time_type (or just using an
+  # appropriate time_value class) makes us need to pass dat / its time
+  # value obj.
+  time_type <- time_type(dat)
+  if (time_type == "day") {
+    version
+  } else if (time_type == "week") {
+    ending_lt_wday <- attr(time_type, "ending_lt_wday")
+    if (is.null(ending_lt_wday)) {
+      cli_abort("`set_time_week_end` must be called first")
+    }
+    # TODO ^ refactor to helper?
+    time_values <- time_value_obj(dat)
+    if (length(time_values) == 0L) {
+      cli_abort("Need nonzero number of time_values so we can tell which wday is used to represent weeks.")
+    }
+    repr_lt_wday <- as.POSIXlt(time_values[[1L]])$wday
+    version + (ending_lt_wday - as.POSIXlt(version)$wday) - (ending_lt_wday - repr_lt_wday)
+  } else {
+    # TODO yearmonth support
+    cli_abort("Unsupported time_type x version class:
+               {format_chr_deparse(time_type)} x {format_chr_deparse(class(version))}")
+  }
+}
+
+#' @export
+version_get_containing_time_value.POSIXct <- function(version, dat) {
+  time_type <- time_type(dat)
+  if (time_type %in% c("day", "week", "yearmonth")) {
+    version_date <- as.Date(format(version, "%Y-%m-%d"))
+    # ^ can't just use as.Date; POSIXct assumes Dates are "UTC" Dates.
+    version_get_containing_time_value(version_date, dat)
+  } else {
+    cli_abort("Unsupported time_type x version class:
+               {format_chr_deparse(time_type)} x {format_chr_deparse(class(version))}")
   }
 }
 
