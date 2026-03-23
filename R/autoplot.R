@@ -129,6 +129,7 @@ autoplot.epi_df <- function(
   pos <- tidyselect::eval_select(
     rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
   )
+  # if there are multiple numeric variables, pivot longer to create a .response column
   if (nvars > 1) {
     object <- tidyr::pivot_longer(
       object[pos], tidyselect::all_of(names(vars)),
@@ -142,6 +143,7 @@ autoplot.epi_df <- function(
     geo_and_other_keys,
     if (nvars > 1) ".response_name" else NULL
   )
+  # Get facet and color variables
   facet_vars <- autoplot_resolve_vars(.facet_by, geo_and_other_keys, nvars, all_avail_names)
   color_vars <- autoplot_resolve_vars(.color_by, geo_and_other_keys, nvars, all_avail_names, color = TRUE)
   color_vars <- vctrs::vec_set_difference(color_vars, facet_vars)
@@ -181,11 +183,9 @@ autoplot.epi_df <- function(
   }
 
   # Subsample keys if needed
-  object <- autoplot_subsample_keys(
-    object, geo_and_other_keys, .max_keys, .interactive,
-    .facet_used = ".facets" %in% names(object)
-  )
+  object <- autoplot_subsample_keys(object, .max_keys, .interactive)
 
+  # If interactive and dropdowns requested, build dropdown plot
   if (.interactive && .facet_to_dropdown && !is.null(facet_expr)) {
     trace_col <- if (".colours" %in% names(object)) {
       ".colours"
@@ -237,19 +237,16 @@ autoplot.epi_df <- function(
     ))
   }
 
-  # Faceting and subtitle should only happen for non-dropdown cases
-  is_faceted <- ".facets" %in% names(object)
-  use_facets <- is_faceted && !(.interactive && .facet_to_dropdown)
+  use_facets <- ".facets" %in% names(object)
 
   if (use_facets) {
     p <- p + ggplot2::facet_wrap(~.facets, scales = "free_y")
     p <- p + ggplot2::labs(subtitle = autoplot_get_label(.facet_by, facet_vars, format = "facet"))
   }
 
-  # Set ylab based on whether we are faceting by response name (which shows name in strip)
-  y_label <- if (use_facets && (.facet_by %in% c(".response", "all"))) "" else paste(names(vars), collapse = ", ")
+  # Omit y-label when the response name already appears in the facet strip labels.
+  y_label <- if (use_facets && ".response_name" %in% facet_vars) "" else paste(names(vars), collapse = ", ")
   p <- p + ggplot2::ylab(y_label)
-
 
   if (.interactive) {
     return(autoplot_interactive_df(p, object, .max_keys, .facet_by))
@@ -300,37 +297,55 @@ autoplot_check_viable_response_vars <- function(
 }
 
 
-autoplot_subsample_keys <- function(
-  object, geo_and_other_keys, .max_keys, .interactive, .facet_used
-) {
+autoplot_subsample_keys <- function(object, .max_keys, .interactive) {
   if (.interactive || is.infinite(.max_keys)) {
     return(object)
   }
 
-  epikey_combinations <- rlang::inject(
-    interaction(!!!object[geo_and_other_keys], sep = "; ", drop = TRUE)
-  )
-  unique_epikeys <- levels(epikey_combinations)
-  num_epikeys <- length(unique_epikeys)
+  facet_lvls <- if (".facets" %in% names(object)) levels(droplevels(object$.facets)) else character(0)
+  color_lvls <- if (".colours" %in% names(object)) levels(droplevels(object$.colours)) else character(0)
 
-  if (num_epikeys <= .max_keys) {
+  N_f <- max(1L, length(facet_lvls))
+  N_c <- max(1L, length(color_lvls))
+
+  if (N_f * N_c <= .max_keys) {
     return(object)
   }
 
-  max_keys_val <- .max_keys # {cli}-compatible name
-  sampled_epikeys <- sample(unique_epikeys, max_keys_val)
+  # If one dimension is small (< half all combinations),
+  # keep it whole and reduce only the other.
+  # Otherwise split proportionally.
+  if (2 * N_c < .max_keys) {
+    n_f <- max(1L, min(N_f, as.integer(floor(.max_keys / N_c))))
+    n_c <- N_c
+  } else if (2 * N_f < .max_keys) {
+    n_c <- max(1L, min(N_c, as.integer(floor(.max_keys / N_f))))
+    n_f <- N_f
+  } else {
+    n_f <- max(1L, min(N_f, as.integer(floor(sqrt(.max_keys * N_f / N_c)))))
+    n_c <- max(1L, min(N_c, as.integer(floor(.max_keys / n_f))))
+    n_f <- max(1L, min(N_f, as.integer(floor(.max_keys / n_c))))
+  }
 
+  if (n_f < N_f) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
+  if (n_c < N_c) object <- object[object$.colours %in% sample(color_lvls, n_c), ]
+
+  object <- dplyr::mutate(object, dplyr::across(
+    tidyselect::any_of(c(".facets", ".colours")), droplevels
+  ))
+
+  n_shown <- n_f * n_c
+  n_total <- N_f * N_c
   msg <- c(
-    "Plotting {num_epikeys} keys can be slow and hard to read. Subsampling to {max_keys_val} keys.",
+    "Too many key combinations to display clearly. Showing {n_shown} of {n_total}.",
     i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
     i = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
   )
-  if (.facet_used) {
+  if (length(facet_lvls) > 0L) {
     msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
   }
-
   cli::cli_warn(msg, class = "epiprocess__autoplot__max_keys_exceeded")
-  object[epikey_combinations %in% sampled_epikeys, ]
+  object
 }
 
 
@@ -350,7 +365,7 @@ autoplot_plotly_dropdown <- function(
 
   # Split data by the group column to avoid quadratic filtering performance
   unique_groups <- as.character(sort(unique(data[[group_col]])))
-  group_data_list <- data %>% dplyr::group_split(.data[[group_col]])
+  group_data_list <- dplyr::group_split(data, as.character(.data[[group_col]]))
 
   # Identify each dropdown option and its traces
   trace_specs <- purrr::map2(group_data_list, unique_groups, function(g_data, g) {
@@ -504,9 +519,6 @@ autoplot_get_label <- function(type, vars = character(0), format = c("none", "pr
   label
 }
 
-
-
-
 autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
@@ -619,11 +631,11 @@ autoplot.epi_archive <- function(object, ...,
     # Interpret `.versions` as a period (even if archive versions are also bare numeric...)
     if (is.numeric(.versions)) .versions <- round(abs(.versions))
     .versions <- seq(min_version, max_version, by = .versions)
-  } else if (inherits(.versions, "Date") || inherits(.versions, "Date")) {
+  } else if (inherits(.versions, "Date") || is.numeric(.versions)) {
     old_n_versions <- length(.versions)
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
     if (length(.versions) != old_n_versions) {
-      cli_inform("Removed entries from `.versions` that weren't in the range of archive versions with update rows.")
+      cli::cli_inform("Removed entries from `.versions` that weren't in the range of archive versions with update rows.")
     }
   } else {
     cli::cli_abort(
@@ -748,7 +760,6 @@ autoplot_interactive_archive <- function(snapshots, .base_color, .facet_by, face
     dropdown_prefix = prefix
   )
 }
-
 
 #' @export
 #' @rdname autoplot-epi
