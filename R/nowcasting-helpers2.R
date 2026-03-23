@@ -286,32 +286,39 @@ force_time_tz <- function(x, tz = NULL) {
 }
 
 time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
-  switch(
-    time_type,
-    day = ,
-    week = {
-      if (time_type == "week") {
+  if (rlang::is_bare_numeric(version_ptype)) {
+    if (time_type == "integer") {
+      time_value
+    } else {
+      cli_abort("time_type {format_chr_deparse(time_type)} with bare numeric versions is unsupported")
+    }
+  } else if (inherits(version_ptype, "yearmonth")) {
+    if (time_type == "yearmonth") {
+      time_value
+    } else {
+      cli_abort("time_type {format_chr_deparse(time_type)} with yearmonth versions is unsupported")
+    }
+  } else {
+    time_ending_date <- switch(
+      time_type,
+      day = time_value,
+      yearmonth = as.Date(time_value + 1L) - 1L,
+      week = {
         ending_lt_wday <- attr(time_type, "ending_lt_wday")
         if (is.null(ending_lt_wday)) {
           cli_abort("`set_time_week_end` must be called first")
         }
-        # TODO make set_time_week_end default emit message, and simply use it here?
-        time_ending_date <- time_value + (ending_lt_wday - as.numeric(time_value)) %% 7
-      } else {
-        time_ending_date <- time_value
-      }
-      if (inherits(version_ptype, "Date")) {
-        time_ending_date
-      } else if (inherits(version_ptype, "POSIXct")) {
+        time_value + (ending_lt_wday - as.numeric(time_value)) %% 7
+      },
+    )
+    if (inherits(version_ptype, "Date")) {
+      time_ending_date
+    } else if (inherits(version_ptype, "POSIXct")) {
         if (is.null(attr(time_type, "tzone"))) {
           cli_abort(c("We need information on the time_value's time zone
                          in order to calculate lags with datetime versions",
                       ">" = "Call `force_time_tz` to specify the time_value time zone beforehand."))
         }
-        # TODO same deal here regarding restructuring to call by
-        # default?  or if this will be used only internally, this is
-        # better + may prevent spam.
-
         next_time_start_date <- time_ending_date + 1
         next_time_start_ct <- strptime(as.character(next_time_start_date), "%Y-%m-%d",
                                        tz = attr(time_type, "tzone"))
@@ -320,23 +327,11 @@ time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
         # as.POSIXct(tz=) or as.POSIXlt(tz=), which get "UTC" or
         # non-DST-midnight-for-given-tz, respectively, then set to
         # print in terms of given tz.
-
         next_time_start_ct
-      } else {
-        cli_abort("For `time_type` {format_chr_deparse(time_type)},
-                   `version` must be a Date or POSIXt,
-                   not an object of class {format_chr_deparse(version_ptype)}")
-      }
-    },
-    yearmonth = {
-      assert_class(version_ptype, "yearmonth")
-      time_value
-    },
-    integer = {
-      assert_numeric(version_ptype)
-      time_value
+    } else {
+      cli_abort("time_type {format_chr_deparse(time_type)} with version class {format_chr_deparse(class(version_ptype))}")
     }
-  )
+  }
 }
 
 extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
