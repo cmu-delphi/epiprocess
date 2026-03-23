@@ -1,64 +1,32 @@
 # autoplot_subsample_keys warning/hints
 
     Code
-      epiprocess:::autoplot_subsample_keys(df_many_keys, "geo_value", .max_keys = 10,
-        .facet_used = TRUE, .interactive = FALSE)
+      epiprocess:::autoplot_subsample_keys(df_facets, .max_keys = 10, .interactive = FALSE)
     Condition
       Warning:
-      Plotting 20 keys can be slow and hard to read. Subsampling to 10 keys.
+      Too many key combinations to display clearly. Showing 10 of 20.
       i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
       i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
       i To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
     Output
-      An `epi_df` object, 30 x 3 with metadata:
+      An `epi_df` object, 30 x 4 with metadata:
       * geo_type  = custom
       * time_type = day
       * as_of     = 2023-01-04
       
-      # A tibble: 30 x 3
-         geo_value time_value   cases
-         <fct>     <date>       <dbl>
-       1 a         2023-01-01  1.37  
-       2 c         2023-01-01  0.363 
-       3 i         2023-01-01  2.02  
-       4 j         2023-01-01 -0.0627
-       5 k         2023-01-01  1.30  
-       6 m         2023-01-01 -1.39  
-       7 o         2023-01-01 -0.133 
-       8 q         2023-01-01 -0.284 
-       9 s         2023-01-01 -2.44  
-      10 t         2023-01-01  1.32  
-      # i 20 more rows
-
----
-
-    Code
-      epiprocess:::autoplot_subsample_keys(df_many_keys, "geo_value", .max_keys = 10,
-        .facet_used = FALSE, .interactive = FALSE)
-    Condition
-      Warning:
-      Plotting 20 keys can be slow and hard to read. Subsampling to 10 keys.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
-    Output
-      An `epi_df` object, 30 x 3 with metadata:
-      * geo_type  = custom
-      * time_type = day
-      * as_of     = 2023-01-04
-      
-      # A tibble: 30 x 3
-         geo_value time_value  cases
-         <fct>     <date>      <dbl>
-       1 b         2023-01-01 -0.565
-       2 d         2023-01-01  0.633
-       3 f         2023-01-01 -0.106
-       4 l         2023-01-01  2.29 
-       5 o         2023-01-01 -0.133
-       6 p         2023-01-01  0.636
-       7 q         2023-01-01 -0.284
-       8 r         2023-01-01 -2.66 
-       9 s         2023-01-01 -2.44 
-      10 t         2023-01-01  1.32 
+      # A tibble: 30 x 4
+         geo_value time_value  cases .facets
+         <fct>     <date>      <dbl> <fct>  
+       1 b         2023-01-01 -0.565 b      
+       2 e         2023-01-01  0.404 e      
+       3 f         2023-01-01 -0.106 f      
+       4 l         2023-01-01  2.29  l      
+       5 m         2023-01-01 -1.39  m      
+       6 o         2023-01-01 -0.133 o      
+       7 p         2023-01-01  0.636 p      
+       8 q         2023-01-01 -0.284 q      
+       9 r         2023-01-01 -2.66  r      
+      10 s         2023-01-01 -2.44  s      
       # i 20 more rows
 
 # autoplot interactive dropdown logic (epi_df and epi_archive)

@@ -297,13 +297,14 @@ autoplot_check_viable_response_vars <- function(
 }
 
 
-autoplot_subsample_keys <- function(object, .max_keys, .interactive) {
+autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "autoplot") {
   if (.interactive || is.infinite(.max_keys)) {
     return(object)
   }
 
   facet_lvls <- if (".facets" %in% names(object)) levels(droplevels(object$.facets)) else character(0)
-  color_lvls <- if (".colours" %in% names(object)) levels(droplevels(object$.colours)) else character(0)
+  color_col <- if (".colours" %in% names(object)) ".colours" else if (".rows" %in% names(object)) ".rows" else NULL
+  color_lvls <- if (!is.null(color_col)) levels(droplevels(object[[color_col]])) else character(0)
 
   N_f <- max(1L, length(facet_lvls))
   N_c <- max(1L, length(color_lvls))
@@ -328,21 +329,27 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive) {
   }
 
   if (n_f < N_f) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
-  if (n_c < N_c) object <- object[object$.colours %in% sample(color_lvls, n_c), ]
+  if (n_c < N_c) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
 
   object <- dplyr::mutate(object, dplyr::across(
-    tidyselect::any_of(c(".facets", ".colours")), droplevels
+    tidyselect::any_of(c(".facets", ".colours", ".rows")), droplevels
   ))
-
+  caller <- .caller
   n_shown <- n_f * n_c
   n_total <- N_f * N_c
+
   msg <- c(
     "Too many key combinations to display clearly. Showing {n_shown} of {n_total}.",
-    i = "To plot all keys, use `autoplot(..., .max_keys = Inf)`.",
-    i = "To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`."
+    i = "To plot all keys, use {.code {caller}(..., .max_keys = Inf)}."
   )
-  if (length(facet_lvls) > 0L) {
-    msg <- c(msg, i = "To plot specific keys, use `autoplot(..., .facet_filter = ...)`.")
+  if (caller == "autoplot") {
+    msg <- c(
+      msg,
+      i = "To explore all keys interactively, use {.code autoplot(..., .interactive = TRUE)}.",
+      if (length(facet_lvls) > 0L) {
+        c(i = "To plot specific keys, use {.code autoplot(..., .facet_filter = ...)}.")
+      }
+    )
   }
   cli::cli_warn(msg, class = "epiprocess__autoplot__max_keys_exceeded")
   object
