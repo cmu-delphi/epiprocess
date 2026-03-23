@@ -250,7 +250,7 @@ force_time_tz <- function(x, tz = NULL) {
     this_session_tz <- session_tz()
     x_version_obj <- version_obj(x)
     if (inherits(x_version_obj, "POSIXct")) {
-      x_version_tz <- attr(x_version_tz, "tzone")
+      x_version_tz <- attr(x_version_obj, "tzone")
       if (!is.null(x_version_tz) && x_version_tz != tz) {
         cli_abort(c("
           This R session's default time zone is {format_chr_deparse(this_session_tz)},
@@ -285,41 +285,43 @@ force_time_tz <- function(x, tz = NULL) {
   x
 }
 
-# TODO infer_time_week_end / guess_time_week_end.... and integrate into guess_time_type?
-
-# TODO printing week end metadata
-
 time_get_zero_lag_version <- function(time_value, time_type, version_ptype) {
   switch(
     time_type,
     day = ,
     week = {
-      # XXX for week, we currently don't have the metadata to know the
-      # end of the week; so we'll have to measure relative to the
-      # representative wday.
+      if (time_type == "week") {
+        ending_lt_wday <- attr(time_type, "ending_lt_wday")
+        if (is.null(ending_lt_wday)) {
+          cli_abort("`set_time_week_end` must be called first")
+        }
+        # TODO make set_time_week_end default emit message, and simply use it here?
+        time_ending_date <- time_value + (ending_lt_wday - as.numeric(time_value)) %% 7
+      } else {
+        time_ending_date <- time_value
+      }
       if (inherits(version_ptype, "Date")) {
-        time_value
-      } else if (inherits(version_ptype, "POSIXt")) {
-        if (time_type == "week") {
-          ending_lt_wday <- attr(time_type, "ending_lt_wday")
-          if (is.null(ending_lt_wday)) {
-            cli_abort("`set_time_week_end` must be called first")
-          }
-          # TODO make set_time_week_end default emit message, and simply use it here?
-          time_value <- time_value + (ending_lt_wday - as.numeric(time_value)) %% 7
+        time_ending_date
+      } else if (inherits(version_ptype, "POSIXct")) {
+        if (is.null(attr(time_type, "tzone"))) {
+          cli_abort(c("We need information on the time_value's time zone
+                         in order to calculate lags with datetime versions",
+                      ">" = "Call `force_time_tz` to specify the time_value time zone beforehand."))
         }
-        if (inherits(version_ptype, "Date")) {
-          time_value
-        } else if (inherits(version_ptype, "POSIXt")) {
-          # TODO since we are converting to essentially tz'd-date, we
-          # need a tz.  Balk or inform about assumption.  But what is
-          # our tz?  POSIXct seems to look at Sys.getenv("TZ"), but
-          # Sys.timezone() does not....
-          #
-          # note: vec_cast will ephemerally use current tz respecting
-          # TZ envvar, but not set it in the result.
-          stop("TODO, carefully considering time zone issues")
-        }
+        # TODO same deal here regarding restructuring to call by
+        # default?  or if this will be used only internally, this is
+        # better + may prevent spam.
+
+        next_time_start_date <- time_ending_date + 1
+        next_time_start_ct <- strptime(as.character(next_time_start_date), "%Y-%m-%d",
+                                       tz = attr(time_type, "tzone"))
+        # ^ Gets midnight in the given tz, and sets to print in terms
+        # of given tz.  Like vec_cast, but faster.  Don't want to use
+        # as.POSIXct(tz=) or as.POSIXlt(tz=), which get "UTC" or
+        # non-DST-midnight-for-given-tz, respectively, then set to
+        # print in terms of given tz.
+
+        next_time_start_ct
       } else {
         cli_abort("For `time_type` {format_chr_deparse(time_type)},
                    `version` must be a Date or POSIXt,
