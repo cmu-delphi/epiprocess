@@ -49,3 +49,19 @@
     Message
       as_epi_archive: converting long to wide by turning each signal into an archive separately and merging.
 
+# auto-pivot aborts when multiple signal candidates exist
+
+    Code
+      as_epi_df(raw)
+    Condition
+      Error in `pivot_epi_data()`:
+      ! Multiple signal variable candidates found; please specify a single `signal_var`.
+
+---
+
+    Code
+      as_epi_archive(raw_arch)
+    Condition
+      Error in `pivot_epi_archive()`:
+      ! Multiple signal variable candidates found; please specify a single `signal_var`.
+

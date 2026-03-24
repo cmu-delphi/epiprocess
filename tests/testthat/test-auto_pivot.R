@@ -122,3 +122,33 @@ test_that("as_epi_archive handles long-format with LOCF during pivot", {
   expect_equal(arch$DT$a, c(1, 2))
   expect_equal(arch$DT$b, c(11, 11))
 })
+
+test_that("auto-pivot aborts when multiple signal candidates exist", {
+  raw <- dplyr::tibble(
+    geo_value = "ak",
+    time_value = as.Date("2020-01-01"),
+    signal = "cases",
+    name = "also_cases",
+    value = 1
+  )
+  expect_snapshot(as_epi_df(raw), error = TRUE)
+
+  raw_arch <- dplyr::mutate(raw, version = as.Date("2020-01-02"))
+  expect_snapshot(as_epi_archive(raw_arch), error = TRUE)
+})
+
+test_that("auto-pivots when signal_var provided explicitly without input_format='long'", {
+  raw <- dplyr::tibble(
+    geo_value = "ak",
+    time_value = as.Date("2020-01-01"),
+    custom_signal = "cases",
+    value = 1
+  )
+  # When signal_var is given, input_format auto should become long
+  expect_message(df <- as_epi_df(raw, signal_var = "custom_signal"))
+  expect_true("cases" %in% names(df))
+
+  raw_arch <- dplyr::mutate(raw, version = as.Date("2020-01-02"))
+  expect_message(arch <- as_epi_archive(raw_arch, signal_var = "custom_signal"))
+  expect_true("cases" %in% names(arch$DT))
+})

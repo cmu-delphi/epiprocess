@@ -368,9 +368,13 @@ pivot_epi_data <- function(x, input_format, signal_var, value_var = "value",
                            id_cols = NULL) {
   if (input_format == "auto") {
     candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+    candidates <- signal_var %||% candidates
     if (length(candidates) == 0) return(x)
+    if (length(candidates) > 1) {
+      cli::cli_abort("Multiple signal variable candidates found; please specify a single {.arg signal_var}.")
+    }
     input_format <- "long"
-    signal_var <- signal_var %||% candidates[1]
+    signal_var <- candidates[1]
   }
 
   if (input_format == "long") {

@@ -516,9 +516,12 @@ pivot_epi_archive <- function(x, input_format, signal_var, other_keys, compactif
                               geo_type, time_type) {
   if (input_format == "auto") {
     candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
-    if (length(candidates) > 0) {
+    candidates <- signal_var %||% candidates
+    if (length(candidates) == 1) {
       input_format <- "long"
-      signal_var <- signal_var %||% candidates[1]
+      signal_var <- candidates[1]
+    } else if (length(candidates) > 1) {
+      cli::cli_abort("Multiple signal variable candidates found; please specify a single {.arg signal_var}.")
     } else {
       input_format <- "wide"
     }

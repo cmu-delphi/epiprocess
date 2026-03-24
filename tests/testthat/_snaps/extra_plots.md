@@ -41,9 +41,8 @@
       invisible(plot_heatmap(test_df_many, val, .max_keys = 10))
     Condition
       Warning:
-      Plotting 100 keys can be slow and hard to read. Subsampling to 10 keys.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
+      Too many key combinations to display clearly. Showing 10 of 100.
+      > To plot all keys, use `plot_heatmap(..., .max_keys = Inf)`.
 
 ---
 
