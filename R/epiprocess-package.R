@@ -48,6 +48,6 @@ utils::globalVariables(c(
   "geo_value", "time_value", "value", ".real", "lag",
   "max_value", "min_value", "median_value", "spread",
   "rel_spread", "lag_to", "lag_near_latest", "n_revisions",
-  "min_lag", "max_lag", ".y_axis", "change", ".contrib",
+  "min_lag", "max_lag", ".rows", "change", ".contrib",
   ".running_count"
 ))

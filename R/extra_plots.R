@@ -32,20 +32,11 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
 
   key_cols <- key_colnames(x)
   non_key_cols <- setdiff(names(x), key_cols)
+  geo_and_other_keys <- key_colnames(x, exclude = "time_value")
 
   # Variable selection
   vars <- autoplot_check_viable_response_vars(x, ..., non_key_cols = non_key_cols)
   nvars <- length(vars)
-
-  # Key subsampling
-  geo_and_other_keys <- key_colnames(x, exclude = "time_value")
-  x <- autoplot_subsample_keys(
-    x,
-    geo_and_other_keys = geo_and_other_keys,
-    .max_keys = .max_keys,
-    .interactive = FALSE,
-    .facet_used = nvars > 1
-  )
 
   # Create a valid df to plot based on selected vars
   pos <- tidyselect::eval_select(
@@ -62,16 +53,21 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     x <- dplyr::rename(x[pos], .response := !!vars) # nolint: object_usage_linter
   }
 
-  # We use interaction of all geo/other keys for the y-axis
+  # Key subsampling and y-axis interaction variable
   plot_df <- x %>%
     dplyr::mutate(
-      .y_axis = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
+      .rows = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
+    ) %>%
+    autoplot_subsample_keys(
+      .max_keys,
+      .interactive = FALSE,
+      .caller = "plot_heatmap"
     )
 
   # Create plot
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(
     x = time_value,
-    y = .y_axis,
+    y = .rows,
     fill = .response
   )) +
     ggplot2::geom_tile(

@@ -120,43 +120,75 @@ test_that("autoplot warns when some specified columns are not numeric, and lists
 })
 
 test_that("autoplot_subsample_keys warning/hints", {
+  # Add .colours to df_many_keys (20 levels)
+  df_colours <- df_many_keys %>%
+    mutate(.colours = factor(geo_value))
+
   # Default .max_keys = 10 logic
   expect_warning(
     sampled <- epiprocess:::autoplot_subsample_keys(
-      df_many_keys, "geo_value",
-      .max_keys = 10, .interactive = FALSE, .facet_used = FALSE
+      df_colours,
+      .max_keys = 10, .interactive = FALSE
     ),
     class = "epiprocess__autoplot__max_keys_exceeded"
   )
-  expect_equal(length(unique(sampled$geo_value)), 10)
+  expect_equal(length(unique(sampled$.colours)), 10)
 
-  # Hint logic respects .facet_used
-  expect_warning(
-    epiprocess:::autoplot_subsample_keys(
-      df_many_keys, "geo_value",
-      .max_keys = 10, .facet_used = TRUE, .interactive = FALSE
-    ),
-    class = "epiprocess__autoplot__max_keys_exceeded"
-  )
-  expect_snapshot(
-    epiprocess:::autoplot_subsample_keys(
-      df_many_keys, "geo_value",
-      .max_keys = 10, .facet_used = TRUE, .interactive = FALSE
-    )
-  )
+  # Fallback to .rows if .colours is missing
+  df_rows <- df_many_keys %>%
+    mutate(.rows = factor(geo_value))
 
   expect_warning(
-    epiprocess:::autoplot_subsample_keys(
-      df_many_keys, "geo_value",
-      .max_keys = 10, .facet_used = FALSE, .interactive = FALSE
+    sampled <- epiprocess:::autoplot_subsample_keys(
+      df_rows,
+      .max_keys = 10, .interactive = FALSE
     ),
     class = "epiprocess__autoplot__max_keys_exceeded"
   )
+  expect_equal(length(unique(sampled$.rows)), 10)
+
+  # Add .facets to df_many_keys (20 levels)
+  df_facets <- df_many_keys %>%
+    mutate(.facets = factor(geo_value))
+
+  # Samples facets
+  expect_warning(
+    sampled <- epiprocess:::autoplot_subsample_keys(
+      df_facets,
+      .max_keys = 10, .interactive = FALSE
+    ),
+    class = "epiprocess__autoplot__max_keys_exceeded"
+  )
+  expect_equal(length(unique(sampled$.facets)), 10)
+
+  # Both .facets and .colours = 20 total
+  df_both <- expand.grid(
+    geo_value = "ak",
+    f = 1:5,
+    c = 1:4,
+    time_value = as.Date("2023-01-01") + 0:2
+  ) %>%
+    mutate(
+      .facets = factor(f),
+      .colours = factor(c),
+      cases = 1
+    ) %>%
+    as_epi_df(other_keys = c("f", "c"))
+
+  # Total shown = 2 * 4 = 8.
+  expect_warning(
+    sampled <- epiprocess:::autoplot_subsample_keys(
+      df_both,
+      .max_keys = 10, .interactive = FALSE
+    ),
+    class = "epiprocess__autoplot__max_keys_exceeded"
+  )
+  expect_equal(length(unique(sampled$.facets)), 2)
+  expect_equal(length(unique(sampled$.colours)), 4)
+
+  # Snapshots for warning message structure
   expect_snapshot(
-    epiprocess:::autoplot_subsample_keys(
-      df_many_keys, "geo_value",
-      .max_keys = 10, .facet_used = FALSE, .interactive = FALSE
-    )
+    epiprocess:::autoplot_subsample_keys(df_facets, .max_keys = 10, .interactive = FALSE)
   )
 })
 
@@ -178,9 +210,7 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   # - `buttons`: dropdown options with their `label`, `method`, and `args`.
   # - `args`: `visible` trace flags, `showlegend` flags, and the updated plot `title`.
 
-  tmp_p1 <- tempfile(fileext = ".json")
-  jsonlite::write_json(plotly::plotly_build(p1)$x$layout$updatemenus, tmp_p1, auto_unbox = TRUE, pretty = TRUE)
-  expect_snapshot_file(tmp_p1, "p1_updatemenus.json")
+  expect_equal_custom_rds_snapshot(plotly::plotly_build(p1)$x$layout$updatemenus, "p1_updatemenus")
 
   # Complex multi-key epi_df dropdowns
   df_other <- expand.grid(
@@ -198,9 +228,7 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   )
   pb2 <- plotly::plotly_build(p2)
   # Check dropdown logic for complex multi-key epi_df
-  tmp_p2 <- tempfile(fileext = ".json")
-  jsonlite::write_json(pb2$x$layout$updatemenus, tmp_p2, auto_unbox = TRUE, pretty = TRUE)
-  expect_snapshot_file(tmp_p2, "p2_updatemenus.json")
+  expect_equal_custom_rds_snapshot(pb2$x$layout$updatemenus, "p2_updatemenus")
   expect_snapshot(purrr::map_lgl(pb2$x$data, ~ .x$visible))
   expect_snapshot(pb2$x$layout$yaxis)
 
@@ -215,9 +243,7 @@ test_that("autoplot interactive dropdown logic (epi_df and epi_archive)", {
   p3 <- autoplot(df_arc, cases, .versions = "day", .interactive = TRUE, .facet_to_dropdown = TRUE)
   pb3 <- plotly::plotly_build(p3)
   # Dropdown logic for epi_archive
-  tmp_p3 <- tempfile(fileext = ".json")
-  jsonlite::write_json(pb3$x$layout$updatemenus, tmp_p3, auto_unbox = TRUE, pretty = TRUE)
-  expect_snapshot_file(tmp_p3, "p3_updatemenus.json")
+  expect_equal_custom_rds_snapshot(pb3$x$layout$updatemenus, "p3_updatemenus")
   expect_snapshot(pb3$x$layout$title$text)
 
   # Test single-trace legend suppression

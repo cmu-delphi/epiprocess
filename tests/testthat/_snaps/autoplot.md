@@ -1,8 +1,7 @@
 # autoplot_subsample_keys warning/hints
 
     Code
-      epiprocess:::autoplot_subsample_keys(df_many_keys, "geo_value", .max_keys = 10,
-        .facet_used = TRUE, .interactive = FALSE)
+      epiprocess:::autoplot_subsample_keys(df_facets, .max_keys = 10, .interactive = FALSE)
     Condition
       Warning:
       Plotting 20 keys can be slow and hard to read. Subsampling to 10 keys.
@@ -10,7 +9,7 @@
       > To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
       > To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
     Output
-      An `epi_df` object, 30 x 3 with metadata:
+      An `epi_df` object, 30 x 4 with metadata:
       * geo_type  = custom
       * time_type = day
       * as_of     = 2023-01-04
@@ -91,7 +90,7 @@
     Code
       pb3$x$layout$title$text
     Output
-      [1] "All: ak"
+      [1] "Geo: ak"
 
 # interactive plot sampling warning
 
