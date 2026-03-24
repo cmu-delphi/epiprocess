@@ -530,7 +530,7 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object))) {
+    (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
