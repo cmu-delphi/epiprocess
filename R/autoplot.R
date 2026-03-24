@@ -340,7 +340,7 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   ))
   msg <- c(
     "Too many key combinations to display clearly. Showing {n_f * n_c} of {n_facets_all * n_colors_all}.",
-    i = "To plot all keys, use {.code {.caller}(..., .max_keys = Inf)}."
+    i = "To plot all keys, use {.code {(.caller)}(..., .max_keys = Inf)}."
   )
   if (.caller == "autoplot") {
     msg <- c(
