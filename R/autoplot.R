@@ -31,7 +31,9 @@
 #' @param .max_keys Maximum number of key combinations to display. If the data
 #'   contains more key combinations than this limit, a random sample of size
 #'   `.max_keys` is displayed, and a warning is issued. Set to `Inf` to
-#'   display all keys. Does not apply if `.interactive = TRUE`.
+#'   display all keys. Subsampling is not performed if `.interactive = TRUE`
+#'   (though a similar limit may be applied to initial legend visibility) when
+#'   `.facet_to_dropdown = FALSE`.
 #' @param .interactive Logical. If `TRUE`, returns an interactive
 #'   [plotly::ggplotly()] widget instead of a static [ggplot2::ggplot()] object.
 #'   This is especially useful for exploring datasets with many keys. Default is
@@ -317,16 +319,18 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   # keep it whole and reduce only the other.
   # Otherwise split proportionally.
   if (2 * N_c < .max_keys) {
-    n_f <- max(1L, min(N_f, as.integer(floor(.max_keys / N_c))))
     n_c <- N_c
+    n_f <- floor(.max_keys / n_c)
   } else if (2 * N_f < .max_keys) {
-    n_c <- max(1L, min(N_c, as.integer(floor(.max_keys / N_f))))
     n_f <- N_f
+    n_c <- floor(.max_keys / n_f)
   } else {
-    n_f <- max(1L, min(N_f, as.integer(floor(sqrt(.max_keys * N_f / N_c)))))
-    n_c <- max(1L, min(N_c, as.integer(floor(.max_keys / n_f))))
-    n_f <- max(1L, min(N_f, as.integer(floor(.max_keys / n_c))))
+    n_f <- floor(sqrt(.max_keys * N_f / N_c))
+    n_c <- floor(.max_keys / n_f)
+    n_f <- floor(.max_keys / n_c)
   }
+  n_f <- max(1L, min(N_f, as.integer(n_f)))
+  n_c <- max(1L, min(N_c, as.integer(n_c)))
 
   if (n_f < N_f) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
   if (n_c < N_c) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
@@ -530,8 +534,7 @@ autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-    (".colours" %in% names(object)) &&
-    inherits(p$facet, "FacetNull")) {
+    (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {

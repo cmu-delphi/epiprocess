@@ -15,6 +15,7 @@
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
+  .max_facets = deprecated(),
   .max_keys = 10,
   .interactive = FALSE,
   .facet_to_dropdown = FALSE
@@ -72,10 +73,14 @@ which are implicitly combined with \code{&}. When multiple variables are selecte
 with \code{...}, their names can be filtered in combination with other factors
 by using \code{.response_name}. See the examples below.}
 
+\item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
+
 \item{.max_keys}{Maximum number of key combinations to display. If the data
 contains more key combinations than this limit, a random sample of size
 \code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Does not apply if \code{.interactive = TRUE}.}
+display all keys. Subsampling is NOT performed if \code{.interactive = TRUE}
+(though a similar limit may be applied to legend visibility) or if
+\code{.max_keys = Inf}.}
 
 \item{.interactive}{Logical. If \code{TRUE}, returns an interactive
 \code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.

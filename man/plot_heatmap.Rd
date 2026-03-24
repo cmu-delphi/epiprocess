@@ -18,7 +18,9 @@ all numeric columns will be plotted and a warning issued.}
 \item{.max_keys}{Maximum number of key combinations to display. If the data
 contains more key combinations than this limit, a random sample of size
 \code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Does not apply if \code{.interactive = TRUE}.}
+display all keys. Subsampling is NOT performed if \code{.interactive = TRUE}
+(though a similar limit may be applied to legend visibility) or if
+\code{.max_keys = Inf}.}
 }
 \value{
 A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
