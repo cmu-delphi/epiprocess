@@ -78,9 +78,9 @@ by using \code{.response_name}. See the examples below.}
 \item{.max_keys}{Maximum number of key combinations to display. If the data
 contains more key combinations than this limit, a random sample of size
 \code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Subsampling is NOT performed if \code{.interactive = TRUE}
-(though a similar limit may be applied to legend visibility) or if
-\code{.max_keys = Inf}.}
+display all keys. Subsampling is not performed if \code{.interactive = TRUE}
+(though a similar limit may be applied to initial legend visibility) when
+\code{.facet_to_dropdown = FALSE}.}
 
 \item{.interactive}{Logical. If \code{TRUE}, returns an interactive
 \code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.

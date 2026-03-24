@@ -251,7 +251,7 @@ autoplot.epi_df <- function(
   p <- p + ggplot2::ylab(y_label)
 
   if (.interactive) {
-    return(autoplot_interactive_df(p, object, .max_keys, .facet_by))
+    return(autoplot_interactive(p, object, .max_keys, .facet_by))
   }
   p
 }
@@ -308,45 +308,41 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   color_col <- if (".colours" %in% names(object)) ".colours" else if (".rows" %in% names(object)) ".rows" else NULL
   color_lvls <- if (!is.null(color_col)) levels(droplevels(object[[color_col]])) else character(0)
 
-  N_f <- max(1L, length(facet_lvls))
-  N_c <- max(1L, length(color_lvls))
+  n_facets_all <- max(1L, length(facet_lvls))
+  n_colors_all <- max(1L, length(color_lvls))
 
-  if (N_f * N_c <= .max_keys) {
+  if (n_facets_all * n_colors_all <= .max_keys) {
     return(object)
   }
 
   # If one dimension is small (< half all combinations),
   # keep it whole and reduce only the other.
   # Otherwise split proportionally.
-  if (2 * N_c < .max_keys) {
-    n_c <- N_c
+  if (2 * n_colors_all < .max_keys) {
+    n_c <- n_colors_all
     n_f <- floor(.max_keys / n_c)
-  } else if (2 * N_f < .max_keys) {
-    n_f <- N_f
+  } else if (2 * n_facets_all < .max_keys) {
+    n_f <- n_facets_all
     n_c <- floor(.max_keys / n_f)
   } else {
-    n_f <- floor(sqrt(.max_keys * N_f / N_c))
+    n_f <- floor(sqrt(.max_keys * n_facets_all / n_colors_all))
     n_c <- floor(.max_keys / n_f)
     n_f <- floor(.max_keys / n_c)
   }
-  n_f <- max(1L, min(N_f, as.integer(n_f)))
-  n_c <- max(1L, min(N_c, as.integer(n_c)))
+  n_f <- max(1L, min(n_facets_all, as.integer(n_f)))
+  n_c <- max(1L, min(n_colors_all, as.integer(n_c)))
 
-  if (n_f < N_f) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
-  if (n_c < N_c) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
+  if (n_f < n_facets_all) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
+  if (n_c < n_colors_all) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
 
   object <- dplyr::mutate(object, dplyr::across(
     tidyselect::any_of(c(".facets", ".colours", ".rows")), droplevels
   ))
-  caller <- .caller
-  n_shown <- n_f * n_c
-  n_total <- N_f * N_c
-
   msg <- c(
-    "Too many key combinations to display clearly. Showing {n_shown} of {n_total}.",
-    i = "To plot all keys, use {.code {caller}(..., .max_keys = Inf)}."
+    "Too many key combinations to display clearly. Showing {n_f * n_c} of {n_facets_all * n_colors_all}.",
+    i = "To plot all keys, use {.code {.caller}(..., .max_keys = Inf)}."
   )
-  if (caller == "autoplot") {
+  if (.caller == "autoplot") {
     msg <- c(
       msg,
       i = "To explore all keys interactively, use {.code autoplot(..., .interactive = TRUE)}.",
@@ -530,11 +526,11 @@ autoplot_get_label <- function(type, vars = character(0), format = c("none", "pr
   label
 }
 
-autoplot_interactive_df <- function(p, object, .max_keys, .facet_by = "none") {
+autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
   if (!is.infinite(.max_keys) &&
-    (".colours" %in% names(object))) {
+        (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
@@ -645,7 +641,10 @@ autoplot.epi_archive <- function(object, ...,
     old_n_versions <- length(.versions)
     .versions <- .versions[min_version <= .versions & .versions <= max_version]
     if (length(.versions) != old_n_versions) {
-      cli::cli_inform("Removed entries from `.versions` that weren't in the range of archive versions with update rows.")
+      cli::cli_inform(paste(
+        "Removed entries from `.versions` that weren't in the range of archive",
+        "versions with update rows."
+      ))
     }
   } else {
     cli::cli_abort(
@@ -739,7 +738,7 @@ autoplot.epi_archive <- function(object, ...,
   bp$layers <- rev(bp$layers)
 
   if (.interactive) {
-    return(autoplot_interactive_df(bp, snapshots, .max_keys, .facet_by = "all"))
+    return(autoplot_interactive(bp, snapshots, .max_keys, .facet_by = "all"))
   }
 
   bp
