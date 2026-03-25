@@ -101,29 +101,47 @@
 #'   receiving revised estimates.
 #'
 #' @param x (unvalidated) an `epi_archive`
-#' @param ekt_var_set optional; (unvalidated) subset of
+#' @param ekt_var_subset optional; (unvalidated) var_subset of
 #'   `key_colnames(x, exclude = "version")`; defaults to
 #'   `key_colnames(x, exclude = c("time_value" ,"version"))`
-#' @param val_var_set technically optional; (unvalidated) subset of
+#' @param val_var_subset technically optional; (unvalidated) var_subset of
 #'   `val_colnames(x)`, but likely just a single var; defaults to
 #'   entire set
-#' @return tibble with names matching `ekt_var_set`; note that if you
-#'   want downstream code to adapt to the choice of `ekt_var_set`, you
-#'   will also need to pass `ekt_var_set` to later processing and may
+#' @return tibble with names matching `ekt_var_subset`; note that if you
+#'   want downstream code to adapt to the choice of `ekt_var_subset`, you
+#'   will also need to pass `ekt_var_subset` to later processing and may
 #'   need to specify `relationship = "many-to-{one,many}"` if joining
 #'   to other data.
 #'
 #' @keywords internal
 epix_diff_keys <- function(x,
-                           ekt_var_set = key_colnames(x, exclude = c("time_value" ,"version")),
-                           val_var_set = val_colnames(x)) {
-  ektv_vars <- key_colnames(x)
-  diff_keys <- x$DT[, c(ektv_vars, val_var_set), with = FALSE] %>%
+                           ekt_var_subset = key_colnames(x, exclude = c("time_value", "version")),
+                           # XXX consider removing the val_var_subset default.
+                           val_var_subset = val_colnames(x)) {
+  ektv_var_subset <- c(ekt_var_subset, "version")
+  diff_keys <- x$DT[, c(ektv_var_subset, val_var_subset), with = FALSE] %>%
     setDF() %>%
     as_tibble() %>%
-    filter(!update_is_locf(., ektv_vars, 0, TRUE)) %>%
-    distinct(pick(all_of(c(ekt_var_set, "version"))))
+    filter(!update_is_locf(., ektv_var_subset, 0, TRUE)) %>%
+    distinct(pick(all_of(c(ekt_var_subset, "version"))))
   diff_keys
+}
+
+corresponding_diff_keys <- function(edf, archive,
+                                    ekt_var_subset = key_colnames(archive, exclude = c("time_value", "version")),
+                                    val_var_subset = val_colnames(archive)) {
+  assert_class(edf, "epi_df")
+  assert_class(archive, "epi_archive")
+  all_diff_keys <- epix_diff_keys(archive, ekt_var_subset, val_var_subset)
+  ektv_var_subset <- c(ekt_var_subset, "version")
+  setDT(all_diff_keys, key = ektv_var_subset)
+  request_keys <- edf %>%
+    as_tibble() %>%
+    select(all_of(ekt_var_subset)) %>%
+    mutate(version = attr(edf, "metadata")$as_of)
+  all_diff_keys[as.list(request_keys), roll = TRUE, allow.cartesian = TRUE] %>%
+    setDF() %>%
+    as_tibble()
 }
 
 time_type <- function(x) UseMethod("time_type")
