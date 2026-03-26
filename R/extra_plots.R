@@ -43,38 +43,49 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), x,
     allow_rename = FALSE
   )
-  if (nvars > 1) {
-    x <- tidyr::pivot_longer(
-      x[pos], tidyselect::all_of(vars),
-      values_to = ".response",
-      names_to = ".response_name"
-    )
-  } else {
-    x <- dplyr::rename(x[pos], .response := !!vars) # nolint: object_usage_linter
-  }
+  x <- tidyr::pivot_longer(
+    x[pos], tidyselect::all_of(vars),
+    values_to = ".response",
+    names_to = ".response_name"
+  )
 
   # Key subsampling and y-axis interaction variable
   plot_df <- x %>%
     dplyr::mutate(
-      .rows = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
+      .key_interaction = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
     ) %>%
     autoplot_subsample_keys(
       .max_keys,
       .interactive = FALSE,
       .caller = "plot_heatmap"
-    )
+    ) %>%
+    tibble::as_tibble()
+
+  fill_label <- "Value"
+  if (nvars > 1) {
+    plot_df <- plot_df %>%
+      dplyr::group_by(.key_interaction, .response_name) %>%
+      dplyr::mutate(
+        .mean = mean(.data$.response, na.rm = TRUE),
+        .sd = sd(.data$.response, na.rm = TRUE),
+        .response = dplyr::if_else(.sd == 0 | is.na(.sd), 0, (.data$.response - .mean) / .sd)
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.mean, -.sd)
+    fill_label <- "Standardized\nValue"
+  }
 
   # Create plot
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(
     x = time_value,
-    y = .rows,
-    fill = .response
+    y = .key_interaction,
+    fill = .data$.response
   )) +
     ggplot2::geom_tile(
       color = "white",
       linewidth = min(0.1, 1 / length(unique(plot_df$time_value)))
     ) +
-    ggplot2::scale_fill_viridis_c(name = "Value") +
+    ggplot2::scale_fill_viridis_c(name = fill_label) +
     ggplot2::labs(x = "Date", y = "") +
     ggplot2::coord_cartesian(expand = FALSE)
 

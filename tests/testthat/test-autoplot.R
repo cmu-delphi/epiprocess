@@ -73,17 +73,16 @@ test_that("autoplot prefers `value` when multiple numeric columns are present", 
   )
 })
 
-test_that("autoplot errors when multiple numeric columns are present and no `value` exists", {
+test_that("autoplot warns when multiple numeric columns are present and no `value` exists, and selects all", {
   test_date <- as.Date("2020-01-01")
   df <- dplyr::tibble(
     geo_value = "ak", time_value = test_date + 1:5,
     cases = 11:15, deaths = 1:5
   ) %>% as_epi_df()
 
-  expect_error(
+  expect_warning(
     autoplot(df),
-    regexp = "Multiple candidate plot columns: `cases` and `deaths`",
-    class = "epiprocess__multiple_plot_candidates"
+    class = "epiprocess__unspecified_plot_var"
   )
 })
 
@@ -134,9 +133,9 @@ test_that("autoplot_subsample_keys warning/hints", {
   )
   expect_equal(length(unique(sampled$.colours)), 10)
 
-  # Fallback to .rows if .colours is missing
+  # Fallback to .key_interaction if .colours is missing
   df_rows <- df_many_keys %>%
-    mutate(.rows = factor(geo_value))
+    mutate(.key_interaction = factor(geo_value))
 
   expect_warning(
     sampled <- epiprocess:::autoplot_subsample_keys(
@@ -145,7 +144,7 @@ test_that("autoplot_subsample_keys warning/hints", {
     ),
     class = "epiprocess__autoplot__max_keys_exceeded"
   )
-  expect_equal(length(unique(sampled$.rows)), 10)
+  expect_equal(length(unique(sampled$.key_interaction)), 10)
 
   # Add .facets to df_many_keys (20 levels)
   df_facets <- df_many_keys %>%

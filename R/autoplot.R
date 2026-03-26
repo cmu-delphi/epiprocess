@@ -132,16 +132,11 @@ autoplot.epi_df <- function(
     rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), object,
     allow_rename = FALSE
   )
-  # if there are multiple numeric variables, pivot longer to create a .response column
-  if (nvars > 1) {
-    object <- tidyr::pivot_longer(
-      object[pos], tidyselect::all_of(vars),
-      values_to = ".response",
-      names_to = ".response_name"
-    )
-  } else {
-    object <- dplyr::rename(object[pos], .response := !!vars) # nolint: object_usage_linter
-  }
+  object <- tidyr::pivot_longer(
+    object[pos], tidyselect::all_of(vars),
+    values_to = ".response",
+    names_to = ".response_name"
+  )
   all_avail_names <- c(
     geo_and_other_keys,
     if (nvars > 1) ".response_name" else NULL
@@ -285,12 +280,13 @@ autoplot_check_viable_response_vars <- function(
         call = call
       )
     } else {
-      cli::cli_abort(
+      vars <- names(allowed)
+      cli::cli_warn(
         c(
-          "Multiple candidate plot columns: {.var {names(allowed)}}.",
-          ">" = "Specify the column(s) to plot, e.g. `autoplot(x, {names(allowed)[1]})`."
+          "Plot variable was unspecified. Automatically selecting all numeric columns: {.var {names(allowed)}}.",
+          ">" = "To plot specific columns, specify them, e.g. `autoplot(x, {names(allowed)[1]})`."
         ),
-        class = "epiprocess__multiple_plot_candidates",
+        class = "epiprocess__unspecified_plot_var",
         call = call
       )
     }
@@ -327,7 +323,7 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   }
 
   facet_lvls <- if (".facets" %in% names(object)) levels(droplevels(object$.facets)) else character(0)
-  color_col <- if (".colours" %in% names(object)) ".colours" else if (".rows" %in% names(object)) ".rows" else NULL
+  color_col <- if (".colours" %in% names(object)) ".colours" else if (".key_interaction" %in% names(object)) ".key_interaction" else NULL
   color_lvls <- if (!is.null(color_col)) levels(droplevels(object[[color_col]])) else character(0)
 
   n_facets_all <- max(1L, length(facet_lvls))
@@ -358,7 +354,7 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   if (n_c < n_colors_all) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
 
   object <- dplyr::mutate(object, dplyr::across(
-    tidyselect::any_of(c(".facets", ".colours", ".rows")), droplevels
+    tidyselect::any_of(c(".facets", ".colours", ".key_interaction")), droplevels
   ))
   msg <- c(
     "Too many key combinations to display clearly. Showing {n_f * n_c} of {n_facets_all * n_colors_all}.",

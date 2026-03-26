@@ -1,12 +1,10 @@
 # plot_heatmap functionality (standard, multi-key, auto-select, multi-var)
 
     Code
-      unique(p_multi$data$.y_axis)
-    Condition
-      Warning:
-      Unknown or uninitialised column: `.y_axis`.
+      unique(p_multi$data$.key_interaction)
     Output
-      NULL
+      [1] ak; adult ak; child al; adult al; child
+      Levels: ak; adult al; adult ak; child al; child
 
 ---
 
@@ -22,18 +20,18 @@
       head(p_multi_var$data, 10)
     Output
       # A tibble: 10 x 5
-         time_value geo_value .response_name .response .rows
-         <date>     <chr>     <chr>              <dbl> <fct>
-       1 2020-01-02 a         val                2.04  a    
-       2 2020-01-02 a         val2               2.15  a    
-       3 2020-01-03 a         val               11.8   a    
-       4 2020-01-03 a         val2               1.97  a    
-       5 2020-01-04 a         val                6.80  a    
-       6 2020-01-04 a         val2               0.710 a    
-       7 2020-01-05 a         val                2.04  a    
-       8 2020-01-05 a         val2               1.40  a    
-       9 2020-01-06 a         val               13.3   a    
-      10 2020-01-06 a         val2               2.82  a    
+         time_value geo_value .response_name .response .key_interaction
+         <date>     <chr>     <chr>              <dbl> <fct>           
+       1 2020-01-02 a         val              -1.21   a               
+       2 2020-01-02 a         val2             -0.426  a               
+       3 2020-01-03 a         val               1.46   a               
+       4 2020-01-03 a         val2             -0.565  a               
+       5 2020-01-04 a         val               0.0945 a               
+       6 2020-01-04 a         val2             -1.53   a               
+       7 2020-01-05 a         val              -1.21   a               
+       8 2020-01-05 a         val2             -1.00   a               
+       9 2020-01-06 a         val               1.87   a               
+      10 2020-01-06 a         val2              0.0873 a               
 
 # plot_heatmap edge cases (subsampling and errors)
 
