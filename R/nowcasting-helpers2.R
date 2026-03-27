@@ -118,18 +118,19 @@ epix_diffkeys <- function(x,
                           ekt_var_subset = key_colnames(x, exclude = c("time_value", "version")),
                           # XXX consider removing the val_var_subset default.
                           val_var_subset = val_colnames(x)) {
-  # XXX -> epix_distinct_diffkeys ?
+  # XXX rename to epix_distinct_diffkeys ?
   assert_class(x, "epi_archive")
   assert_subset(ekt_var_subset, key_colnames(x, exclude = "version"))
   assert_subset(val_var_subset, val_colnames(x))
   ektv_var_subset <- c(ekt_var_subset, "version")
-  diffkeys <- x$DT[, c(ektv_var_subset, val_var_subset), with = FALSE] %>%
+  diffkeys <- x$DT[, c(key_colnames(x), val_var_subset), with = FALSE] %>%
     setDF() %>%
     as_tibble() %>%
-    filter(!update_is_locf(., ektv_var_subset, 0, TRUE)) %>%
-    distinct(pick(all_of(c(ekt_var_subset, "version"))))
+    filter(!update_is_locf(., key_colnames(archive), 0, TRUE)) %>%
+    distinct(pick(all_of(ektv_var_subset)))
   diffkeys
 }
+# XXX long format might be more convenient but less flexible?
 
 corresponding_diffkey_versions <- function(edf,
                                            archive,
@@ -143,7 +144,7 @@ corresponding_diffkey_versions <- function(edf,
     as_tibble() %>%
     select(all_of(ekt_var_subset)) %>%
     mutate(version = attr(edf, "metadata")$as_of)
-  all_diffkeys[as.list(request_keys), x.version, roll = TRUE]
+  all_diffkeys[as.list(request_keys), x.version, on = ektv_var_subset, roll = TRUE]
 }
 
 time_type <- function(x) UseMethod("time_type")
