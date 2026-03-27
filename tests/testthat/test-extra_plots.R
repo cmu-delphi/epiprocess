@@ -65,4 +65,21 @@ withr::with_rng_version("3.5.0", withr::with_seed(1410852, {
     expect_error(plot_heatmap(df_invalid), class = "epiprocess__plot_heatmap__invalid_x")
     expect_snapshot(plot_heatmap(df_invalid), error = TRUE)
   })
+
+  test_that("plot_heatmap standardization logic", {
+    # Check that standardization maps values to mean 0, sd 1 per key/signal
+    p_norm <- plot_heatmap(test_df_multi_var, val, val2)
+    # The stats for each variable/key should be mean 0 and sd 1
+    # (unless sd is 0, which is not the case for our test data)
+    norm_stats <- p_norm$data %>%
+      dplyr::group_by(.key_interaction, .response_name) %>%
+      dplyr::summarize(
+        mean = mean(.response),
+        sd = stats::sd(.response),
+        .groups = "drop"
+      )
+    expect_true(all(abs(norm_stats$mean) < 1e-10))
+    expect_true(all(abs(norm_stats$sd - 1) < 1e-10))
+    expect_snapshot(head(p_norm$data, 10))
+  })
 }))
