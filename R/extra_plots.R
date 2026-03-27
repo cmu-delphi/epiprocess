@@ -8,7 +8,8 @@
 #'   be used to select a range of variables. If no variables are specified,
 #'   all numeric columns will be plotted and a warning issued.
 #' @return A [ggplot2::ggplot] object.
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get theme_gray theme_bw facet_wrap labs
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get
+#' @importFrom ggplot2 theme_gray theme_bw facet_wrap labs coord_cartesian
 #' @importFrom rlang sym !! inject syms
 #' @importFrom dplyr mutate rename
 #' @importFrom tidyr pivot_longer
@@ -35,13 +36,15 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
   geo_and_other_keys <- key_colnames(x, exclude = "time_value")
 
   # Variable selection
-  vars <- autoplot_check_viable_response_vars(x, ..., non_key_cols = non_key_cols)
+  vars <- autoplot_check_viable_response_vars(
+    x, ...,
+    non_key_cols = non_key_cols
+  )
   nvars <- length(vars)
 
   # Create a valid df to plot based on selected vars
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), x,
-    allow_rename = FALSE
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), x
   )
   x <- tidyr::pivot_longer(
     x[pos], tidyselect::all_of(vars),
@@ -58,28 +61,13 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
       .max_keys,
       .interactive = FALSE,
       .caller = "plot_heatmap"
-    ) %>%
-    tibble::as_tibble()
-
-  fill_label <- "Value"
-  if (nvars > 1) {
-    plot_df <- plot_df %>%
-      dplyr::group_by(.key_interaction, .response_name) %>%
-      dplyr::mutate(
-        .mean = mean(.data$.response, na.rm = TRUE),
-        .sd = sd(.data$.response, na.rm = TRUE),
-        .response = dplyr::if_else(.sd == 0 | is.na(.sd), 0, (.data$.response - .mean) / .sd)
-      ) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(-.mean, -.sd)
-    fill_label <- "Standardized\nValue"
-  }
+    )
 
   # Create plot
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(
     x = time_value,
-    y = .key_interaction,
-    fill = .data$.response
+    y = .rows,
+    fill = .response
   )) +
     ggplot2::geom_tile(
       color = "white",
@@ -97,5 +85,5 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     p <- p + ggplot2::theme_bw()
   }
 
-  return(p)
+  p
 }
