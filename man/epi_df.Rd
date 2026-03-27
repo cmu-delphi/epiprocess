@@ -22,7 +22,7 @@ as_epi_df(x, ...)
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  input_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long"),
   signal_var = NULL,
   ...
 )
@@ -33,7 +33,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  input_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long"),
   signal_var = NULL,
   ...
 )
@@ -42,7 +42,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  input_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long"),
   signal_var = NULL,
   ...
 )
@@ -83,15 +83,18 @@ then the current day-time will be used.}
 \item{other_keys}{If your tibble has additional keys, be sure to specify them
 as a character vector here (typical examples are "age" or sub-geographies).}
 
-\item{input_format}{One of "auto", "wide", or "long". If "auto" (the default),
-the function will try to guess the format of the input data. If the data
-contains a column that looks like a signal identifier (e.g., "signal",
-"name", "signal_name", etc.), it will be treated as "long" format and
-pivoted to "wide" format.}
+\item{signal_format}{Format of the signal data. If \code{"auto"} (default),
+the function will try to detect if the data is in long format and pivot
+to wide if necessary. This happens only if a unique signal identifier
+column (see \code{signal_var}) and a \code{value} column are both present,
+and the signal column contains more than one unique value. \code{"long"} format
+treats the signal as a metadata key by adding it to \code{other_keys}. \code{"wide"}
+format tries to pivot to wide.}
 
-\item{signal_var}{If \code{input_format = "long"}, the name of the column that
-contains the signal identifiers. If \code{input_format = "auto"}, the function
-will try to guess this column.}
+\item{signal_var}{The name of the column that contains the signal
+identifiers. If \code{NULL}, the function will try to guess this column
+(see \code{signal_column_names()} for a list of column names that will be
+checked).}
 }
 \value{
 \itemize{

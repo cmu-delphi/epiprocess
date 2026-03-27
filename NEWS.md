@@ -8,7 +8,7 @@ indicate development versions beyond 0.x.
 ## New features
 
 - `plot_heatmap()` provides heatmap visualization for `epi_df` objects.
-- `as_epi_df()` and `as_epi_archive()` now support an `input_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect long-format data (e.g., from `covidcast`) and automatically pivot it to a wide format.
+- `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"long"`, the signal column is added to `other_keys` instead of pivoting. When `"wide"`, it always pivots to wide.
 
 ## Improvements
 
