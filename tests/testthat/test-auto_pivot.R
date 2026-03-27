@@ -1,5 +1,6 @@
-test_that("as_epi_df auto-detects long format and pivots", {
-  test_date <- as.Date("2020-01-01")
+test_date <- as.Date("2020-01-01")
+
+test_that("as_epi_df and as_epi_archive handle auto-detection and pivoting", {
   raw <- dplyr::tibble(
     geo_value = "ak",
     time_value = rep(test_date + 1:5, 2),
@@ -7,19 +8,34 @@ test_that("as_epi_df auto-detects long format and pivots", {
     value = 1:10
   )
 
-  # Auto detection
-  expect_snapshot(
-    df <- as_epi_df(raw)
-  )
+  # as_epi_df: auto-detects 'signal' and pivots to wide
+  expect_snapshot(df <- as_epi_df(raw))
   expect_s3_class(df, "epi_df")
-  expect_true(all(c("cases", "deaths") %in% names(df)))
-  expect_false("signal" %in% names(df))
-  expect_false("value" %in% names(df))
+  expect_setequal(names(df), c("geo_value", "time_value", "cases", "deaths"))
   expect_equal(nrow(df), 5)
+
+  # as_epi_archive: auto-detects and pivots
+  raw_arch <- dplyr::mutate(raw, version = test_date + 6)
+  expect_snapshot(arch <- as_epi_archive(raw_arch))
+  expect_setequal(names(arch$DT), c("geo_value", "time_value", "cases", "deaths", "version"))
+  expect_equal(nrow(arch$DT), 5)
+
+  # Drops extra columns during pivot
+  raw_extra <- dplyr::mutate(raw, direction = 1)
+  expect_snapshot(edf <- as_epi_df(raw_extra))
+  expect_setequal(names(edf), c("geo_value", "time_value", "cases", "deaths"))
+
+  # Handles observation carried forward in archive pivot
+  tib <- tibble::tibble(
+    geo_value = 1, time_value = 1, version = c(1, 1, 2),
+    signal = c("a", "b", "a"), value = c(1, 11, 2)
+  )
+  expect_snapshot(arch_locf <- as_epi_archive(tib))
+  expect_equal(arch_locf$DT$a, c(1, 2))
+  expect_equal(arch_locf$DT$b, c(11, 11))
 })
 
-test_that("as_epi_df supports explicit long format via input_format and signal_var", {
-  test_date <- as.Date("2020-01-01")
+test_that("Explicit signal formats (long/wide) and guessing", {
   raw <- dplyr::tibble(
     geo_value = "ak",
     time_value = rep(test_date + 1:5, 2),
@@ -28,127 +44,109 @@ test_that("as_epi_df supports explicit long format via input_format and signal_v
   )
 
   # Explicit long format
-  expect_snapshot(
-    df <- as_epi_df(raw, input_format = "long", signal_var = "custom_signal")
-  )
-  expect_true(all(c("a", "b") %in% names(df)))
+  expect_snapshot(df_long <- as_epi_df(raw, signal_format = "long", signal_var = "custom_signal"))
+  expect_true("custom_signal" %in% attr(df_long, "metadata")$other_keys)
+  expect_true("value" %in% names(df_long))
+
+  # Guessing long if NULL
+  raw_guess <- dplyr::rename(raw, signal = custom_signal)
+  expect_snapshot(df_long_guess <- as_epi_df(raw_guess, signal_format = "long"))
+  expect_true("signal" %in% attr(df_long_guess, "metadata")$other_keys)
+
+  # Explicit wide format
+  expect_snapshot(df_wide <- as_epi_df(raw, signal_format = "wide", signal_var = "custom_signal"))
+  expect_named(df_wide, c("geo_value", "time_value", "a", "b"))
+
+  # Guessing wide if NULL
+  expect_snapshot(df_wide_guess <- as_epi_df(raw_guess, signal_format = "wide"))
+  expect_named(df_wide_guess, c("geo_value", "time_value", "a", "b"))
+
+  # Explicit signal_var activates pivot in auto mode
+  expect_message(df_auto <- as_epi_df(raw, signal_var = "custom_signal"))
+  expect_named(df_auto, c("geo_value", "time_value", "a", "b"))
 })
 
-test_that("as_epi_df errors if signal_var or value column is missing in long format", {
-  test_date <- as.Date("2020-01-01")
+test_that("Multi-candidate behavior and silence", {
   raw <- dplyr::tibble(
-    geo_value = "ak",
-    time_value = test_date + 1:5,
-    signal = "cases",
-    not_value = 1:5
+    geo_value = "ca", time_value = test_date,
+    signal = 1, value = 2
   )
 
-  expect_snapshot(
-    as_epi_df(raw, input_format = "long", signal_var = "signal"),
-    error = TRUE
-  )
+  # Multiple candidates: silent if not pivoting OR if ambiguous in auto mode
+  raw_multi <- dplyr::mutate(raw, signal2 = 1)
+  expect_silent(as_epi_df(raw_multi))
 
-  expect_snapshot(
-    as_epi_df(raw, input_format = "long", signal_var = "nonexistent"),
-    error = TRUE
+  raw_pivot <- dplyr::tibble(
+    geo_value = "ca", time_value = test_date + 1:5,
+    signal = c(1, 1, 2, 2, 2), value = 1:5,
+    variable = 1
   )
+  expect_silent(as_epi_df(raw_pivot))
+  # Explicit selection resolves ambiguity and pivots
+  expect_message(as_epi_df(raw_pivot, signal_var = "signal"), "Pivoting")
+
+  # Silent and no-pivot when multiple candidates found in auto mode (if not pivoting)
+  raw_no_pivot <- dplyr::mutate(raw, signal_name = "s")
+  expect_silent(df <- as_epi_df(raw_no_pivot))
+  expect_true(all(c("signal", "signal_name") %in% names(df)))
+
+  # Archive silence
+  raw_arch <- dplyr::mutate(raw_no_pivot, version = test_date + 1)
+  expect_silent(arch <- as_epi_archive(raw_arch))
+  expect_true(all(c("signal", "signal_name") %in% names(arch$DT)))
 })
 
-test_that("as_epi_archive auto-detects long format and pivots", {
-  test_date <- as.Date("2020-01-01")
-  raw <- dplyr::tibble(
-    geo_value = "ak",
-    time_value = rep(test_date + 1:5, 2),
-    version = test_date + 6,
-    signal = rep(c("cases", "deaths"), each = 5),
-    value = 1:10
+test_that("Error handling and non-scalar validations", {
+  raw_error <- dplyr::tibble(
+    geo_value = "ca", time_value = test_date,
+    custom = "cases", value = 1
   )
 
-  expect_snapshot(
-    arch <- as_epi_archive(raw)
-  )
-  expect_s3_class(arch, "epi_archive")
-  expect_true(all(c("cases", "deaths") %in% names(arch$DT)))
-  expect_equal(nrow(arch$DT), 5)
-})
-
-test_that("as_epi_df with input_format = 'wide' does no pivoting", {
-  test_date <- as.Date("2020-01-01")
-  raw <- dplyr::tibble(
-    geo_value = "ak",
-    time_value = test_date + 1:5,
-    value = 1:5,
-    signal = "cases" # This would be detected as long if "auto"
+  # Cannot guess
+  expect_error(
+    as_epi_df(raw_error, signal_format = "long"),
+    class = "epiprocess__unspecified_signal_var"
   )
 
-  df <- as_epi_df(raw, input_format = "wide")
-  expect_true("signal" %in% names(df))
-  expect_true("value" %in% names(df))
-})
-
-test_that("as_epi_df drops extra metadata columns during auto-pivot", {
-  # Data with a 'direction' column that should be dropped
-  df <- tibble::tibble(
-    geo_value = rep(c("ca", "ny"), each = 2),
-    time_value = rep(as.Date("2020-01-01"), 4),
-    name = rep(c("cases", "deaths"), 2),
-    value = c(10, 1, 20, 2),
-    direction = c(1, 0, -1, 0)
+  # Multiple candidates in non-auto mode
+  raw_multi <- dplyr::mutate(raw_error, signal = "s", name = "n")
+  expect_error(
+    as_epi_df(raw_multi, signal_format = "long"),
+    class = "epiprocess__multiple_signal_candidates"
+  )
+  expect_error(
+    as_epi_archive(dplyr::mutate(raw_multi, version = test_date), signal_format = "wide"),
+    class = "epiprocess__multiple_signal_candidates"
   )
 
-  # Should pivot and drop 'direction'
-  expect_snapshot(edf <- as_epi_df(df))
-  expect_named(edf, c("geo_value", "time_value", "cases", "deaths"))
-  expect_false("direction" %in% names(edf))
-})
-
-test_that("as_epi_archive handles long-format with LOCF during pivot", {
-  # Case provided by user
-  tib <- tibble::tibble(
-    geo_value = 1,
-    time_value = 1,
-    version = c(1, 1, 2),
-    signal = c("a", "b", "a"),
-    value = c(1, 11, 2)
+  # Non-scalar signal_var
+  raw_ns <- dplyr::mutate(raw_error, s1 = 1, s2 = 2)
+  expect_error(
+    as_epi_df(raw_ns, signal_var = c("s1", "s2")),
+    class = "epiprocess__signal_var_not_scalar"
+  )
+  expect_error(
+    as_epi_archive(dplyr::mutate(raw_ns, version = test_date), signal_var = c("s1", "s2")),
+    class = "epiprocess__signal_var_not_scalar"
   )
 
-  expect_snapshot(
-    arch <- as_epi_archive(tib)
+  # signal_var cannot be a primary key
+  expect_error(
+    as_epi_df(raw_error, signal_var = "geo_value"),
+    class = "epiprocess__signal_var_is_key"
+  )
+  expect_error(
+    as_epi_archive(dplyr::mutate(raw_error, version = test_date), signal_var = "version"),
+    class = "epiprocess__signal_var_is_key"
+  )
+  expect_error(
+    as_epi_df(raw_error, signal_var = "custom", other_keys = "custom"),
+    class = "epiprocess__signal_var_is_key"
   )
 
-  # Check that version 2 has both 'a' and 'b'
-  # 'a' should be updated to 2, 'b' should be carried forward as 11
-  expect_equal(nrow(arch$DT), 2)
-  expect_equal(arch$DT$a, c(1, 2))
-  expect_equal(arch$DT$b, c(11, 11))
-})
-
-test_that("auto-pivot aborts when multiple signal candidates exist", {
-  raw <- dplyr::tibble(
-    geo_value = "ak",
-    time_value = as.Date("2020-01-01"),
-    signal = "cases",
-    name = "also_cases",
-    value = 1
+  # wide pivot requires value column
+  expect_error(
+    as_epi_df(dplyr::select(raw_error, -value), signal_var = "custom", signal_format = "wide"),
+    class = "epiprocess__wide_pivot_requires_value_col"
   )
-  expect_snapshot(as_epi_df(raw), error = TRUE)
-
-  raw_arch <- dplyr::mutate(raw, version = as.Date("2020-01-02"))
-  expect_snapshot(as_epi_archive(raw_arch), error = TRUE)
-})
-
-test_that("auto-pivots when signal_var provided explicitly without input_format='long'", {
-  raw <- dplyr::tibble(
-    geo_value = "ak",
-    time_value = as.Date("2020-01-01"),
-    custom_signal = "cases",
-    value = 1
-  )
-  # When signal_var is given, input_format auto should become long
-  expect_message(df <- as_epi_df(raw, signal_var = "custom_signal"))
-  expect_true("cases" %in% names(df))
-
-  raw_arch <- dplyr::mutate(raw, version = as.Date("2020-01-02"))
-  expect_message(arch <- as_epi_archive(raw_arch, signal_var = "custom_signal"))
-  expect_true("cases" %in% names(arch$DT))
 })
