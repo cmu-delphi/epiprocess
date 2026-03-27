@@ -299,14 +299,30 @@ autoplot_check_viable_response_vars <- function(
 }
 
 
-autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "autoplot") {
+autoplot_subsample_keys <- function(
+  object, .max_keys, .interactive, .caller = "autoplot"
+) {
   if (.interactive || is.infinite(.max_keys)) {
     return(object)
   }
 
-  facet_lvls <- if (".facets" %in% names(object)) levels(droplevels(object$.facets)) else character(0)
-  color_col <- if (".colours" %in% names(object)) ".colours" else if (".rows" %in% names(object)) ".rows" else NULL
-  color_lvls <- if (!is.null(color_col)) levels(droplevels(object[[color_col]])) else character(0)
+  facet_lvls <- if (".facets" %in% names(object)) {
+    levels(droplevels(object$.facets))
+  } else {
+    character(0)
+  }
+  color_col <- if (".colours" %in% names(object)) {
+    ".colours"
+  } else if (".rows" %in% names(object)) {
+    ".rows"
+  } else {
+    NULL
+  }
+  color_lvls <- if (!is.null(color_col)) {
+    levels(droplevels(object[[color_col]]))
+  } else {
+    character(0)
+  }
 
   n_facets_all <- max(1L, length(facet_lvls))
   n_colors_all <- max(1L, length(color_lvls))
@@ -332,17 +348,22 @@ autoplot_subsample_keys <- function(object, .max_keys, .interactive, .caller = "
   n_f <- max(1L, min(n_facets_all, as.integer(n_f)))
   n_c <- max(1L, min(n_colors_all, as.integer(n_c)))
 
-  if (n_f < n_facets_all) object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
-  if (n_c < n_colors_all) object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
-
+  if (n_f < n_facets_all) {
+    object <- object[object$.facets %in% sample(facet_lvls, n_f), ]
+  }
+  if (n_c < n_colors_all) {
+    object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
+  }
   object <- dplyr::mutate(object, dplyr::across(
     tidyselect::any_of(c(".facets", ".colours", ".rows")), droplevels
   ))
+  caller <- .caller
+
   msg <- c(
     "Too many key combinations to display clearly. Showing {n_f * n_c} of {n_facets_all * n_colors_all}.",
-    i = "To plot all keys, use {.code {(.caller)}(..., .max_keys = Inf)}."
+    i = "To plot all keys, use {.code {caller}(..., .max_keys = Inf)}."
   )
-  if (.caller == "autoplot") {
+  if (caller == "autoplot") {
     msg <- c(
       msg,
       i = "To explore all keys interactively, use {.code autoplot(..., .interactive = TRUE)}.",

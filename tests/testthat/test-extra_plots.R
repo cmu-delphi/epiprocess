@@ -37,7 +37,7 @@ withr::with_rng_version("3.5.0", withr::with_seed(1410852, {
     # Multiple keys on y-axis
     p_multi <- plot_heatmap(test_df_multi, val)
     expect_s3_class(p_multi, "ggplot")
-    expect_snapshot(unique(p_multi$data$.y_axis))
+    expect_snapshot(unique(p_multi$data$.rows))
 
     # Auto-select fill column
     expect_warning(p_auto <- plot_heatmap(test_df), class = "epiprocess__unspecified_plot_var")

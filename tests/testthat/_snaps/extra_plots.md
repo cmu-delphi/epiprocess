@@ -1,12 +1,10 @@
 # plot_heatmap functionality (standard, multi-key, auto-select, multi-var)
 
     Code
-      unique(p_multi$data$.y_axis)
-    Condition
-      Warning:
-      Unknown or uninitialised column: `.y_axis`.
+      unique(p_multi$data$.rows)
     Output
-      NULL
+      [1] ak; adult ak; child al; adult al; child
+      Levels: ak; adult al; adult ak; child al; child
 
 ---
 

@@ -8,7 +8,8 @@
 #'   be used to select a range of variables. If no variables are specified,
 #'   all numeric columns will be plotted and a warning issued.
 #' @return A [ggplot2::ggplot] object.
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get theme_gray theme_bw facet_wrap labs
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get
+#' @importFrom ggplot2 theme_gray theme_bw facet_wrap labs coord_cartesian
 #' @importFrom rlang sym !! inject syms
 #' @importFrom dplyr mutate rename
 #' @importFrom tidyr pivot_longer
@@ -35,12 +36,17 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
   geo_and_other_keys <- key_colnames(x, exclude = "time_value")
 
   # Variable selection
-  vars <- autoplot_check_viable_response_vars(x, ..., non_key_cols = non_key_cols)
+  vars <- autoplot_check_viable_response_vars(
+    x, ...,
+    non_key_cols = non_key_cols
+  )
   nvars <- length(vars)
 
   # Create a valid df to plot based on selected vars
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), x
+    rlang::expr(c(
+      "time_value", tidyselect::all_of(geo_and_other_keys), names(vars)
+    )), x
   )
   if (nvars > 1) {
     x <- tidyr::pivot_longer(
@@ -60,14 +66,14 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     autoplot_subsample_keys(
       .max_keys,
       .interactive = FALSE,
-      .caller = "plot_heatmap"
+      "plot_heatmap"
     )
 
   # Create plot
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(
-    x = time_value,
-    y = .rows,
-    fill = .response
+    x = .data$time_value,
+    y = .data$.rows,
+    fill = .data$.response
   )) +
     ggplot2::geom_tile(
       color = "white",
@@ -85,5 +91,5 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     p <- p + ggplot2::theme_bw()
   }
 
-  return(p)
+  p
 }
