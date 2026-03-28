@@ -102,7 +102,7 @@ latency_info_epi_df <- function(x) {
   # Summary of max non-NA time per signal and other-keys
   smry <- x %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_no_t))) %>%
+    dplyr::group_by(dplyr::pick(dplyr::all_of(key_no_t))) %>%
     dplyr::summarize(dplyr::across(dplyr::all_of(sigs), ~ {
       times <- time_value[!is.na(.x)]
       if (length(times) == 0) time_value[1][NA] else max(times)
