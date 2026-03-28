@@ -568,8 +568,7 @@ autoplot_get_label <- function(type, vars = character(0), format = c("none", "pr
 autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
-  if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object))) {
+  if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {

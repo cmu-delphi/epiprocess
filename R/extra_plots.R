@@ -55,7 +55,7 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
       .key_interaction = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
     ) %>%
     autoplot_subsample_keys(
-      .max_keys,
+      .max_keys = .max_keys,
       .interactive = FALSE,
       .caller = "plot_heatmap"
     )
