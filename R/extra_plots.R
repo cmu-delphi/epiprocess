@@ -4,7 +4,8 @@
 #' @param x An `epi_df` object.
 #' @param .max_keys The maximum number of key combinations to display.
 #' @return A [ggplot2::ggplot] object.
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data
+#' @importFrom ggplot2 theme_get
 #' @importFrom ggplot2 theme_gray theme_bw facet_wrap labs coord_cartesian
 #' @importFrom rlang sym !! inject syms
 #' @importFrom dplyr mutate rename group_by ungroup select if_else
@@ -52,12 +53,15 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
     ) %>%
     # Key subsampling and y-axis interaction variable
     dplyr::mutate(
-      .key_interaction = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
+      .key_interaction = interaction(
+        !!!rlang::syms(geo_and_other_keys),
+        sep = "; "
+      )
     ) %>%
     autoplot_subsample_keys(
       .max_keys = .max_keys,
       .interactive = FALSE,
-      .caller = "plot_heatmap"
+      "plot_heatmap"
     )
 
   # --- Requested standardization logic
