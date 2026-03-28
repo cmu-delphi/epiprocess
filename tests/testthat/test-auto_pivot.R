@@ -139,8 +139,20 @@ test_that("Error handling and non-scalar validations", {
     as_epi_archive(dplyr::mutate(raw_error, version = test_date), signal_var = "version"),
     class = "epiprocess__signal_var_is_key"
   )
+
+  # signal_var in other_keys prevents it from being guessed (stays long)
+  x_ok <- tibble::tibble(
+    geo_value = rep("pa", 2), time_value = test_date,
+    signal = c("s1", "s2"), value = c(1, 2)
+  )
+  # auto-pivot skipped because "signal" is in other_keys
+  res_ok <- as_epi_df(x_ok, other_keys = "signal")
+  expect_false("s1" %in% names(res_ok))
+  expect_true("signal" %in% attr(res_ok, "metadata")$other_keys)
+
+  # explicit conflict still aborts
   expect_error(
-    as_epi_df(raw_error, signal_var = "custom", other_keys = "custom"),
+    as_epi_df(x_ok, signal_var = "signal", other_keys = "signal"),
     class = "epiprocess__signal_var_is_key"
   )
 

@@ -804,6 +804,7 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
 
   # Guessing signal_var if missing
   candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+  candidates <- setdiff(candidates, other_keys)
   if (is.null(signal_var) && length(candidates) == 1) {
     signal_var <- candidates
   }
@@ -860,6 +861,7 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
 #' @keywords internal
 #' @importFrom cli cli_inform cli_abort
 #' @importFrom dplyr rename
+#' @importFrom tidyselect any_of
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
