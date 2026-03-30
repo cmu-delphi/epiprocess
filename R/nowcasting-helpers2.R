@@ -444,6 +444,7 @@ validate_nice_version_lag <- function(version_lag, x, version_lag_arg = rlang::c
   # version_lag: bare integerish, difftime
   if (inherits(version_lag, "difftime")) {
     if (inherits(x_version_obj, c("Date", "yearmonth", "POSIXct"))) { # (any)
+      # TODO check if weekly versions and existing real lags are very uniform & version_lag not among?
       invisible(version_lag)
     } else {
       cli_abort("difftime version lags can only be used with Date, yearmonth, or POSIXct versions,
@@ -490,15 +491,16 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   # assert_vector(toffset, len = 1L)
   validate_slide_window_arg(toffset, x$time_type, lower = -Inf)
   toffset <- time_delta_standardize(toffset, x$time_type, "fast")
-  version_type <- guess_time_type(x$DT$version)
-  assert_vector(voffset, len = 1L)
-  voffset <- time_delta_standardize(voffset, version_type, "fast")
+  # version_type <- guess_time_type(x$DT$version)
+  # assert_vector(voffset, len = 1L)
+  # voffset <- time_delta_standardize(voffset, version_type, "fast")
+  validate_nice_version_lag(voffset, x)
   # We want default vtol to be reasonably large to in order to adapt
   # to normal variance in pipeline schedules as well as transient
   # pipeline issues and holiday-shifted schedules, which seem pretty
   # common.
   ek_vars <- c("geo_value", x$other_keys)
-  x_var_diff_ekvs <- epix_diff_keys(x, ek_vars, var)
+  x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
   if (is.null(vtol)) {
     # First, we want to prevent vnominal1 + vdeparture1 + vtol from
     # regularly crossing vnominal2 + vdeparture2 (i.e., vactual1 +
@@ -517,33 +519,71 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
       # special data set overhauls, we don't want presence of the
       # latter to make us balk at the former:
       quantile(probs = 0.10) %>%
-      unname() %>%
-      time_delta_standardize(version_type)
+      unname()
     # We also want to prevent version - lag from being ambiguous in
     # what time it refers to, so something like preventing t1 + lag +
     # vtol from crossing t2 + lag - vtol.  So choose vtol < (t2 -
-    # t1)/2 = unit_time_delta(time_type)/2.
-    approx_floor_half_tstride_in_vspace <-
-      unit_time_delta(x$time_type) %>%
-      time_delta_to_approx_difftime(x$time_type) %>%
-      `/`(2) %>%
-      difftime_approx_ceiling_time_delta(version_type) %>%
-      # ^ a < b   <==>   a < ceil(b),   for integer a
-      time_delta_standardize(version_type)
-    vtol_threshold <- min(c(low_vstride, approx_floor_half_tstride_in_vspace))
-    vtol <- exclusive(vtol_threshold)
+    # t1)/2 = unit_time_delta(time_type)/2 <==> vtol < ceiling of RHS.
+    approx_ceiling_half_tstride_in_vspace <-
+      # TODO refactor to helper?
+      switch(x$time_type,
+             day =, week = , yearmonth = {
+               approx_half_tstride_difftime <-
+                 unit_time_delta(x$time_type) %>%
+                 time_delta_to_approx_difftime(x$time_type) %>%
+                 `/`(2)
+               if (inherits(x$DT$version, "POSIXct")) {
+                 approx_half_tstride_difftime
+               } else if (inherits(x$DT$version, "Date")) {
+                 approx_half_tstride_difftime %>%
+                   difftime_approx_ceiling_time_delta("day") %>%
+                   time_delta_standardize("day")
+               } else if (inherits(x$DT$version, "yearmonth")) {
+                 approx_half_tstride_difftime %>%
+                   difftime_approx_ceiling_time_delta("yearmonth") %>%
+                   time_delta_standardize("yearmonth")
+               } else {
+                 cli_abort("Unsupported time_type x version class:
+                            {format_chr_deparse(x$time_type)} x {format_chr_deparse(class(x$DT$version))}")
+               }
+             },
+             integer = {
+               1L
+             },
+             cli_abort("Unsupported time_type {format_chr_deparse(x$time_type)}"))
+    vtol <- exclusive(min(c(low_vstride, approx_ceiling_half_tstride_in_vspace)))
   } else {
     vtol <- as_inclusive_if_not_bound(vtol)
     if (is.difftime(vtol$threshold)) {
-      vtol$threshold <- difftime_approx_floor_time_delta(vtol$threshold, version_type)
+      if (inherits(x$DT$version, "POSIXct")) {
+        # nothing to do
+      } else if (inherits(x$DT$version, "Date")) {
+        vtol$threshold <- difftime_approx_floor_time_delta(vtol$threshold, "day") %>%
+          time_delta_standardize("day")
+      } else if (inherits(x$DT$version, "yearmonth")) {
+        vtol$threshold <- difftime_approx_floor_time_delta(vtol$threshold, "yearmonth") %>%
+          time_delta_standardize("yearmonth")
+      } else {
+        cli_abort("difftime vtol threshold not supported with version class
+                   {format_chr_deparse(class(x$DT$version))}")
+      }
+    } else {
+      # vtol thresh is definitely in terms of intervals
+      if (inherits(x$DT$version, "Date")) {
+        vtol$threshold <- time_delta_standardize(vtol$threshold, "day")
+      } else if (inherits(x$DT$version, "yearmonth")) {
+        vtol$threshold <- time_delta_standardize(vtol$threshold, "yearmonth")
+      } else {
+        cli_abort("unsupported vtol threshold class x version class
+                   {format_chr_deparse(class(vtol$threshold))} x {format_chr_deparse(class(x$DT$version))}")
+      }
     }
-    vtol_threshold <- time_delta_standardize(vtol_threshold, version_type)
-    vtol$threshold <- vtol_threshold
   }
   check_dots_empty()
 
-  lookup_ektvs <- ektvs %>%
-    mutate(time_value = time_value + toffset, version = version + voffset)
+  lookup_ektvs <- ekts %>%
+    mutate(time_value = time_value + toffset,
+           version = time_get_zero_lag_version(time_value, x$time_type, x$DT$version) + voffset)
 
   # Find the closest "real" version for `var` for each lookup
   ekv_vars <- c(ek_vars, "version")
@@ -559,7 +599,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
     as.list(lookup_ektvs), on = key(x$DT), roll = TRUE,
     var,
     with = FALSE
-  ]
+  ][[var]] # `with = FALSE` -> have to manually extract2
   if (vtol$inclusive) {
     result[real_versions_info[, abs(vdiff) > vtol$threshold]] <- NA
   } else {
