@@ -304,7 +304,7 @@ autoplot_check_viable_response_vars <- function(
       cli::cli_warn(
         c(
           "`autoplot()` cannot display {.var {vars[!ok]}}, as they are not numeric",
-          ">" = "Only plotting {.var {vars[ok]}}."
+          "i" = "Only plotting {.var {vars[ok]}}."
         ),
         class = "epiprocess__some_requested_vars_not_numeric",
         call = call,
@@ -372,6 +372,8 @@ autoplot_subsample_keys <- function(
   if (n_c < n_colors_all) {
     object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
   }
+  # This is to drop the levels of the factors that were removed during
+  # subsampling to keep facets/legends clean.
   object <- dplyr::mutate(object, dplyr::across(
     tidyselect::any_of(c(".facets", ".colours", ".key_interaction")), droplevels
   ))

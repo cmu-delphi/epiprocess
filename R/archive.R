@@ -885,14 +885,14 @@ epix_pivot_wider <- function(x, names_from, values_from) {
   assert_string(values_from)
 
   # Use vctrs::vec_split to split the data table by the names_from column.
-  # This returns a data frame with 'key' and 'val'.
+  # This returns an object with 'key' and 'val'.
   split_data <- vctrs::vec_split(x$DT, x$DT[[names_from]])
 
   archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {
     sig_name <- as.character(sig_name)
     df <- df %>%
       dplyr::select(
-        tidyselect::any_of(
+        tidyselect::all_of(
           c(
             "geo_value", setdiff(x$other_keys, names_from),
             "time_value", "version"
