@@ -102,12 +102,31 @@ max_version_with_row_in <- function(x) {
 next_after <- function(x) UseMethod("next_after")
 
 
-#' @keywords internal
+#' @export
 next_after.integer <- function(x) x + 1L
 
-
-#' @keywords internal
+#' @export
 next_after.Date <- function(x) x + 1L
+
+#' @export
+next_after.POSIXct <- function(x) {
+  # Trying to avoid compilation dependency, so Rcpp nextafter() is
+  # out.  The current implementation assumes binary64, and still may
+  # not be accurate.
+  x_dbl <- as.double(x)
+  x_abs <- abs(x_dbl)
+  result_dbl <- x_dbl
+  result_dbl[x_dbl == -Inf] <- -.Machine$double.xmax
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + 2^-1074 # subnormal step
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps*x_abs # for x == -2^k
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs*2 # hedge against rounding weirdness
+  stop("FIXME TODO finish")
+}
 
 
 #' `epi_archive` object

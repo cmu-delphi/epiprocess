@@ -431,7 +431,45 @@ version_get_containing_time_value.POSIXct <- function(version, dat) {
   }
 }
 
-extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) UseMethod("extract2_tvshift")
+#' Validate that `version_lag` is an unambiguous, length-1, `version-time_value` possibility
+#'
+#' @keywords internal
+validate_nice_version_lag <- function(version_lag, x, version_lag_arg = rlang::caller_arg(version_lag), call = rlang::caller_env()) {
+  assert_vector(version_lag, len = 1L, .var.name = version_lag_arg)
+  x_time_type <- time_type(x)
+  x_version_obj <- version_obj(x)
+  # x time_value class: bare integerish, Date, yearmonth, custom
+  # x_time_type: day, week, yearmonth, integer, custom
+  # x_version_obj: bare integerish, Date, yearmonth, POSIXct
+  # version_lag: bare integerish, difftime
+  if (inherits(version_lag, "difftime")) {
+    if (inherits(x_version_obj, c("Date", "yearmonth", "POSIXct"))) { # (any)
+      invisible(version_lag)
+    } else {
+      cli_abort("difftime version lags can only be used with Date, yearmonth, or POSIXct versions,
+                 not versions of class {format_chr_deparse(class(x_version_obj))}")
+    }
+  } else if (rlang::is_bare_integerish(version_lag)) {
+    if (inherits(x_version_obj, "Date") &&
+          (x_time_type == "week" || any(diff(as.numeric(x_version_obj)) == 7))
+        ) {
+      cli_abort("Since versions appeared weekly in some/all of the data,
+                 {.var {version_lag_arg}} must be a difftime, not bare integerish,
+                 in order to clarify whether it is in terms of days or weeks.")
+    }
+    if (inherits(x_version_obj, c("Date", "yearmonth", "numeric", "integer"))) {
+      invisible(version_lag)
+    } else {
+      cli_abort("Bare integerish {.var {version_lag_arg}} cannot be used with versions of class
+                 {format_chr_deparse(class(x_version_obj))}.")
+    }
+  } else {
+    cli_abort("{.var {version_lag_arg}} must be difftime or bare integerish,
+               not an object of class {format_chr_deparse(class(version_lag))}")
+  }
+}
+
+extract2_tvoffset <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) UseMethod("extract2_tvoffset")
 
 # XXX ekts & tvlag rather than ektvs & vrel?
 
@@ -443,17 +481,18 @@ extract2_tvshift <- function(x, ektvs, var, tshift, vshift, vtol = NULL, ...) Us
 # source-nominal approach.
 
 #' @export
-extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL, ...) {
+extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) {
   # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
-  assert_class(ektvs, "tbl_df")
-  ektvs <- tblish_cast_cols(ektvs, x$DT[0L, key_colnames(x), with = FALSE])
+  assert_class(ekts, "tbl_df")
+  ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])
   assert_string(var)
   assert_subset(var, names(x$DT))
-  assert_vector(trel, len = 1L)
-  trel <- time_delta_standardize(trel, x$time_type, "fast")
+  # assert_vector(toffset, len = 1L)
+  validate_slide_window_arg(toffset, x$time_type, lower = -Inf)
+  toffset <- time_delta_standardize(toffset, x$time_type, "fast")
   version_type <- guess_time_type(x$DT$version)
-  assert_vector(vrel, len = 1L)
-  vrel <- time_delta_standardize(vrel, version_type, "fast")
+  assert_vector(voffset, len = 1L)
+  voffset <- time_delta_standardize(voffset, version_type, "fast")
   # We want default vtol to be reasonably large to in order to adapt
   # to normal variance in pipeline schedules as well as transient
   # pipeline issues and holiday-shifted schedules, which seem pretty
@@ -504,7 +543,7 @@ extract2_tvshift.epi_archive <- function(x, ektvs, var, trel, vrel, vtol = NULL,
   check_dots_empty()
 
   lookup_ektvs <- ektvs %>%
-    mutate(time_value = time_value + trel, version = version + vrel)
+    mutate(time_value = time_value + toffset, version = version + voffset)
 
   # Find the closest "real" version for `var` for each lookup
   ekv_vars <- c(ek_vars, "version")
