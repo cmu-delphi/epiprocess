@@ -470,37 +470,10 @@ validate_nice_version_lag <- function(version_lag, x, version_lag_arg = rlang::c
   }
 }
 
-extract2_tvoffset <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) UseMethod("extract2_tvoffset")
-
-# XXX ekts & tvlag rather than ektvs & vrel?
-
-# XXX holiday Fri -> Tue delays potentially problematic (or worse?
-# check ILINet history); Fri excluding Tue is fine, but Tue will
-# probably map to wrong training Fris?  Though... could this actually
-# be somewhat valid and okay?  If do want to change, probably need to
-# use the occasional-delays-never-early and/or source-actual ->
-# source-nominal approach.
-
-#' @export
-extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) {
-  # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
-  assert_class(ekts, "tbl_df")
-  ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])
-  assert_string(var)
-  assert_subset(var, names(x$DT))
-  # assert_vector(toffset, len = 1L)
-  validate_slide_window_arg(toffset, x$time_type, lower = -Inf)
-  toffset <- time_delta_standardize(toffset, x$time_type, "fast")
-  # version_type <- guess_time_type(x$DT$version)
-  # assert_vector(voffset, len = 1L)
-  # voffset <- time_delta_standardize(voffset, version_type, "fast")
-  validate_nice_version_lag(voffset, x)
-  # We want default vtol to be reasonably large to in order to adapt
-  # to normal variance in pipeline schedules as well as transient
-  # pipeline issues and holiday-shifted schedules, which seem pretty
-  # common.
+vtol_preprocess <- function(vtol, x, x_var_diff_ekvs) {
   ek_vars <- c("geo_value", x$other_keys)
-  x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
+  # TODO refactor a lot of this into basic helpers.  Need some idea of
+  # non-integer numbers of steps in time interval cases.
   if (is.null(vtol)) {
     # First, we want to prevent vnominal1 + vdeparture1 + vtol from
     # regularly crossing vnominal2 + vdeparture2 (i.e., vactual1 +
@@ -568,7 +541,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
                    {format_chr_deparse(class(x$DT$version))}")
       }
     } else {
-      # vtol thresh is definitely in terms of intervals
+      # vtol$threshold is definitely in terms of intervals
       if (inherits(x$DT$version, "Date")) {
         vtol$threshold <- time_delta_standardize(vtol$threshold, "day")
       } else if (inherits(x$DT$version, "yearmonth")) {
@@ -579,6 +552,35 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
       }
     }
   }
+  vtol
+}
+
+# XXX might be unclear in usage which time voffset is relative to.  also, with extract2, perhaps even less need to combine in toffset.
+#
+# XXX function name also doesn't suggest that it may be using nearby...
+extract2_tvoffset <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) UseMethod("extract2_tvoffset")
+
+#' @export
+extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) {
+  # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
+  assert_class(ekts, "tbl_df")
+  ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])
+  assert_string(var)
+  assert_subset(var, names(x$DT))
+  # assert_vector(toffset, len = 1L)
+  validate_slide_window_arg(toffset, x$time_type, lower = -Inf)
+  toffset <- time_delta_standardize(toffset, x$time_type, "fast")
+  # version_type <- guess_time_type(x$DT$version)
+  # assert_vector(voffset, len = 1L)
+  # voffset <- time_delta_standardize(voffset, version_type, "fast")
+  validate_nice_version_lag(voffset, x)
+  # We want default vtol to be reasonably large to in order to adapt
+  # to normal variance in pipeline schedules as well as transient
+  # pipeline issues and holiday-shifted schedules, which seem pretty
+  # common.
+  ek_vars <- c("geo_value", x$other_keys)
+  x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
+  vtol <- vtol_preprocess(vtol, x, x_var_diff_ekvs)
   check_dots_empty()
 
   lookup_ektvs <- ekts %>%
@@ -608,6 +610,64 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 
   result
 }
+
+# extract2_version_lag <- function(x, ekts, var, version_lag, vtol = NULL, ...) UseMethod("extract2_version_lag")
+
+# #' @export
+# extract2_version_lag.epi_archive <- function(x, ekts, var, version_lag, vtol = NULL, ...) {
+#   # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
+#   assert_class(ekts, "tbl_df")
+#   ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])
+#   assert_string(var)
+#   assert_subset(var, names(x$DT))
+#   # version_type <- guess_time_type(x$DT$version)
+#   # assert_vector(voffset, len = 1L)
+#   # voffset <- time_delta_standardize(voffset, version_type, "fast")
+#   validate_nice_version_lag(version_lag, x)
+#   # We want default vtol to be reasonably large to in order to adapt
+#   # to normal variance in pipeline schedules as well as transient
+#   # pipeline issues and holiday-shifted schedules, which seem pretty
+#   # common.
+#   ek_vars <- c("geo_value", x$other_keys)
+#   x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
+#   vtol <- vtol_preprocess(vtol, x, x_var_diff_ekvs)
+#   check_dots_empty()
+
+#   lookup_ektvs <- ekts %>%
+#     mutate(version =
+#              time_get_zero_lag_version(.data$time_value, .env$x$time_type, .env$x$DT$version) +
+#              version_lag)
+
+#   # Find the closest "real" version for `var` for each lookup
+#   ekv_vars <- c(ek_vars, "version")
+#   setDT(x_var_diff_ekvs, key = ekv_vars)
+#   real_versions_info <- x_var_diff_ekvs[
+#     as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
+#     list(real_version = x.version, vdiff = x.version - i.version)
+#   ]
+#   # ^ `as.list` is needed to make `x.version` and `i.version` work
+
+#   lookup_ektvs$version <- real_versions_info$real_version
+#   result <- x$DT[
+#     as.list(lookup_ektvs), on = key(x$DT), roll = TRUE,
+#     var,
+#     with = FALSE
+#   ][[var]] # `with = FALSE` -> have to manually extract2
+#   if (vtol$inclusive) {
+#     result[real_versions_info[, abs(vdiff) > vtol$threshold]] <- NA
+#   } else {
+#     result[real_versions_info[, abs(vdiff) >= vtol$threshold]] <- NA
+#   }
+
+#   result
+# }
+
+# XXX holiday Fri -> Tue delays potentially problematic (or worse?
+# check ILINet history); Fri excluding Tue is fine, but Tue will
+# probably map to wrong training Fris?  Though... could this actually
+# be somewhat valid and okay?  If do want to change, probably need to
+# use the occasional-delays-never-early and/or source-actual ->
+# source-nominal approach.
 
 
 
@@ -649,3 +709,19 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 
 # Situation not just of data being more latent, but also less latent.
 # Might need backoff to stale version that actually know patterns of.
+
+
+
+
+# Assessing feature inclusion, availability proportion, avoiding
+# overly large denominator: (a) get non-NA training targets, left_join
+# all candidates, then exclude where all candidate features are NA; or
+# (b) get non-NA training targets, inner_join target signal diffkeys
+# somehow?  but in case of lower than normal latency, don't want to
+# just do based on same diffkeyversion-reftime/version lag.  In (a)
+# problem is having aux signal with longer history along with an
+# initial batch report from the target signal.  Perhaps could do an
+# approach like (a) with only lags of the target signal, or just logic
+# around the feature selection window?  Or do something to try to
+# remove some excess from batch reports?  Or perhaps just mark some
+# larger lag that has to be there to even attempt stuff...
