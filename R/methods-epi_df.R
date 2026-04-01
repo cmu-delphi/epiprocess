@@ -103,29 +103,30 @@ epi_ts_range <- function(x, key_no_t, sigs) {
       dplyr::mutate(..sig = NA, ..val = NA)
   }
 
+  # Identify signal-specific ranges and identify non-lag gaps
   smry %>%
     dplyr::group_by(dplyr::pick(dplyr::all_of(c(key_no_t, "..sig")))) %>%
-    # We keep signals if all observations are NA
-    # So we can return a message saying that there are empty time series
-    dplyr::filter(!is.na(.data$..val) | all(is.na(.data$..val))) %>%
     dplyr::summarize(
-      empty = all(is.na(.data$..val)),
-      min_t = min(.data$time_value),
-      max_t = max(.data$time_value),
+      n_non_na = sum(!is.na(.data$..val)),
+      n_t = dplyr::n(),
+      empty = .data$n_non_na == 0,
+      # If empty, we take the min/max of all time_values
+      min_t = if (.data$empty) {
+        min(.data$time_value)
+      } else {
+        min(.data$time_value[!is.na(.data$..val)])
+      },
+      max_t = if (.data$empty) {
+        max(.data$time_value)
+      } else {
+        max(.data$time_value[!is.na(.data$..val)])
+      },
+      n_gap_na = sum(!all(is.na(.data$..val)) & is.na(.data$..val) &
+        # The idea is to count the number of NA values that
+        # are not at the beginning or end of the time series
+        .data$time_value > .data$min_t & .data$time_value < .data$max_t),
       .groups = "drop"
     )
-}
-
-# Lag = as_of minus each element of `times`.
-compute_lags <- function(as_of, times, integer_time) {
-  tryCatch(
-    if (integer_time) {
-      as.numeric(as_of) - as.numeric(times)
-    } else {
-      as.numeric(as.Date(as_of) - as.Date(times), units = "days")
-    },
-    error = function(e) rep(NA_real_, length(times))
-  )
 }
 
 # Internal helper for print.epi_df — compact aggregate view
@@ -145,8 +146,8 @@ print_latency_info <- function(x) {
   # Get min/max non-NA time_value per (keys × signal).
   smry_long <- epi_ts_range(x, key_no_t, sigs)
 
-  # Compute lags for each time series
-  combo_lags <- compute_lags(as_of, smry_long$max_t, integer_time)
+  # Compute lags for each time series in natural units
+  combo_lags <- time_minus_time_in_n_steps(as_of, smry_long$max_t, md$time_type)
 
   # Check for empty time series and create message
   empty_serie <- dplyr::case_when(
@@ -160,7 +161,9 @@ print_latency_info <- function(x) {
 
   if (length(combo_lags) >= 1) {
     # Format the lag range
-    unit <- if (integer_time) "" else " days"
+    unit_format <- if (integer_time) "" else time_type_unit_pluralizer[[md$time_type]] %||% ""
+    # For a range, we'll generally want the plural label
+    unit <- if (integer_time) "" else cli::pluralize(paste0(" {qty(2)}", unit_format))
     lag_min <- as.integer(min(combo_lags))
     lag_max <- as.integer(max(combo_lags))
 
@@ -171,8 +174,9 @@ print_latency_info <- function(x) {
       sprintf("%d\u2013%d%s", lag_min, lag_max, unit)
     }
 
-    # Add hint if the lag range is large
-    hint <- if ((lag_max - lag_min) >= 7) " (see summary() for per-signal details)" else ""
+    # Add hint if the lag range spread is large
+    notable_threshold <- if (isTRUE(md$time_type == "day")) 7 else 2
+    hint <- if ((lag_max - lag_min) >= notable_threshold) " (see summary() for per-signal details)" else ""
     # Check if there are multiple signals
     if (length(sigs) <= 1 || nrow(na.omit(x[sigs])) == 0) {
       sent_series <- ""
@@ -189,70 +193,6 @@ print_latency_info <- function(x) {
   cat(lag_msg)
   cat(empty_serie)
 }
-
-
-# Internal helper for summary.epi_df to calculate and print time regularity/gaps
-epi_df_time_info <- function(x) {
-  if (nrow(x) == 0) {
-    return(invisible(NULL))
-  }
-
-  keys <- key_colnames(x)
-  key_no_t <- setdiff(keys, "time_value")
-  sigs <- setdiff(names(x), keys)
-  md <- attr(x, "metadata")
-
-  # Identify rows that are explicit gaps (all signals NA)
-  is_expl_gap <- if (length(sigs) > 0) {
-    rowSums(is.na(x[sigs])) == length(sigs)
-  } else {
-    rep(FALSE, nrow(x))
-  }
-
-  smry <- x %>%
-    dplyr::mutate(..is_expl = is_expl_gap) %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_no_t))) %>%
-    dplyr::summarize(
-      # baseline range for evenness should be non-gap data
-      min_t = if (any(!.data$..is_expl)) min(time_value[!.data$..is_expl], na.rm = TRUE) else NA,
-      max_t = if (any(!.data$..is_expl)) max(time_value[!.data$..is_expl], na.rm = TRUE) else NA,
-      has_explicit = any(.data$..is_expl, na.rm = TRUE),
-      # n_t counts rows within the non-gap range (effectively detects internal missing rows)
-      n_t = if (any(!.data$..is_expl)) {
-        sum(time_value >= min(.data$min_t) & time_value <= max(.data$max_t))
-      } else {
-        0
-      },
-      .groups = "drop"
-    )
-
-  # Gaps
-  smry$expected_n <- tryCatch(
-    {
-      d <- if (inherits(x$time_value, c("POSIXt", "Date"))) {
-        diff <- as.numeric(as.Date(smry$max_t)) - as.numeric(as.Date(smry$min_t))
-        if (isTRUE(md$time_type == "week")) diff / 7 else diff
-      } else {
-        as.numeric(smry$max_t) - as.numeric(smry$min_t)
-      }
-      d + 1
-    },
-    error = function(e) rep(NA_real_, nrow(smry))
-  )
-
-  n_imp <- sum(!is.na(smry$expected_n) & (smry$n_t < smry$expected_n), na.rm = TRUE)
-  n_exp <- sum(smry$has_explicit, na.rm = TRUE)
-
-  gaps <- c()
-  if (n_imp > 0) gaps <- c(gaps, sprintf("implicit (in %d/%d key combinations)", n_imp, nrow(smry)))
-  if (n_exp > 0) gaps <- c(gaps, sprintf("explicit (in %d/%d key combinations)", n_exp, nrow(smry)))
-  gaps_str <- if (length(gaps) > 0) paste(gaps, collapse = ", ") else "none detected"
-
-  cat(sprintf("* %-27s = %s\n", "time gaps", gaps_str))
-
-  return(invisible(NULL))
-}
-
 
 #' Summarize `epi_df` object
 #'
@@ -277,16 +217,250 @@ summary.epi_df <- function(object, ...) {
   }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
-  epi_df_time_info(object)
-  cat(sprintf(
-    "* %-27s = %i\n", "average rows per time value",
-    as.integer(
-      object %>%
-        dplyr::group_by(.data$time_value) %>%
-        dplyr::summarize(num = dplyr::n()) %>%
-        dplyr::summarize(mean(.data$num))
+  summary_time_latency(object)
+}
+
+# Internal helper for summary.epi_df — orchestrates time range, gap, and latency analysis
+summary_time_latency <- function(x) {
+  if (nrow(x) == 0) {
+    return(invisible(NULL))
+  }
+
+  keys <- key_colnames(x)
+  key_no_t <- setdiff(keys, "time_value")
+  sigs <- setdiff(names(x), keys)
+  md <- attr(x, "metadata")
+  as_of <- md$as_of
+  as_of_valid <- !is.null(as_of) && !is.na(as_of) && (length(as_of) > 0)
+  integer_time <- isTRUE(md$time_type %in% c("integer", "custom"))
+
+  # Per-(key combination × signal) time ranges
+  smry_ts <- tryCatch(epi_ts_range(x, key_no_t, sigs), error = function(e) NULL)
+
+  if (is.null(smry_ts)) {
+    return(invisible(NULL))
+  }
+
+  # Time range information
+  tryCatch(epi_df_time_range_info(x, smry_ts), error = function(e) NULL)
+
+  # Time gap information
+  tryCatch(
+    epi_df_time_gap_info(x, smry_ts, key_no_t, sigs, md),
+    error = function(e) NULL
+  )
+
+  # Latency information
+  tryCatch(
+    epi_df_latency_info(
+      x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time
+    ),
+    error = function(e) NULL
+  )
+
+  return(invisible(NULL))
+}
+
+# Internal helper for min/max time values summary
+epi_df_time_range_info <- function(x, smry_ts) {
+  cat("Time range:\n")
+  all_empty <- all(smry_ts$empty)
+  same_start <- dplyr::n_distinct(smry_ts$min_t[!smry_ts$empty]) <= 1
+  same_end <- dplyr::n_distinct(smry_ts$max_t[!smry_ts$empty]) <= 1
+
+  min_desc <- dplyr::case_when(
+    all_empty ~ "",
+    same_start ~ " (same for every time series)",
+    TRUE ~ " (but some time series start later)"
+  )
+  max_desc <- dplyr::case_when(
+    all_empty ~ "",
+    same_end ~ " (same for every time series)",
+    TRUE ~ " (but some time series end earlier)"
+  )
+
+  cat(sprintf("* %-27s = %s%s\n", "min time value", min(x$time_value), min_desc))
+  cat(sprintf("* %-27s = %s%s\n", "max time value", max(x$time_value), max_desc))
+}
+
+# Internal helper for gap analysis summary
+epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
+  # Calculate gap metrics at the key-combination level
+  smry_all_gaps <- smry_ts %>%
+    dplyr::group_by(dplyr::pick(dplyr::all_of(key_no_t))) %>%
+    dplyr::summarize(
+      n_t = dplyr::first(.data$n_t),
+      min_t = min(.data$min_t),
+      max_t = max(.data$max_t),
+      expected_n = time_minus_time_in_n_steps(.data$max_t, .data$min_t, md$time_type) + 1,
+      has_implicit = dplyr::first(.data$n_t) < .data$expected_n,
+      n_sig_imp = as.integer(.data$has_implicit) * length(sigs),
+      # Total signals with internal non-lag gaps
+      n_sig_gap = sum(.data$n_gap_na > 0),
+      .groups = "drop"
     )
-  ))
+
+  cat("Gaps:\n")
+  n_imp_keys <- sum(smry_all_gaps$n_sig_imp > 0, na.rm = TRUE)
+  n_gap_keys <- sum(smry_all_gaps$n_sig_gap > 0, na.rm = TRUE)
+
+  n_printed <- 0
+  if (n_imp_keys > 0) {
+    n_sig <- sum(smry_all_gaps$n_sig_imp)
+    sig_label <- if (n_sig == 1) "signal" else "signals"
+    cat(sprintf(
+      "* implicit (missing rows in %d/%d key combinations, affecting %d %s)\n",
+      n_imp_keys, nrow(smry_all_gaps), n_sig, sig_label
+    ))
+    n_printed <- 1
+  }
+  if (n_gap_keys > 0) {
+    n_sig <- sum(smry_all_gaps$n_sig_gap)
+    sig_label <- if (n_sig == 1) "signal" else "signals"
+    cat(sprintf(
+      "* explicit (non-lag NAs in %d/%d key combinations, affecting %d %s)\n",
+      n_gap_keys, nrow(smry_all_gaps), n_sig, sig_label
+    ))
+    n_printed <- 1
+  }
+
+  if (n_printed == 0) {
+    cat(sprintf("* %-27s = none detected\n", "time gaps"))
+  }
+
+  # Average rows per time value
+  avg_rows <- nrow(x) / dplyr::n_distinct(x$time_value)
+  cat(sprintf("* %-27s = %.2f\n", "average rows per time value", avg_rows))
+}
+
+# Internal helper for latency reporting summary
+epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time) {
+  cat("Latency (lag from as_of to latest observation by time series):\n")
+
+  # Check for empty time series and return message if none detected
+  if (length(sigs) == 0) {
+    cat("* No time series detected\n")
+    return(invisible(NULL))
+  }
+
+  # Determine the unit for time
+  unit_format <- if (integer_time) "" else time_type_unit_pluralizer[[md$time_type]] %||% ""
+  # Note: a space is prefixed for unit label formatting
+  unit <- if (integer_time) "" else cli::pluralize(paste0(" {qty(2)}", unit_format))
+
+  max_sigs <- 8
+  fired_reasons <- character(0)
+  as_of <- md$as_of
+
+  # Iterate over signals and print latency information
+  for (sig in head(sigs, max_sigs)) {
+    ts_sig <- smry_ts[smry_ts$..sig == sig, ]
+
+    # Check for empty time series and return message if all NA detected
+    if (all(ts_sig$empty)) {
+      cat(sprintf("* %s: all NA\n", sig))
+      next
+    }
+
+    # Range based on non-empty time series
+    ts_non_empty <- ts_sig[!ts_sig$empty, ]
+    lags <- if (as_of_valid) {
+      time_minus_time_in_n_steps(as_of, ts_non_empty$max_t, md$time_type)
+    } else {
+      NA_real_
+    }
+    lag_min <- as.integer(min(lags, na.rm = TRUE))
+    lag_max <- as.integer(max(lags, na.rm = TRUE))
+    om <- max(ts_non_empty$max_t, na.rm = TRUE)
+
+    # Format the lag range
+    range_str <- if (as_of_valid && !all(is.na(lags))) {
+      if (lag_min == lag_max) {
+        sprintf("lag %d%s ", lag_min, unit)
+      } else {
+        sprintf("lag %d\u2013%d%s ", lag_min, lag_max, unit)
+      }
+    } else {
+      ""
+    }
+
+    out <- sprintf("* %s: %s(max time %s)", sig, range_str, as.character(om))
+
+    # Identify empty keys for this signal
+    ts_empty <- ts_sig[ts_sig$empty, ]
+    n_empty <- nrow(ts_empty)
+    if (n_empty > 0) {
+      out <- paste0(
+        out,
+        "; empty: ",
+        format_key_combos(ts_empty[, key_no_t, drop = FALSE], max_sigs)
+      )
+    }
+
+    # Identify lagging keys for this signal
+    lagging_rows <- ts_non_empty[ts_non_empty$max_t < om, key_no_t, drop = FALSE]
+    n_lagging <- nrow(lagging_rows)
+    if (n_lagging > 0) {
+      out <- paste0(
+        out,
+        "; lagging keys: ",
+        format_key_combos(lagging_rows, max_sigs)
+      )
+    }
+
+    # Collect notable reasons
+    notable_threshold <- if (isTRUE(md$time_type == "day")) 7 else 2
+    reasons <- c()
+    if (as_of_valid && !all(is.na(lags)) && lag_max > notable_threshold) {
+      unit_pl <- cli::pluralize(paste0(" {qty(", lag_max, ")}", unit_format))
+      reasons <- c(
+        reasons,
+        sprintf("lag > %d%s", notable_threshold, unit_pl)
+      )
+    }
+    if (n_lagging > 0) reasons <- c(reasons, "lagging keys")
+    if (n_empty > 0) reasons <- c(reasons, "empty keys")
+    if (length(reasons) > 0) {
+      fired_reasons <- union(fired_reasons, reasons)
+      out <- paste0(out, " (!)")
+    }
+    cat(out, "\n", sep = "")
+  }
+
+  # Print summary for other signals if there are more than max_sigs
+  if ((n_more <- length(sigs) - max_sigs) > 0) {
+    cat(sprintf(
+      "* ... and %d other signal%s\n",
+      n_more,
+      if (n_more == 1) "" else "s"
+    ))
+  }
+
+  # Print notable latency reasons if any
+  if (length(fired_reasons) > 0) {
+    cat(sprintf(
+      "(!): notable latency (%s)\n",
+      paste(fired_reasons, collapse = "; ")
+    ))
+  }
+}
+
+# Helper to format key combinations
+# TODO: reuse function in #693
+format_key_combos <- function(df, max_n = 8) {
+  n <- nrow(df)
+  if (n == 0) {
+    return("")
+  }
+
+  # Paste across columns with "; "
+  keys_str <- apply(df, 1, paste, collapse = "; ")
+
+  if (n <= max_n) {
+    paste(keys_str, collapse = "; ")
+  } else {
+    sprintf("%d keys (e.g., %s)", n, paste(head(keys_str, 2), collapse = "; "))
+  }
 }
 
 #' Drop any `epi_df` metadata and class on a data frame
