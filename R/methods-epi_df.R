@@ -199,10 +199,12 @@ epi_ts_range <- function(x, key_no_t, sigs) {
       } else {
         max(.data$time_value[!is.na(.data$..val)])
       },
-      n_gap_na = sum(!all(is.na(.data$..val)) & is.na(.data$..val) &
-        # The idea is to count the number of NA values that
-        # are not at the beginning or end of the time series
-        .data$time_value > .data$min_t & .data$time_value < .data$max_t),
+      n_gap_na = sum(
+        !all(is.na(.data$..val)) & is.na(.data$..val) &
+          # The idea is to count the number of NA values that
+          # are not at the beginning or end of the time series
+          .data$time_value > .data$min_t & .data$time_value < .data$max_t
+      ),
       .groups = "drop"
     )
 }
