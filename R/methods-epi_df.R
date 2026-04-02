@@ -114,8 +114,9 @@ print_latency_info <- function(x) {
 
   # Compute lags for each time series in natural units
   combo_lags <- time_minus_time_in_n_steps(
-    as_of, smry_long$max_t, md$time_type, require_integer = FALSE
+    as_of, smry_long$max_t, md$time_type,
     # This prevents problems with latency calculations
+    require_integer = FALSE
   )
 
   # Check for empty time series and create message
