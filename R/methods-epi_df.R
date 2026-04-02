@@ -554,15 +554,19 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
 #' @export
 drop_na.epi_df <- function(data, ...) {
   res <- NextMethod()
-  reconstruct_light_edf(res, data)
+  reclass(res, attr(data, "metadata"))
 }
 
 #' @method pivot_wider epi_df
 #' @importFrom tidyr pivot_wider
 #' @export
 pivot_wider.epi_df <- function(data, ...) {
-  res <- NextMethod()
-  reconstruct_light_edf(res, data)
+  res <- NextMethod(names_from = {{names_from}})
+  names_from_chr <- names(tidyselect::eval_select(rlang::enquo(names_from), data, allow_rename = FALSE))
+  print(names_from_chr)
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- vctrs::vec_set_difference(attr(template, "metadata")$other_keys, names_from_chr)
+  reconstruct_light_edf(res, template)
 }
 
 #' @method pivot_longer epi_df
