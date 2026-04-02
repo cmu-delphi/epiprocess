@@ -85,50 +85,6 @@ print.epi_df <- function(x, ...) {
   NextMethod()
 }
 
-
-# Min/max non-NA time_value per (epikey x signal).
-epi_ts_range <- function(x, key_no_t, sigs) {
-  smry <- x %>%
-    dplyr::ungroup()
-
-  # long format for empty sigs and all NA sigs
-  if (!(length(sigs) == 0)) {
-    smry <- smry %>%
-      tidyr::pivot_longer(dplyr::all_of(sigs),
-        names_to = "..sig",
-        values_to = "..val"
-      )
-  } else {
-    smry <- smry %>%
-      dplyr::mutate(..sig = NA, ..val = NA)
-  }
-
-  # Identify signal-specific ranges and identify non-lag gaps
-  smry %>%
-    dplyr::group_by(dplyr::pick(dplyr::all_of(c(key_no_t, "..sig")))) %>%
-    dplyr::summarize(
-      n_non_na = sum(!is.na(.data$..val)),
-      n_t = dplyr::n(),
-      empty = .data$n_non_na == 0,
-      # If empty, we take the min/max of all time_values
-      min_t = if (.data$empty) {
-        min(.data$time_value)
-      } else {
-        min(.data$time_value[!is.na(.data$..val)])
-      },
-      max_t = if (.data$empty) {
-        max(.data$time_value)
-      } else {
-        max(.data$time_value[!is.na(.data$..val)])
-      },
-      n_gap_na = sum(!all(is.na(.data$..val)) & is.na(.data$..val) &
-        # The idea is to count the number of NA values that
-        # are not at the beginning or end of the time series
-        .data$time_value > .data$min_t & .data$time_value < .data$max_t),
-      .groups = "drop"
-    )
-}
-
 # Internal helper for print.epi_df — compact aggregate view
 print_latency_info <- function(x) {
   md <- attr(x, "metadata")
@@ -192,6 +148,49 @@ print_latency_info <- function(x) {
   cat("Latency (lag from as_of to latest observation by time series):\n")
   cat(lag_msg)
   cat(empty_serie)
+}
+
+# Min/max non-NA time_value per (epikey x signal).
+epi_ts_range <- function(x, key_no_t, sigs) {
+  smry <- x %>%
+    dplyr::ungroup()
+
+  # long format for empty sigs and all NA sigs
+  if (!(length(sigs) == 0)) {
+    smry <- smry %>%
+      tidyr::pivot_longer(dplyr::all_of(sigs),
+        names_to = "..sig",
+        values_to = "..val"
+      )
+  } else {
+    smry <- smry %>%
+      dplyr::mutate(..sig = NA, ..val = NA)
+  }
+
+  # Identify signal-specific ranges and identify non-lag gaps
+  smry %>%
+    dplyr::group_by(dplyr::pick(dplyr::all_of(c(key_no_t, "..sig")))) %>%
+    dplyr::summarize(
+      n_non_na = sum(!is.na(.data$..val)),
+      n_t = dplyr::n(),
+      empty = .data$n_non_na == 0,
+      # If empty, we take the min/max of all time_values
+      min_t = if (.data$empty) {
+        min(.data$time_value)
+      } else {
+        min(.data$time_value[!is.na(.data$..val)])
+      },
+      max_t = if (.data$empty) {
+        max(.data$time_value)
+      } else {
+        max(.data$time_value[!is.na(.data$..val)])
+      },
+      n_gap_na = sum(!all(is.na(.data$..val)) & is.na(.data$..val) &
+        # The idea is to count the number of NA values that
+        # are not at the beginning or end of the time series
+        .data$time_value > .data$min_t & .data$time_value < .data$max_t),
+      .groups = "drop"
+    )
 }
 
 #' Summarize `epi_df` object
