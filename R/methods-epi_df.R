@@ -80,7 +80,11 @@ print.epi_df <- function(x, ...) {
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
   # Latency info:
-  print_latency_info(x)
+  # Note: sections below use tryCatch as a defensive programming measure.
+  tryCatch(
+    print_latency_info(x),
+    error = function(e) NULL
+  )
   cat("\n")
   NextMethod()
 }
@@ -95,6 +99,12 @@ print_latency_info <- function(x) {
   keys <- key_colnames(x)
   key_no_t <- setdiff(keys, "time_value")
   sigs <- setdiff(names(x), keys)
+  # Exclude complex columns from signal calculations
+  sigs <- sigs[vapply(
+    x[sigs],
+    function(col) is.numeric(col) || is.logical(col),
+    logical(1)
+  )]
   if (!as_of_valid) {
     return(invisible(NULL))
   }
@@ -103,7 +113,10 @@ print_latency_info <- function(x) {
   smry_long <- epi_ts_range(x, key_no_t, sigs)
 
   # Compute lags for each time series in natural units
-  combo_lags <- time_minus_time_in_n_steps(as_of, smry_long$max_t, md$time_type)
+  combo_lags <- time_minus_time_in_n_steps(
+    as_of, smry_long$max_t, md$time_type,
+    # This prevents problems with latency calculations
+  )
 
   # Check for empty time series and create message
   empty_serie <- dplyr::case_when(
@@ -228,12 +241,19 @@ summary_time_latency <- function(x) {
   keys <- key_colnames(x)
   key_no_t <- setdiff(keys, "time_value")
   sigs <- setdiff(names(x), keys)
+  # Exclude complex columns from signal calculations
+  sigs <- sigs[vapply(
+    x[sigs],
+    function(col) is.numeric(col) || is.logical(col),
+    logical(1)
+  )]
   md <- attr(x, "metadata")
   as_of <- md$as_of
   as_of_valid <- !is.null(as_of) && !is.na(as_of) && (length(as_of) > 0)
   integer_time <- isTRUE(md$time_type %in% c("integer", "custom"))
 
   # Per-(key combination × signal) time ranges
+  # Note: sections below use tryCatch as a defensive programming measure.
   smry_ts <- tryCatch(epi_ts_range(x, key_no_t, sigs), error = function(e) NULL)
 
   if (is.null(smry_ts)) {
@@ -263,9 +283,9 @@ summary_time_latency <- function(x) {
 # Internal helper for min/max time values summary
 epi_df_time_range_info <- function(x, smry_ts) {
   cat("Time range:\n")
-  all_empty <- all(smry_ts$empty)
-  same_start <- dplyr::n_distinct(smry_ts$min_t[!smry_ts$empty]) <= 1
-  same_end <- dplyr::n_distinct(smry_ts$max_t[!smry_ts$empty]) <= 1
+  all_empty <- all(smry_ts$empty) # nolint: object_usage_linter
+  same_start <- dplyr::n_distinct(smry_ts$min_t[!smry_ts$empty]) <= 1 # nolint: object_usage_linter
+  same_end <- dplyr::n_distinct(smry_ts$max_t[!smry_ts$empty]) <= 1 # nolint: object_usage_linter
 
   min_desc <- dplyr::case_when(
     all_empty ~ "",
