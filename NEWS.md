@@ -8,6 +8,7 @@ indicate development versions beyond 0.x.
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
+- Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
