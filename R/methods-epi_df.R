@@ -581,21 +581,11 @@ pivot_wider.epi_df <- function(data, ...) {
 #' @export
 pivot_longer.epi_df <- function(data, ..., names_to = "name") {
   res <- NextMethod()
-  res <- reconstruct_light_edf(res, data)
-  if (inherits(res, "epi_df")) {
-    new_keys <- setdiff(names_to, ".value")
-    attr(res, "metadata")$other_keys <- unique(
-      c(attr(res, "metadata")$other_keys, new_keys)
-    )
-    # Check if adding the new keys solved the uniqueness problem
-    current_keys <- key_colnames(res)
-    if (!isTRUE(check_ukey_unique(ungroup(res), current_keys))) {
-      cli::cli_warn(c(
-        "Result is not unique on keys.",
-        "!" = "Decaying to a `tibble`."
-      ))
-      res <- decay_epi_df(res)
-    }
-  }
-  res
+  # Use setdiff to filter out the special `".value"` placeholder
+  new_keys <- setdiff(names_to, ".value")
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- unique(
+    c(attr(template, "metadata")$other_keys, new_keys)
+  )
+  reconstruct_light_edf(res, template)
 }
