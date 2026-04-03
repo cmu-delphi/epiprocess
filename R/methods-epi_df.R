@@ -561,11 +561,18 @@ drop_na.epi_df <- function(data, ...) {
 #' @importFrom tidyr pivot_wider
 #' @export
 pivot_wider.epi_df <- function(data, ...) {
-  res <- NextMethod(names_from = {{names_from}})
-  names_from_chr <- names(tidyselect::eval_select(rlang::enquo(names_from), data, allow_rename = FALSE))
-  print(names_from_chr)
+  res <- NextMethod()
+  # Extract the 'names_from' field from the dots.
+  dots <- rlang::enquos(...)
+  names_from_enquo <- dots$names_from %||% rlang::quo(name)
+  names_from_chr <- names(tidyselect::eval_select(
+    names_from_enquo, data,
+    allow_rename = FALSE
+  ))
   template <- vctrs::vec_ptype(data)
-  attr(template, "metadata")$other_keys <- vctrs::vec_set_difference(attr(template, "metadata")$other_keys, names_from_chr)
+  attr(template, "metadata")$other_keys <- vctrs::vec_set_difference(
+    attr(template, "metadata")$other_keys, names_from_chr
+  )
   reconstruct_light_edf(res, template)
 }
 
