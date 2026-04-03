@@ -39,7 +39,7 @@ test_that("pivot_wider.epi_df handles keys and metadata", {
     age = c(1, 2), value = c(10, 20)
   ) %>%
     as_epi_df(other_keys = "age")
-  
+
   res_age <- edf_age %>% tidyr::pivot_wider(names_from = age, values_from = value)
   expect_class(res_age, "epi_df")
   expect_equal(attr(res_age, "metadata")$other_keys, character(0L))
@@ -50,7 +50,7 @@ test_that("pivot_wider.epi_df handles keys and metadata", {
     signal = c("cases", "signal"), value = c(5, 2)
   ) %>%
     as_epi_df(other_keys = "signal")
-  
+
   res_overlap <- edf_overlap %>% tidyr::pivot_wider(names_from = signal, values_from = value)
   expect_class(res_overlap, "epi_df")
   expect_true(all(c("cases", "signal") %in% names(res_overlap)))
@@ -78,8 +78,10 @@ test_that("pivot_longer.epi_df handles new keys", {
     geo_value = "ca", time_value = as.Date("2020-01-01"),
     x_1 = 1, x_2 = 2, y_1 = 3, y_2 = 4
   ) %>% as_epi_df()
-  res_complex <- pivot_longer(x_complex, cols = -c(geo_value, time_value),
-                               names_to = c(".value", "num"), names_sep = "_")
+  res_complex <- pivot_longer(x_complex,
+    cols = -c(geo_value, time_value),
+    names_to = c(".value", "num"), names_sep = "_"
+  )
   expect_true("num" %in% attr(res_complex, "metadata")$other_keys)
   expect_false(".value" %in% attr(res_complex, "metadata")$other_keys)
 
