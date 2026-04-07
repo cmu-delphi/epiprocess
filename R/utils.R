@@ -1022,3 +1022,24 @@ dplyr_col_modify.single_assignment_df <- function(data, cols) {
   }
   NextMethod()
 }
+
+#' Like `mutate`, but refusing to overwrite or delete existing columns
+#'
+#' @param .data data frame
+#' @param ... other parameters to forward to `mutate`
+#'
+#' @keywords internal
+mutate_new2 <- function(.data, ...) {
+  dots_quos <- enquos(...)
+  dots_quos <- dots_quos[! names2(dots_quos) %in% c(".by", ".keep", ".before", ".after")]
+  # ^ we can't just add these as separate parameters and forward;
+  # `relocate` will complain about `.before` + `.after` even if both default
+  autonamed <- rlang::quos_auto_name(dots_quos)
+  # TODO try to detect unpacking mutate
+  if (any(names2(autonamed) %in% names(.data))) {
+    overlapping_names <- vec_set_intersect(names2(autonamed), names(.data))
+    cli_abort("Column name conflict: trying to assign to {.var {names(autonamed)}} column{?s},
+               but {.var {overlapping_names}} already exist{?s/} in the data frame")
+  }
+  mutate(.data, ...)
+}
