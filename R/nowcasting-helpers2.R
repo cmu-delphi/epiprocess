@@ -114,24 +114,24 @@
 #'   to other data.
 #'
 #' @keywords internal
-epix_diffkeys <- function(x,
+epix_confkeys <- function(x,
                           val_var_subset,
                           ekt_var_subset = key_colnames(x, exclude = c("time_value", "version"))) {
-  # XXX rename to epix_distinct_diffkeys ?
+  # XXX rename to epix_distinct_confkeys ?
   assert_class(x, "epi_archive")
   assert_subset(val_var_subset, val_colnames(x))
   assert_subset(ekt_var_subset, key_colnames(x, exclude = "version"))
   ektv_var_subset <- c(ekt_var_subset, "version")
-  diffkeys <- x$DT[, c(key_colnames(x), val_var_subset), with = FALSE] %>%
+  confkeys <- x$DT[, c(key_colnames(x), val_var_subset), with = FALSE] %>%
     setDF() %>%
     as_tibble() %>%
     filter(!update_is_locf(., key_colnames(archive), 0, TRUE)) %>%
     distinct(pick(all_of(ektv_var_subset)))
-  diffkeys
+  confkeys
 }
 # XXX long format might be more convenient but less flexible?
 
-# epix_diffkeys_min_lag <- function(x,
+# epix_confkeys_min_lag <- function(x,
 #                                   val_var_subset,
 #                                   ekt_var_subset = key_colnames(x, exclude = c("time_value", "version"))) {
 #   assert_class(x, "epi_archive")
@@ -147,20 +147,20 @@ epix_diffkeys <- function(x,
 #               min_lag = min(version_get_containing_time_value(.data$version, x) - time_value))
 # }
 
-corresponding_diffkey_versions <- function(edf,
+corresponding_confkey_versions <- function(edf,
                                            archive,
                                            val_var_subset,
                                            ekt_var_subset = key_colnames(archive, exclude = c("time_value", "version"))) {
-  # XXX this is a tad slow.  maybe need to have a diffkey table structure rather than archive
+  # XXX this is a tad slow.  maybe need to have a confkey table structure rather than archive
   assert_class(edf, "epi_df")
-  all_diffkeys <- epix_diffkeys(archive, val_var_subset, ekt_var_subset)
+  all_confkeys <- epix_confkeys(archive, val_var_subset, ekt_var_subset)
   ektv_var_subset <- c(ekt_var_subset, "version")
-  setDT(all_diffkeys, key = ektv_var_subset)
+  setDT(all_confkeys, key = ektv_var_subset)
   request_keys <- edf %>%
     as_tibble() %>%
     select(all_of(ekt_var_subset)) %>%
     mutate(version = attr(edf, "metadata")$as_of)
-  result <- all_diffkeys[as.list(request_keys), x.version, on = ektv_var_subset, roll = TRUE]
+  result <- all_confkeys[as.list(request_keys), x.version, on = ektv_var_subset, roll = TRUE]
   # XXX some possibility of NA... let through or raise error?
   result
 }
@@ -488,7 +488,7 @@ validate_nice_version_lag <- function(version_lag, x, version_lag_arg = rlang::c
   }
 }
 
-vtol_preprocess <- function(vtol, x, x_var_diff_ekvs) {
+vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
   ek_vars <- c("geo_value", x$other_keys)
   # TODO refactor a lot of this into basic helpers.  Need some idea of
   # non-integer numbers of steps in time interval cases.
@@ -500,7 +500,7 @@ vtol_preprocess <- function(vtol, x, x_var_diff_ekvs) {
     # that we can just select vtol < vactual2 - vactual1 for all/most
     # seen vactual1, vactual2.
     low_vstride <-
-      x_var_diff_ekvs %>%
+      x_var_conf_ekvs %>%
       reframe(.by = all_of(ek_vars),
               # re-using reserved name `version` for version gaps:
               version = diff(sort(unique(version)))) %>%
@@ -597,8 +597,8 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   # pipeline issues and holiday-shifted schedules, which seem pretty
   # common.
   ek_vars <- c("geo_value", x$other_keys)
-  x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
-  vtol <- vtol_preprocess(vtol, x, x_var_diff_ekvs)
+  x_var_conf_ekvs <- epix_confkeys(x, ek_vars, var)
+  vtol <- vtol_preprocess(vtol, x, x_var_conf_ekvs)
   check_dots_empty()
 
   lookup_ektvs <- ekts %>%
@@ -607,8 +607,8 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 
   # Find the closest "real" version for `var` for each lookup
   ekv_vars <- c(ek_vars, "version")
-  setDT(x_var_diff_ekvs, key = ekv_vars)
-  real_versions_info <- x_var_diff_ekvs[
+  setDT(x_var_conf_ekvs, key = ekv_vars)
+  real_versions_info <- x_var_conf_ekvs[
     as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
     list(real_version = x.version, vdiff = x.version - i.version)
   ]
@@ -647,8 +647,8 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 #   # pipeline issues and holiday-shifted schedules, which seem pretty
 #   # common.
 #   ek_vars <- c("geo_value", x$other_keys)
-#   x_var_diff_ekvs <- epix_diffkeys(x, ek_vars, var)
-#   vtol <- vtol_preprocess(vtol, x, x_var_diff_ekvs)
+#   x_var_conf_ekvs <- epix_confkeys(x, ek_vars, var)
+#   vtol <- vtol_preprocess(vtol, x, x_var_conf_ekvs)
 #   check_dots_empty()
 
 #   lookup_ektvs <- ekts %>%
@@ -658,8 +658,8 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 
 #   # Find the closest "real" version for `var` for each lookup
 #   ekv_vars <- c(ek_vars, "version")
-#   setDT(x_var_diff_ekvs, key = ekv_vars)
-#   real_versions_info <- x_var_diff_ekvs[
+#   setDT(x_var_conf_ekvs, key = ekv_vars)
+#   real_versions_info <- x_var_conf_ekvs[
 #     as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
 #     list(real_version = x.version, vdiff = x.version - i.version)
 #   ]
@@ -734,9 +734,9 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 # Assessing feature inclusion, availability proportion, avoiding
 # overly large denominator: (a) get non-NA training targets, left_join
 # all candidates, then exclude where all candidate features are NA; or
-# (b) get non-NA training targets, inner_join target signal diffkeys
+# (b) get non-NA training targets, inner_join target signal confkeys
 # somehow?  but in case of lower than normal latency, don't want to
-# just do based on same diffkeyversion-reftime/version lag.  In (a)
+# just do based on same confkeyversion-reftime/version lag.  In (a)
 # problem is having aux signal with longer history along with an
 # initial batch report from the target signal.  Perhaps could do an
 # approach like (a) with only lags of the target signal, or just logic
