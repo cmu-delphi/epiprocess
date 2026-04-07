@@ -115,13 +115,12 @@
 #'
 #' @keywords internal
 epix_diffkeys <- function(x,
-                          ekt_var_subset = key_colnames(x, exclude = c("time_value", "version")),
-                          # XXX consider removing the val_var_subset default.
-                          val_var_subset = val_colnames(x)) {
+                          val_var_subset,
+                          ekt_var_subset = key_colnames(x, exclude = c("time_value", "version"))) {
   # XXX rename to epix_distinct_diffkeys ?
   assert_class(x, "epi_archive")
-  assert_subset(ekt_var_subset, key_colnames(x, exclude = "version"))
   assert_subset(val_var_subset, val_colnames(x))
+  assert_subset(ekt_var_subset, key_colnames(x, exclude = "version"))
   ektv_var_subset <- c(ekt_var_subset, "version")
   diffkeys <- x$DT[, c(key_colnames(x), val_var_subset), with = FALSE] %>%
     setDF() %>%
@@ -132,19 +131,38 @@ epix_diffkeys <- function(x,
 }
 # XXX long format might be more convenient but less flexible?
 
+# epix_diffkeys_min_lag <- function(x,
+#                                   val_var_subset,
+#                                   ekt_var_subset = key_colnames(x, exclude = c("time_value", "version"))) {
+#   assert_class(x, "epi_archive")
+#   assert_subset(val_var_subset, val_colnames(x))
+#   assert_subset(ekt_var_subset, key_colnames(x, exclude = "version"))
+#   ektv_var_subset <- c(ekt_var_subset, "version")
+#   x$DT[, c(key_colnames(x), val_var_subset), with = FALSE] %>%
+#     setDF() %>%
+#     as_tibble() %>%
+#     filter(!update_is_locf(., key_colnames(archive), 0, TRUE)) %>%
+#     transmute(ekt_subset = pick(all_of(ekt_var_subset)), version, time_value) %>%
+#     summarize(.by = all_of(c("ekt_subset", "version")),
+#               min_lag = min(version_get_containing_time_value(.data$version, x) - time_value))
+# }
+
 corresponding_diffkey_versions <- function(edf,
                                            archive,
-                                           ekt_var_subset = key_colnames(archive, exclude = c("time_value", "version")),
-                                           val_var_subset = val_colnames(archive)) {
+                                           val_var_subset,
+                                           ekt_var_subset = key_colnames(archive, exclude = c("time_value", "version"))) {
+  # XXX this is a tad slow.  maybe need to have a diffkey table structure rather than archive
   assert_class(edf, "epi_df")
-  all_diffkeys <- epix_diffkeys(archive, ekt_var_subset, val_var_subset)
+  all_diffkeys <- epix_diffkeys(archive, val_var_subset, ekt_var_subset)
   ektv_var_subset <- c(ekt_var_subset, "version")
   setDT(all_diffkeys, key = ektv_var_subset)
   request_keys <- edf %>%
     as_tibble() %>%
     select(all_of(ekt_var_subset)) %>%
     mutate(version = attr(edf, "metadata")$as_of)
-  all_diffkeys[as.list(request_keys), x.version, on = ektv_var_subset, roll = TRUE]
+  result <- all_diffkeys[as.list(request_keys), x.version, on = ektv_var_subset, roll = TRUE]
+  # XXX some possibility of NA... let through or raise error?
+  result
 }
 
 time_type <- function(x) UseMethod("time_type")
@@ -725,3 +743,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 # around the feature selection window?  Or do something to try to
 # remove some excess from batch reports?  Or perhaps just mark some
 # larger lag that has to be there to even attempt stuff...
+
+
+# Feature inclusion... what to do about features that are only helpful
+# in a subset of epikeys, and unusably noisy in others?
