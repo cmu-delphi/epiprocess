@@ -994,3 +994,31 @@ cli_cat <- function(message, .envir = parent.frame()) {
   cat(cli::format_message(message, .envir = .envir))
   cat("\n")
 }
+
+#' Like `mutate`, but refusing to overwrite or delete existing columns
+#'
+#' @param .data data frame
+#'
+#' @keywords internal
+mutate_new <- function(.data, ...) {
+  if (inherits(.data, "single_assignment_df")) {
+    cli_abort("`.data` must not already be marked `single_assignment_df`")
+  }
+  if (!inherits(.data, "data.frame")) {
+    cli_abort("`.data` must be a data frame, and further, must use ?dplyr_extending for `mutate`")
+  }
+  class(.data) <- c("single_assignment_df", class(.data))
+  result <- mutate(.data, ...)
+  class(result) <- vec_set_difference(class(result), "single_assignment_df")
+  result
+}
+
+#' @export
+dplyr_col_modify.single_assignment_df <- function(data, cols) {
+  if (any(names(cols) %in% names(data))) {
+    overlapping_names <- vec_set_intersect(names(cols), names(data))
+    cli_abort("Column name conflict: trying to assign to {.var {names(cols)}} column{?s},
+               but {.var {overlapping_names}} already exist{?s/} in the data frame")
+  }
+  NextMethod()
+}

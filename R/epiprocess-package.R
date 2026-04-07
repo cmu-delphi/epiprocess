@@ -52,6 +52,7 @@
 #' @importFrom vctrs vec_recycle_common
 #' @importFrom vctrs vec_rep
 #' @importFrom vctrs vec_set_difference
+#' @importFrom vctrs vec_set_intersect
 #' @importFrom vctrs vec_slice
 #' @importFrom vctrs vec_slice<-
 #' @importFrom vctrs vec_sort
