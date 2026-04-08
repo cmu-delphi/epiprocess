@@ -597,7 +597,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   # pipeline issues and holiday-shifted schedules, which seem pretty
   # common.
   ek_vars <- c("geo_value", x$other_keys)
-  x_var_conf_ekvs <- epix_confkeys(x, ek_vars, var)
+  x_var_conf_ekvs <- epix_confkeys(x, var, ek_vars)
   vtol <- vtol_preprocess(vtol, x, x_var_conf_ekvs)
   check_dots_empty()
 
@@ -647,7 +647,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
 #   # pipeline issues and holiday-shifted schedules, which seem pretty
 #   # common.
 #   ek_vars <- c("geo_value", x$other_keys)
-#   x_var_conf_ekvs <- epix_confkeys(x, ek_vars, var)
+#   x_var_conf_ekvs <- epix_confkeys(x, var, ek_vars)
 #   vtol <- vtol_preprocess(vtol, x, x_var_conf_ekvs)
 #   check_dots_empty()
 
