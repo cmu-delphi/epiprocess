@@ -545,7 +545,7 @@ vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
     vtol <- exclusive(min(c(low_vstride, approx_ceiling_half_tstride_in_vspace)))
   } else {
     vtol <- as_inclusive_if_not_bound(vtol)
-    if (is.difftime(vtol$threshold)) {
+    if (inherits(vtol$threshold, "difftime")) {
       if (inherits(x$DT$version, "POSIXct")) {
         # nothing to do
       } else if (inherits(x$DT$version, "Date")) {
@@ -602,8 +602,12 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   check_dots_empty()
 
   lookup_ektvs <- ekts %>%
-    mutate(time_value = time_value + toffset,
-           version = time_get_zero_lag_version(time_value, x$time_type, x$DT$version) + voffset)
+    mutate_new(
+      offset_time_value = .data$time_value + .env$toffset,
+      version = time_get_zero_lag_version(.data$time_value, .env$x$time_type, .env$x$DT$version) + .env$voffset
+    ) %>%
+    select(-time_value) %>%
+    rename(time_value = offset_time_value)
 
   # Find the closest "real" version for `var` for each lookup
   ekv_vars <- c(ek_vars, "version")
