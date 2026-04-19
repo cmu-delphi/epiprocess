@@ -739,6 +739,25 @@ pipeline <- function(...) {
 # though perhaps it will give nice metainfo and potentially act a bit
 # of a sanity and consistency check.
 
+# For lag preparation, it seems like first characterizing (potentially
+# with fake/proxy test data), then extracting from archive for
+# training set and actual test set might actually be the most natural,
+# vs. applying a separate edf-lagging function on latest.  That plus
+# other things also duplicating train & test processing that may get
+# involved makes it feel like prep & bake or something similar to that
+# may be the way to go... need to rethink pipeline in and out...
+# Though some discussion online doesn't like this level of abstraction
+# and wants everything more dplyr-verb-y; not sure if this is actually
+# possible given the things that need to be saved.  Not sure if the
+# prep & bake stuff is actually going to feel better tucked into some
+# featureset definition?  Though was initially trying to make
+# something where this would only be defining columns, not altering
+# rows, but some prep & bake like stuff desired might(?) want to
+# select away rows... And still have some (pseudo-)test-set checks
+# partway through prep-bake requiring prep-bake on (pseudo-)testing as
+# well...  Plus potential issues with sensors encouraging or defying
+# caching depending on format and wanting to be able to inspect...
+
 # to allow to work with just a normal pipe and map, perhaps it's
 # better to separate out the pipeline runner stuff into an orthogonal
 # thing for transforming pipelines?
