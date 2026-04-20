@@ -11,6 +11,8 @@ revision_analysis(
   ...,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
   compactify_drop_initial_nas = TRUE,
@@ -32,6 +34,8 @@ revision_summary(
   ...,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
   compactify_drop_initial_nas = TRUE,
@@ -61,6 +65,18 @@ days will be rounded to 1 week if the data is weekly).}
 
 \item{within_latest}{double between 0 and 1. Determines the
 threshold used for the \code{lag_to}}
+
+\item{bulk_reporting_level, bulk_reporting_multiplier}{numeric; the
+former between 0 and 1, typically close to but less than one, and
+the latter \verb{>= 1}; defaults of 0.8 and 1.2,
+respectively. Determines how to detect bulk reporting.  Consider
+the distribution of "max initial lags" across geodemographic
+group x version pairs that add initial observations for new time
+values; a bulk reporting lag threshold is determined by taking
+the \code{bulk_reporting_level}-th quantile of this distribution,
+multiplying by \code{bulk_reporting_level}, and rounding to the an
+integer number of time intervals.  To avoid flagging anything as
+bulk reporting, set \code{bulk_reporting_level = 1}.}
 
 \item{compactify}{bool. If \code{TRUE}, we will compactify after the
 signal requested in \code{...} has been selected on its own and the

@@ -43,6 +43,17 @@
 #'   days will be rounded to 1 week if the data is weekly).
 #' @param within_latest double between 0 and 1. Determines the
 #'   threshold used for the `lag_to`
+#' @param bulk_reporting_level,bulk_reporting_multiplier numeric; the
+#'   former between 0 and 1, typically close to but less than one, and
+#'   the latter `>= 1`; defaults of 0.8 and 1.2,
+#'   respectively. Determines how to detect bulk reporting.  Consider
+#'   the distribution of "max initial lags" across geodemographic
+#'   group x version pairs that add initial observations for new time
+#'   values; a bulk reporting lag threshold is determined by taking
+#'   the `bulk_reporting_level`-th quantile of this distribution,
+#'   multiplying by `bulk_reporting_level`, and rounding to the an
+#'   integer number of time intervals.  To avoid flagging anything as
+#'   bulk reporting, set `bulk_reporting_level = 1`.
 #' @param compactify bool. If `TRUE`, we will compactify after the
 #'   signal requested in `...` has been selected on its own and the
 #'   `drop_nas` step.  This helps, for example, to give similar
@@ -188,6 +199,8 @@ revision_analysis <- function(epi_arch,
     summarize(.by = all_of(c(epikey_names, "version")),
               min_initial_lag = min(lag),
               max_initial_lag = max(lag))
+  assert_numeric(bulk_reporting_level, lower = 0, upper = 1, any.missing = FALSE, len = 1L)
+  assert_numeric(bulk_reporting_multiplier, lower = 1, any.missing = FALSE, len = 1L)
   max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * unname(quantile(initial_reporting$max_initial_lag, bulk_reporting_level)))
   initial_reporting %>%
     mutate(blah = .data$max_initial_lag > .env$max_nonbulk_initial_lag)
