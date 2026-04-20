@@ -3,7 +3,7 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
-# epiprocess 0.12.1
+# epiprocess 0.12.0.9999
 
 ## New features
 
@@ -13,9 +13,13 @@ indicate development versions beyond 0.x.
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
+- `print.epi_df()` now includes a **Latency info** section that summarizes reporting 
+  lags and identifies "lagging keys".
+- `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 - `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
 - Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
 - `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
+- Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column

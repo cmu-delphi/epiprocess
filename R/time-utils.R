@@ -166,7 +166,7 @@ unit_time_delta <- function(time_type, format = c("friendly", "fast")) {
 #'   result match the addition result for non-infinite entries.
 #'
 #' @keywords internal
-time_delta_to_n_steps <- function(time_delta, time_type) {
+time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE) {
   # could be S3 if we're willing to export
   if (inherits(time_delta, "difftime")) {
     output_units <- switch(time_type,
@@ -176,7 +176,7 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
     )
     units(time_delta) <- output_units # converts number to represent same duration; not just attr<-
     n_steps <- vec_data(time_delta)
-    if (!is_bare_integerish(n_steps)) {
+    if (require_integer && !is_bare_integerish(n_steps)) {
       cli_abort("`time_delta` did not appear to contain only integerish numbers
                  of steps between time values of time type {format_chr_with_quotes(time_type)}")
     }
@@ -190,7 +190,7 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
       cli_abort("Invalid or unsupported time_type {format_chr_with_quotes(time_type)}")
     )
   } else {
-    cli_abort("Invalid or unsupported kind of `time_delta`")
+    cli_abort("Invalid or unsupported kind of `time_delta` (class '{class(time_delta)[1]}')")
   }
 }
 
@@ -346,8 +346,13 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
 #'   should equal `y`.
 #'
 #' @keywords internal
-time_minus_time_in_n_steps <- function(x, y, time_type) {
-  time_delta_to_n_steps(x - y, time_type)
+time_minus_time_in_n_steps <- function(x, y, time_type, require_integer = TRUE) {
+  if (inherits(x, "POSIXt") && inherits(y, "Date")) {
+    x <- as.Date(x)
+  } else if (inherits(x, "Date") && inherits(y, "POSIXt")) {
+    y <- as.Date(y)
+  }
+  time_delta_to_n_steps(x - y, time_type, require_integer = require_integer)
 }
 
 #' Advance/retreat time_values by specified number of time "steps"
