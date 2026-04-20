@@ -17,16 +17,8 @@
 ---
 
     Code
-      head(p_multi_var$data, 10)
+      head(as_tibble(p_multi_var$data), 10)
     Output
-      An `epi_df` object, 10 x 5 with metadata:
-      * geo_type  = custom
-      * time_type = day
-      * other_keys = .response_name
-      * as_of     = 2026-04-20 02:26:32.54704
-      Latency (lag from as_of to latest observation by time series):
-      * lag  = 2296 days
-      
       # A tibble: 10 x 5
          time_value geo_value .response_name .response .key_interaction
          <date>     <chr>     <chr>              <dbl> <fct>           
@@ -61,16 +53,8 @@
 # plot_heatmap standardization logic
 
     Code
-      head(p_norm$data, 10)
+      head(as_tibble(p_norm$data), 10)
     Output
-      An `epi_df` object, 10 x 5 with metadata:
-      * geo_type  = custom
-      * time_type = day
-      * other_keys = .response_name
-      * as_of     = 2026-04-20 02:26:32.54704
-      Latency (lag from as_of to latest observation by time series):
-      * lag  = 2296 days
-      
       # A tibble: 10 x 5
          time_value geo_value .response_name .response .key_interaction
          <date>     <chr>     <chr>              <dbl> <fct>           

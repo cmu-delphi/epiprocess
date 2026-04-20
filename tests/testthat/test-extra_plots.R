@@ -48,7 +48,7 @@ withr::with_rng_version("3.5.0", withr::with_seed(1410852, {
     p_multi_var <- plot_heatmap(test_df_multi_var, val, val2)
     expect_s3_class(p_multi_var, "ggplot")
     expect_true(inherits(p_multi_var$facet, "FacetWrap"))
-    expect_snapshot(head(p_multi_var$data, 10))
+    expect_snapshot(head(as_tibble(p_multi_var$data), 10))
   })
 
   test_that("plot_heatmap edge cases (subsampling and errors)", {
@@ -80,6 +80,6 @@ withr::with_rng_version("3.5.0", withr::with_seed(1410852, {
       )
     expect_true(all(abs(norm_stats$mean) < 1e-10))
     expect_true(all(abs(norm_stats$sd - 1) < 1e-10))
-    expect_snapshot(head(p_norm$data, 10))
+    expect_snapshot(head(as_tibble(p_norm$data), 10))
   })
 }))
