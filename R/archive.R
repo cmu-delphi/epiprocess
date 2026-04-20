@@ -886,7 +886,8 @@ epix_pivot_wider <- function(x, names_from, values_from) {
 
   # Use vctrs::vec_split to split the data table by the names_from column.
   # This returns an object with 'key' and 'val'.
-  split_data <- vctrs::vec_split(x$DT, x$DT[[names_from]])
+  data <- tibble::as_tibble(as.data.frame(x$DT))
+  split_data <- vctrs::vec_split(data, data[[names_from]])
 
   archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {
     sig_name <- as.character(sig_name)
