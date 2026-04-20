@@ -3,11 +3,14 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
-# epiprocess 0.12.1
+# epiprocess 0.12.0.9999
 
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
+- `print.epi_df()` now includes a **Latency info** section that summarizes reporting 
+  lags and identifies "lagging keys".
+- `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 - Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
 
 ## Bug fixes
