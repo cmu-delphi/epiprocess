@@ -11,6 +11,7 @@ indicate development versions beyond 0.x.
 - `print.epi_df()` now includes a **Latency info** section that summarizes reporting 
   lags and identifies "lagging keys".
 - `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
+- Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
 
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column

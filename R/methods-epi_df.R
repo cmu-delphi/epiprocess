@@ -914,3 +914,44 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
   ) %>%
     arrange_canonical()
 }
+
+#' @method drop_na epi_df
+#' @importFrom tidyr drop_na
+#' @export
+drop_na.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  reclass(res, attr(data, "metadata"))
+}
+
+#' @method pivot_wider epi_df
+#' @importFrom tidyr pivot_wider
+#' @export
+pivot_wider.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  # Extract the 'names_from' field from the dots.
+  dots <- rlang::enquos(...)
+  names_from_enquo <- dots$names_from %||% rlang::quo(name)
+  names_from_chr <- names(tidyselect::eval_select(
+    names_from_enquo, data,
+    allow_rename = FALSE
+  ))
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- vctrs::vec_set_difference(
+    attr(template, "metadata")$other_keys, names_from_chr
+  )
+  reconstruct_light_edf(res, template)
+}
+
+#' @method pivot_longer epi_df
+#' @importFrom tidyr pivot_longer
+#' @export
+pivot_longer.epi_df <- function(data, ..., names_to = "name") {
+  res <- NextMethod()
+  # Use setdiff to filter out the special `".value"` placeholder
+  new_keys <- setdiff(names_to, ".value")
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- unique(
+    c(attr(template, "metadata")$other_keys, new_keys)
+  )
+  reconstruct_light_edf(res, template)
+}
