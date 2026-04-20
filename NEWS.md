@@ -5,6 +5,11 @@ indicate development versions beyond 0.x.
 
 # epiprocess 0.12.0.9999
 
+## New features
+
+- `revision_summary()` now detects bulk reporting adding new time
+  values, and excludes bulk reporting for some statistics.
+
 ## Improvements
 
 - Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
@@ -15,9 +20,9 @@ indicate development versions beyond 0.x.
 - `revision_summary()` by default no longer removes revisions from
   non-NA values to explicit NAs, instead only dropping initial
   estimates of NA that were likely inserted by `epix_merge`ing with a
-  more timely signal.  This behavior is customizable with the
-  `compactify`, `compactify_drop_initial_nas`, and `drop_nas`
-  parameters.
+  more timely and/or more widely available signal.  This behavior is
+  customizable with the `compactify`, `compactify_drop_initial_nas`,
+  and `drop_nas` parameters.
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
