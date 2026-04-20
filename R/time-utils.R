@@ -373,3 +373,37 @@ time_plus_n_steps <- function(x, y, time_type) {
 time_minus_n_steps <- function(x, y, time_type) {
   x - y * unit_time_delta(time_type, "fast")
 }
+
+#' Get `time_type` of an `epi_*` object
+#'
+#' @param x an `epi_*` object
+#'
+#' @keywords internal
+time_type <- function(x) UseMethod("time_type")
+
+#' @export
+time_type.epi_df <- function(x) attr(x, "metadata")$time_type
+
+#' @export
+time_type.epi_archive <- function(x) x$time_type
+
+# Not making a `time_type<-` as that implies validation.
+
+#' Set, without validation, the `time_type` of an `epi_*` object
+#'
+#' @param x an `epi_*` object
+#'
+#' @keywords internal
+set_time_type0 <- function(x, value) UseMethod("set_time_type0")
+
+#' @export
+set_time_type0.epi_df <- function(x, value) {
+  attr(x, "metadata")$time_type <- value
+  x
+}
+
+#' @export
+set_time_type0.epi_archive <- function(x, value) {
+  x$time_type <- value
+  x
+}
