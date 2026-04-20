@@ -42,6 +42,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -397,7 +398,7 @@ Epidata API</a>.</p>
 <span>  epiweeks <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">201801</span>, <span class="fl">202001</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■                       </span></span></span>
-<span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■                  </span></span></span>
+<span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   </span></span></span>
 <span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  </span></span></span></code></pre></div>
 <p>We’re interested in the age-specific rates:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -457,7 +458,7 @@ the <code>age_group</code> column as an additional group key:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
 <span><span class="co">#&gt; * other_keys = age_group</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:50:37.55678</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:31.600053</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 329 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -543,7 +544,7 @@ rate.</p>
 <span><span class="co">#&gt; An `epi_df` object, 61 x 3 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:50:37.55678</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:31.600053</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 329 weeks</span></span>
 <span><span class="co">#&gt; </span></span>

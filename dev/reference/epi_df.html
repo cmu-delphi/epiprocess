@@ -32,6 +32,7 @@ represents a snapshot of an epidemiological data set at a point in time."><meta 
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
@@ -74,6 +75,8 @@ represents a snapshot of an epidemiological data set at a point in time.</p>
 <span>  time_type <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">as_of</span>,</span>
 <span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  signal_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"wide"</span>, <span class="st">"long"</span><span class="op">)</span>,</span>
+<span>  signal_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -81,10 +84,24 @@ represents a snapshot of an epidemiological data set at a point in time.</p>
 <span><span class="fu">as_epi_df</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
-<span><span class="fu">as_epi_df</span><span class="op">(</span><span class="va">x</span>, <span class="va">as_of</span>, other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">as_epi_df</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">as_of</span>,</span>
+<span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  signal_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"wide"</span>, <span class="st">"long"</span><span class="op">)</span>,</span>
+<span>  signal_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'tbl_ts'</span></span>
-<span><span class="fu">as_epi_df</span><span class="op">(</span><span class="va">x</span>, <span class="va">as_of</span>, other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">as_epi_df</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">as_of</span>,</span>
+<span>  other_keys <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  signal_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"wide"</span>, <span class="st">"long"</span><span class="op">)</span>,</span>
+<span>  signal_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">is_epi_df</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
@@ -136,6 +153,23 @@ then the current day-time will be used.</p></dd>
 <dt id="arg-other-keys">other_keys<a class="anchor" aria-label="anchor" href="#arg-other-keys"></a></dt>
 <dd><p>If your tibble has additional keys, be sure to specify them
 as a character vector here (typical examples are "age" or sub-geographies).</p></dd>
+
+
+<dt id="arg-signal-format">signal_format<a class="anchor" aria-label="anchor" href="#arg-signal-format"></a></dt>
+<dd><p>Format of the signal data. If <code>"auto"</code> (default),
+the function will try to detect if the data is in long format and pivot
+to wide if necessary. This happens only if a unique signal identifier
+column (see <code>signal_var</code>) and a <code>value</code> column are both present,
+and the signal column contains more than one unique value. <code>"long"</code> format
+treats the signal as a metadata key by adding it to <code>other_keys</code>. <code>"wide"</code>
+format tries to pivot to wide.</p></dd>
+
+
+<dt id="arg-signal-var">signal_var<a class="anchor" aria-label="anchor" href="#arg-signal-var"></a></dt>
+<dd><p>The name of the column that contains the signal
+identifiers. If <code>NULL</code>, the function will try to guess this column
+(see <code><a href="signal_column_names.html">signal_column_names()</a></code> for a list of column names that will be
+checked).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -269,15 +303,15 @@ arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   state pol   reported_date value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> ca    blue  2020-06-01    0.991</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> ca    blue  2020-06-02    2.00 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> ca    blue  2020-06-03    3.00 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> fl    swing 2020-06-01    3.99 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> fl    swing 2020-06-02    5.01 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> fl    swing 2020-06-03    6.02 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> pa    swing 2020-06-01    7.00 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> pa    swing 2020-06-02    7.99 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> pa    swing 2020-06-03    9.00 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> ca    blue  2020-06-01    0.987</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> ca    blue  2020-06-02    2.01 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> ca    blue  2020-06-03    3.02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> fl    swing 2020-06-01    4.00 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> fl    swing 2020-06-02    4.99 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> fl    swing 2020-06-03    6.00 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> pa    swing 2020-06-01    6.99 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> pa    swing 2020-06-02    7.98 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> pa    swing 2020-06-03    9.01 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">ex2</span> <span class="op">&lt;-</span> <span class="va">ex2_input</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>geo_value <span class="op">=</span> <span class="va">state</span>, time_value <span class="op">=</span> <span class="va">reported_date</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -321,7 +355,7 @@ arbitrary (as to whether a week starts on a Monday, Tuesday); coded as a
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "day"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $as_of</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2026-04-20 07:48:38 UTC"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "2026-04-20 13:43:26 UTC"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $other_keys</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "state" "pol"  </span>

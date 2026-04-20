@@ -30,6 +30,8 @@ as_epi_archive(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...,
   versions_end = .versions_end
 )
@@ -113,6 +115,23 @@ validate_epi_archive(x)
   location based versions_end, used to avoid prefix `version = issue`
   from being assigned to `versions_end` instead of being used to rename
   columns.
+
+- signal_format:
+
+  Format of the signal data. If `"auto"` (default), the function will
+  try to detect if the data is in long format and pivot to wide if
+  necessary. This happens only if a unique signal identifier column (see
+  `signal_var`) and a `value` column are both present, and the signal
+  column contains more than one unique value. `"long"` format treats the
+  signal as a metadata key by adding it to `other_keys`. `"wide"` format
+  tries to pivot to wide.
+
+- signal_var:
+
+  The name of the column that contains the signal identifiers. If
+  `NULL`, the function will try to guess this column (see
+  [`signal_column_names()`](https://cmu-delphi.github.io/epiprocess/dev/reference/signal_column_names.md)
+  for a list of column names that will be checked).
 
 - ...:
 
@@ -244,18 +263,18 @@ toy_epi_archive
 #> ℹ Versions end: 2020-01-06
 #> ℹ A preview of the table (10 rows x 4 columns):
 #> Key: <geo_value, time_value, version>
-#>     geo_value time_value    version      value
-#>        <char>     <Date>     <Date>      <num>
-#>  1:        ca 2020-01-01 2020-01-02  0.5999565
-#>  2:        ca 2020-01-02 2020-01-03  2.2553171
-#>  3:        ca 2020-01-03 2020-01-04 -0.4372636
-#>  4:        ca 2020-01-04 2020-01-05  1.9944287
-#>  5:        ca 2020-01-05 2020-01-06  2.6215527
-#>  6:        hi 2020-01-01 2020-01-02  3.1484116
-#>  7:        hi 2020-01-02 2020-01-03  0.1781823
-#>  8:        hi 2020-01-03 2020-01-04  1.7526747
-#>  9:        hi 2020-01-04 2020-01-05  1.7558004
-#> 10:        hi 2020-01-05 2020-01-06  1.7172946
+#>     geo_value time_value    version     value
+#>        <char>     <Date>     <Date>     <num>
+#>  1:        ca 2020-01-01 2020-01-02 1.9944287
+#>  2:        ca 2020-01-02 2020-01-03 2.6215527
+#>  3:        ca 2020-01-03 2020-01-04 3.1484116
+#>  4:        ca 2020-01-04 2020-01-05 0.1781823
+#>  5:        ca 2020-01-05 2020-01-06 1.7526747
+#>  6:        hi 2020-01-01 2020-01-02 1.7558004
+#>  7:        hi 2020-01-02 2020-01-03 1.7172946
+#>  8:        hi 2020-01-03 2020-01-04 1.4463006
+#>  9:        hi 2020-01-04 2020-01-05 2.6289820
+#> 10:        hi 2020-01-05 2020-01-06 4.0650249
 
 # Ex. with an additional key for county
 df <- data.frame(

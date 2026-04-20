@@ -42,6 +42,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -136,7 +137,7 @@ follows:</p>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:51:09.566257</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:54.558788</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 1540 days</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -171,7 +172,7 @@ sliding, see <code><a href="../articles/epi_df.html">vignette("epi_df")</a></cod
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:51:09.566257</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:54.558788</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 1540 days</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -196,7 +197,7 @@ see <code><a href="../articles/growth_rate.html">vignette("growth_rate")</a></co
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:51:09.566257</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:54.558788</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 1540–1541 days</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -222,7 +223,7 @@ see <code><a href="../articles/outliers.html">vignette("outliers")</a></code>.</
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 07:51:09.566257</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:54.558788</span></span>
 <span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 1540 days</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -332,6 +333,15 @@ objects, though the interface is a bit different.</p>
 <span><span class="co">#&gt; 117124:        tx 2021-11-26 2021-11-29    1.858596</span></span></code></pre>
 <p>See <code><a href="../articles/epi_archive.html">vignette("epi_archive")</a></code> for a more in-depth guide to
 <code>epi_archive</code> objects.</p>
+</div>
+<div class="section level2">
+<h2 id="advanced-plotting">Advanced Plotting<a class="anchor" aria-label="anchor" href="#advanced-plotting"></a>
+</h2>
+<p>The <a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a> package provides advanced visualization
+capabilities for both <code>epi_df</code> and <code>epi_archive</code>
+objects, including interactive plotting and multi-variable heatmaps. For
+a detailed overview and examples, see
+<code><a href="../articles/advanced_plotting.html">vignette("advanced_plotting")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data-attribution">Data attribution<a class="anchor" aria-label="anchor" href="#data-attribution"></a>

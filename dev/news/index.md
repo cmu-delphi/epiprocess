@@ -2,16 +2,50 @@
 
 ## epiprocess 0.12.0.9999
 
-### Improvements
+### New features
 
-- Includes the `linelist_to_archive` function to convert a linelist
-  database in an `epi_archive`.
+- Added
+  [`linelist_to_archive()`](https://cmu-delphi.github.io/epiprocess/dev/reference/linelist_to_archive.md),
+  which converts a linelist or chart of patient data updates into an
+  `epi_archive`.
+- Added
+  [`plot_heatmap()`](https://cmu-delphi.github.io/epiprocess/dev/reference/plot_heatmap.md),
+  which provides heatmap visualization for `epi_df` objects.
+- [`as_epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_df.md)
+  and
+  [`as_epi_archive()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_archive.md)
+  now support a `signal_format` argument (defaulting to `"auto"`) and
+  `signal_var`. When `"auto"`, the functions detect a signal column with
+  a `value` column and \>1 unique signal, and automatically pivot to
+  wide format. When `"long"`, the signal column is added to `other_keys`
+  instead of pivoting. When `"wide"`, it always pivots to wide.
 - [`print.epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.md)
   now includes a **Latency info** section that summarizes reporting lags
   and identifies “lagging keys”.
 - [`summary.epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.md)
   now includes detailed notes about even/uneven min and max `time_value`
   (by `epikey`) and detects implicit or explicit gaps.
+- [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+  now includes `.max_keys` and `.interactive` parameters. The
+  `.max_keys` parameter helps manage large datasets by restricting the
+  number of key combinations shown. The `.interactive` feature enables
+  interactive plots using Plotly, which now supports
+  `.facet_to_dropdown` to consolidate facets into a dropdown menu.
+
+### Improvements
+
+- Key interaction labels in
+  [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+  and
+  [`plot_heatmap()`](https://cmu-delphi.github.io/epiprocess/dev/reference/plot_heatmap.md)
+  have been standardized to use `;` as a separator for improved
+  readability.
+- [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+  now more intelligently selects a plot column when multiple numeric
+  candidates are available. If a column named `value` is present, it is
+  favored. If no column named `value` is present and multiple numeric
+  candidates exist, the function now aborts and asks for explicit
+  selection.
 - Improved metadata handling and consistency in `epi_df` methods,
   including `pivot_wider` and `pivot_longer`.
 

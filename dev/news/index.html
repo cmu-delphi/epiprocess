@@ -24,6 +24,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
@@ -46,12 +47,23 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.12.0.9999" id="epiprocess-01209999">epiprocess 0.12.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-01209999"></a></h2>
 <div class="section level3">
-<h3 id="improvements-0-12-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-0-9999"></a></h3>
-<ul><li>Includes the <code>linelist_to_archive</code> function to convert a linelist database in an <code>epi_archive</code>.</li>
+<h3 id="new-features-0-12-0-9999">New features<a class="anchor" aria-label="anchor" href="#new-features-0-12-0-9999"></a></h3>
+<ul><li>Added <code><a href="../reference/linelist_to_archive.html">linelist_to_archive()</a></code>, which converts a linelist or chart of patient data updates into an <code>epi_archive</code>.</li>
+<li>Added <code><a href="../reference/plot_heatmap.html">plot_heatmap()</a></code>, which provides heatmap visualization for <code>epi_df</code> objects.</li>
+<li>
+<code><a href="../reference/epi_df.html">as_epi_df()</a></code> and <code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> now support a <code>signal_format</code> argument (defaulting to <code>"auto"</code>) and <code>signal_var</code>. When <code>"auto"</code>, the functions detect a signal column with a <code>value</code> column and &gt;1 unique signal, and automatically pivot to wide format. When <code>"long"</code>, the signal column is added to <code>other_keys</code> instead of pivoting. When <code>"wide"</code>, it always pivots to wide.</li>
 <li>
 <code><a href="../reference/print.epi_df.html">print.epi_df()</a></code> now includes a <strong>Latency info</strong> section that summarizes reporting lags and identifies “lagging keys”.</li>
 <li>
 <code><a href="../reference/print.epi_df.html">summary.epi_df()</a></code> now includes detailed notes about even/uneven min and max <code>time_value</code> (by <code>epikey</code>) and detects implicit or explicit gaps.</li>
+<li>
+<code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> now includes <code>.max_keys</code> and <code>.interactive</code> parameters. The <code>.max_keys</code> parameter helps manage large datasets by restricting the number of key combinations shown. The <code>.interactive</code> feature enables interactive plots using Plotly, which now supports <code>.facet_to_dropdown</code> to consolidate facets into a dropdown menu.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-12-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-0-9999"></a></h3>
+<ul><li>Key interaction labels in <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> and <code><a href="../reference/plot_heatmap.html">plot_heatmap()</a></code> have been standardized to use <code>;</code> as a separator for improved readability.</li>
+<li>
+<code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> now more intelligently selects a plot column when multiple numeric candidates are available. If a column named <code>value</code> is present, it is favored. If no column named <code>value</code> is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.</li>
 <li>Improved metadata handling and consistency in <code>epi_df</code> methods, including <code>pivot_wider</code> and <code>pivot_longer</code>.</li>
 </ul></div>
 <div class="section level3">

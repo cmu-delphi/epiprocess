@@ -155,6 +155,9 @@ Functions operating on `epi_archive` objects.
   [`plot(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot-epi.md)
   : Automatically plot an epi_df or epi_archive
 
+- [`plot_heatmap()`](https://cmu-delphi.github.io/epiprocess/dev/reference/plot_heatmap.md)
+  : Plot a heatmap for an epi_df
+
 - [`print(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.md)
   :
 

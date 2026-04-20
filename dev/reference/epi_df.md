@@ -22,6 +22,8 @@ as_epi_df(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...
 )
 
@@ -29,10 +31,24 @@ as_epi_df(
 as_epi_df(x, ...)
 
 # S3 method for class 'data.frame'
-as_epi_df(x, as_of, other_keys = character(), ...)
+as_epi_df(
+  x,
+  as_of,
+  other_keys = character(),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...
+)
 
 # S3 method for class 'tbl_ts'
-as_epi_df(x, as_of, other_keys = character(), ...)
+as_epi_df(
+  x,
+  as_of,
+  other_keys = character(),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...
+)
 
 is_epi_df(x)
 
@@ -83,6 +99,23 @@ new_epi_df(
 
   If your tibble has additional keys, be sure to specify them as a
   character vector here (typical examples are "age" or sub-geographies).
+
+- signal_format:
+
+  Format of the signal data. If `"auto"` (default), the function will
+  try to detect if the data is in long format and pivot to wide if
+  necessary. This happens only if a unique signal identifier column (see
+  `signal_var`) and a `value` column are both present, and the signal
+  column contains more than one unique value. `"long"` format treats the
+  signal as a metadata key by adding it to `other_keys`. `"wide"` format
+  tries to pivot to wide.
+
+- signal_var:
+
+  The name of the column that contains the signal identifiers. If
+  `NULL`, the function will try to guess this column (see
+  [`signal_column_names()`](https://cmu-delphi.github.io/epiprocess/dev/reference/signal_column_names.md)
+  for a list of column names that will be checked).
 
 ## Value
 
@@ -245,15 +278,15 @@ print(ex2_input)
 #> # A tibble: 9 × 4
 #>   state pol   reported_date value
 #>   <chr> <chr> <date>        <dbl>
-#> 1 ca    blue  2020-06-01    0.991
-#> 2 ca    blue  2020-06-02    2.00 
-#> 3 ca    blue  2020-06-03    3.00 
-#> 4 fl    swing 2020-06-01    3.99 
-#> 5 fl    swing 2020-06-02    5.01 
-#> 6 fl    swing 2020-06-03    6.02 
-#> 7 pa    swing 2020-06-01    7.00 
-#> 8 pa    swing 2020-06-02    7.99 
-#> 9 pa    swing 2020-06-03    9.00 
+#> 1 ca    blue  2020-06-01    0.987
+#> 2 ca    blue  2020-06-02    2.01 
+#> 3 ca    blue  2020-06-03    3.02 
+#> 4 fl    swing 2020-06-01    4.00 
+#> 5 fl    swing 2020-06-02    4.99 
+#> 6 fl    swing 2020-06-03    6.00 
+#> 7 pa    swing 2020-06-01    6.99 
+#> 8 pa    swing 2020-06-02    7.98 
+#> 9 pa    swing 2020-06-03    9.01 
 
 ex2 <- ex2_input %>%
   dplyr::rename(geo_value = state, time_value = reported_date) %>%
@@ -297,7 +330,7 @@ attr(ex3, "metadata")
 #> [1] "day"
 #> 
 #> $as_of
-#> [1] "2026-04-20 07:48:38 UTC"
+#> [1] "2026-04-20 13:43:26 UTC"
 #> 
 #> $other_keys
 #> [1] "state" "pol"  

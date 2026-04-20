@@ -70,7 +70,7 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-20 07:51:09.566257
+#> * as_of     = 2026-04-20 13:45:54.558788
 #> Latency (lag from as_of to latest observation by time series):
 #> * lag across all time series = 1540 days
 #> 
@@ -114,7 +114,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-20 07:51:09.566257
+#> * as_of     = 2026-04-20 13:45:54.558788
 #> Latency (lag from as_of to latest observation by time series):
 #> * lag across all time series = 1540 days
 #> 
@@ -142,7 +142,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-20 07:51:09.566257
+#> * as_of     = 2026-04-20 13:45:54.558788
 #> Latency (lag from as_of to latest observation by time series):
 #> * lag across all time series = 1540–1541 days
 #> 
@@ -171,7 +171,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-20 07:51:09.566257
+#> * as_of     = 2026-04-20 13:45:54.558788
 #> Latency (lag from as_of to latest observation by time series):
 #> * lag across all time series = 1540 days
 #> 
@@ -293,6 +293,14 @@ dv
 See
 [`vignette("epi_archive")`](https://cmu-delphi.github.io/epiprocess/dev/articles/epi_archive.md)
 for a more in-depth guide to `epi_archive` objects.
+
+## Advanced Plotting
+
+The [epiprocess](https://github.com/cmu-delphi/epiprocess) package
+provides advanced visualization capabilities for both `epi_df` and
+`epi_archive` objects, including interactive plotting and multi-variable
+heatmaps. For a detailed overview and examples, see
+[`vignette("advanced_plotting")`](https://cmu-delphi.github.io/epiprocess/dev/articles/advanced_plotting.md).
 
 ## Data attribution
 

@@ -16,6 +16,8 @@ Basic usage and examples.
   signals](https://cmu-delphi.github.io/epiprocess/dev/articles/growth_rate.md):
 - [Correlate signals across locations and
   time](https://cmu-delphi.github.io/epiprocess/dev/articles/correlation.md):
+- [Advanced Plotting with
+  epiprocess](https://cmu-delphi.github.io/epiprocess/dev/articles/advanced_plotting.md):
 
 ### Developer
 
