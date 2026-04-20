@@ -13,6 +13,8 @@
       * geo_type  = custom
       * time_type = day
       * as_of     = 2023-01-04
+      Latency (lag from as_of to latest observation by time series):
+      * lag  = 1 days
       
       # A tibble: 30 x 4
          geo_value time_value  cases .facets
