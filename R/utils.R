@@ -811,13 +811,18 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
 
   # Auto-detection behavior
   if (signal_format == "auto") {
-    if (
-      !is.null(signal_var) &&
-        value_var %in% names(x) &&
-        length(unique(x[[signal_var]])) > 1
-    ) {
-      signal_format <- "wide"
+    if (!is.null(signal_var) && value_var %in% names(x)) {
+      # Input looks like long format.
+      if (length(unique(x[[signal_var]])) > 1) {
+        # Our processing was built expecting wide format, so convert:
+        signal_format <- "wide"
+      } else {
+        # It's convenient to be able to just use `value` if there's
+        # only one signal, so let's not auto-convert in this case:
+        signal_format <- "long"
+      }
     } else {
+      # Input doesn't look like long format; no extra processing needed:
       return(list(format = "none", signal_var = signal_var, other_keys = other_keys))
     }
   }

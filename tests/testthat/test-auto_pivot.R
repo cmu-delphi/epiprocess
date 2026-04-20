@@ -74,7 +74,7 @@ test_that("Multi-candidate behavior and silence", {
 
   # Multiple candidates: silent if not pivoting OR if ambiguous in auto mode
   raw_multi <- dplyr::mutate(raw, signal2 = 1)
-  expect_silent(as_epi_df(raw_multi))
+  expect_message(as_epi_df(raw_multi), "Adding")
 
   raw_pivot <- dplyr::tibble(
     geo_value = "ca", time_value = test_date + 1:5,
