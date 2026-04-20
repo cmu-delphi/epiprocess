@@ -59,7 +59,7 @@
     Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
-        <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>           <dbl>
+        <date>     <chr>           <int> <drtn>  <drtn>  <drtn>           <dbl>
       1 2020-01-01 ak                  6 2 days  19 days 19 days            101
       2 2020-01-02 ak                  1 4 days   5 days  4 days              9
       3 2020-01-03 ak                  0 3 days   3 days  3 days              0
@@ -138,7 +138,7 @@
     Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
-        <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>           <dbl>
+        <date>     <chr>           <int> <drtn>  <drtn>  <drtn>           <dbl>
       1 2020-01-01 ak                  6 2 days  19 days 19 days            101
       2 2020-01-02 ak                  1 4 days   5 days  4 days              9
       3 2020-01-03 ak                  0 3 days   3 days  3 days              0
@@ -217,7 +217,7 @@
     Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag  lag_near_latest spread
-        <date>     <chr>           <dbl> <drtn>  <drtn>   <drtn>           <dbl>
+        <date>     <chr>           <int> <drtn>  <drtn>   <drtn>           <dbl>
       1 2020-01-01 ak                  6 2 weeks 19 weeks 19 weeks           101
       2 2020-01-08 ak                  1 4 weeks  5 weeks  4 weeks             9
       3 2020-01-15 ak                  0 3 weeks  3 weeks  3 weeks             0
@@ -296,7 +296,7 @@
     Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
-             <mth> <chr>           <dbl>   <dbl>   <dbl>           <dbl>  <dbl>
+             <mth> <chr>           <int>   <dbl>   <dbl>           <dbl>  <dbl>
       1   2020 Jan ak                  6       2      19              19    101
       2   2020 Feb ak                  1       4       5               4      9
       3   2020 Mar ak                  0       3       3               3      0
@@ -375,7 +375,7 @@
     Output
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
-             <dbl> <chr>           <dbl>   <dbl>   <dbl>           <dbl>  <dbl>
+             <dbl> <chr>           <int>   <dbl>   <dbl>           <dbl>  <dbl>
       1          1 ak                  6       2      19              19    101
       2          2 ak                  1       4       5               4      9
       3          3 ak                  0       3       3               3      0

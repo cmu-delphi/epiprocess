@@ -22,7 +22,7 @@ indicate development versions beyond 0.x.
   estimates of NA that were likely inserted by `epix_merge`ing with a
   more timely and/or more widely available signal.  This behavior is
   customizable with the `compactify`, `compactify_drop_initial_nas`,
-  and `drop_nas` parameters.
+  and `drop_nas` parameters.  It also runs more quickly.
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).

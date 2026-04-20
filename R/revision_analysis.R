@@ -195,10 +195,13 @@ revision_analysis <- function(epi_arch,
   n_obs <- nrow(revision_behavior)
 
   initial_reporting <- revision_behavior %>%
-    slice_head(n = 1L, by = all_of(epikeytime_names)) %>%
-    summarize(.by = all_of(c(epikey_names, "version")),
-              min_initial_lag = min(lag),
-              max_initial_lag = max(lag))
+    data.table::setDT() %>%
+    .[, .SD[1], by = c(epikeytime_names)] %>%
+    .[, list(min_initial_lag = min(lag),
+             max_initial_lag = max(lag)),
+      by = c(epikey_names, "version")] %>%
+    data.table::setDF() %>%
+    as_tibble()
   assert_numeric(bulk_reporting_level, lower = 0, upper = 1, any.missing = FALSE, len = 1L)
   assert_numeric(bulk_reporting_multiplier, lower = 1, any.missing = FALSE, len = 1L)
   max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * unname(quantile(initial_reporting$max_initial_lag, bulk_reporting_level)))
@@ -214,17 +217,24 @@ revision_analysis <- function(epi_arch,
 
   revision_behavior <-
     revision_behavior %>%
-    group_by(pick(all_of(epikeytime_names))) %>% # group = versions of one measurement
-    summarize(
-      n_revisions = dplyr::n() - 1,
-      min_lag = min(lag), # nolint: object_usage_linter
-      max_lag = max(lag), # nolint: object_usage_linter
-      min_value = f_no_na(min, .data[[arg]]),
-      max_value = f_no_na(max, .data[[arg]]),
-      median_value = f_no_na(median, .data[[arg]]),
-      lag_to = lag_within_x_latest(lag, .data[[arg]], prop = within_latest),
-      .groups = "drop"
-    )
+    rename(.VAL = !!arg) %>% # faster than .SD[[arg]]
+    data.table::setDT() %>%
+    {
+      with_missing <- .[, list(
+        n_revisions = .N - 1L,
+        min_lag = min(lag), # nolint: object_usage_linter
+        max_lag = max(lag), # nolint: object_usage_linter
+        lag_to = lag_within_x_latest(lag, .VAL, prop = ..within_latest) # nolint: object_usage_linter
+      ), by = c(epikeytime_names)]
+      without_missing <- .[!is.na(.VAL)][, list(
+        min_value = min(.VAL), # nolint: object_usage_linter
+        max_value = max(.VAL), # nolint: object_usage_linter
+        median_value = median(.VAL) # nolint: object_usage_linter
+      ), by = c(epikeytime_names)]
+      merge(with_missing, without_missing, by = epikeytime_names, all = TRUE)
+    } %>%
+    data.table::setDF() %>%
+    as_tibble()
   n_epikeytimes <- nrow(revision_behavior)
   revision_behavior <- revision_behavior %>%
     filter(.data$min_lag <= .env$max_nonbulk_initial_lag) %>%
