@@ -247,12 +247,12 @@ print(ex2_input)
 #>   <chr> <chr> <date>        <dbl>
 #> 1 ca    blue  2020-06-01    0.991
 #> 2 ca    blue  2020-06-02    2.00 
-#> 3 ca    blue  2020-06-03    2.99 
-#> 4 fl    swing 2020-06-01    3.98 
+#> 3 ca    blue  2020-06-03    3.00 
+#> 4 fl    swing 2020-06-01    3.99 
 #> 5 fl    swing 2020-06-02    5.01 
-#> 6 fl    swing 2020-06-03    6.00 
+#> 6 fl    swing 2020-06-03    6.02 
 #> 7 pa    swing 2020-06-01    7.00 
-#> 8 pa    swing 2020-06-02    8.02 
+#> 8 pa    swing 2020-06-02    7.99 
 #> 9 pa    swing 2020-06-03    9.00 
 
 ex2 <- ex2_input %>%
@@ -297,7 +297,7 @@ attr(ex3, "metadata")
 #> [1] "day"
 #> 
 #> $as_of
-#> [1] "2026-02-10 07:25:42 UTC"
+#> [1] "2026-04-20 02:29:14 UTC"
 #> 
 #> $other_keys
 #> [1] "state" "pol"  

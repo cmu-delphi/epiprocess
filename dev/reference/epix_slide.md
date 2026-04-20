@@ -269,9 +269,12 @@ case_death_rate_archive %>%
       )$predictions
     }
   )
-#> Registered S3 method overwritten by 'epipredict':
-#>   method            from   
-#>   print.step_naomit recipes
+#> Registered S3 methods overwritten by 'epipredict':
+#>   method                          from   
+#>   print.step_naomit               recipes
+#>   vec_arith.quantile_pred         hardhat
+#>   vec_arith.numeric.quantile_pred hardhat
+#>   vec_math.quantile_pred          hardhat
 #> # A tibble: 112 × 6
 #>    version    geo_value  .pred .pred_distn forecast_date target_date
 #>  * <date>     <chr>      <dbl>   <qtls(7)> <date>        <date>     

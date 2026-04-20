@@ -5,7 +5,7 @@ Find the greatest common divisor of all entries in a numeric vector
 ## Usage
 
 ``` r
-gcd_num(dividends, ..., rrtol = 0.000001, pqlim = 1000000, irtol = 0.000001)
+gcd_num(dividends, ..., rrtol = 1e-06, pqlim = 1e+06, irtol = 1e-06)
 ```
 
 ## Arguments

@@ -6,6 +6,8 @@
 
 - Includes the `linelist_to_archive` function to convert a linelist
   database in an `epi_archive`.
+- Improved metadata handling and consistency in `epi_df` methods,
+  including `pivot_wider` and `pivot_longer`.
 
 ### Bug fixes
 

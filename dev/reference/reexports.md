@@ -22,7 +22,10 @@ to see their documentation.
 - tidyr:
 
   [`complete`](https://tidyr.tidyverse.org/reference/complete.html),
+  [`drop_na`](https://tidyr.tidyverse.org/reference/drop_na.html),
   [`full_seq`](https://tidyr.tidyverse.org/reference/full_seq.html),
+  [`pivot_longer`](https://tidyr.tidyverse.org/reference/pivot_longer.html),
+  [`pivot_wider`](https://tidyr.tidyverse.org/reference/pivot_wider.html),
   [`unnest`](https://tidyr.tidyverse.org/reference/unnest.html)
 
 - tsibble:

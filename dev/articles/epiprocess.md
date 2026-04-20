@@ -70,7 +70,7 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-02-10 07:28:03.778419
+#> * as_of     = 2026-04-20 02:31:30.395442
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -112,7 +112,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-02-10 07:28:03.778419
+#> * as_of     = 2026-04-20 02:31:30.395442
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -138,7 +138,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-02-10 07:28:03.778419
+#> * as_of     = 2026-04-20 02:31:30.395442
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -165,7 +165,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-02-10 07:28:03.778419
+#> * as_of     = 2026-04-20 02:31:30.395442
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
@@ -197,6 +197,9 @@ df <- pub_covidcast(
   select(geo_value, time_value, deaths_daily = value) %>%
   as_epi_df() %>%
   arrange_canonical()
+#> Waiting 4s for retry backoff ■■■■■■■■■                       
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■               
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 edf <- inner_join(edf, df, by = c("geo_value", "time_value"))
 edf %>%
   group_by(geo_value) %>%

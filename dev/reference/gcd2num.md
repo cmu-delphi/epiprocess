@@ -7,7 +7,7 @@ could be moved away into
 ## Usage
 
 ``` r
-gcd2num(a, b, rrtol = 0.000001, pqlim = 1000000, irtol = 0.000001)
+gcd2num(a, b, rrtol = 1e-06, pqlim = 1e+06, irtol = 1e-06)
 ```
 
 ## Arguments

@@ -19,7 +19,7 @@ growth_rate_params(
   nlambda = 50L,
   lambda_max = NULL,
   lambda_min = NULL,
-  lambda_min_ratio = 0.00001,
+  lambda_min_ratio = 1e-05,
   error_measure = c("deviance", "mse", "mae"),
   nfolds = 3L
 )

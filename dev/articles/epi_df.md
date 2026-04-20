@@ -330,6 +330,9 @@ flu_data_api <- pub_flusurv(
   locations = "ca",
   epiweeks = epirange(201801, 202001)
 )
+#> Waiting 4s for retry backoff ■■■■■■■■■                       
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
 We’re interested in the age-specific rates:
@@ -394,7 +397,7 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-02-10 07:27:32.403611
+#> * as_of     = 2026-04-20 02:31:01.96289
 #> 
 #> # A tibble: 305 × 4
 #>   geo_value age_group time_value  rate
@@ -488,7 +491,7 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-02-10 07:27:32.403611
+#> * as_of     = 2026-04-20 02:31:01.96289
 #> 
 #> # A tibble: 61 × 3
 #>   geo_value time_value rate_overall_recalc

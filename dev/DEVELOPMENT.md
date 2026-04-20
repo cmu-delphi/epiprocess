@@ -82,7 +82,7 @@ NEWS](https://github.com/cmu-delphi/epiprocess/blob/dev/NEWS.md).
 
 - This may choke on the MIT license url, and that’s ok.
 
-[`devtools::build_readme()`](https://devtools.r-lib.org/reference/build_rmd.html)
+[`devtools::build_readme()`](https://devtools.r-lib.org/reference/build_readme.html)
 
 [`devtools::check_win_devel()`](https://devtools.r-lib.org/reference/check_win.html)
 
