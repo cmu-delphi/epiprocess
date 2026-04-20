@@ -65,6 +65,8 @@ epix_as_of(
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-12-01
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 1–5 days
 #> 
 #> # A tibble: 2,192 × 4
 #>    geo_value time_value percent_cli case_rate_7d_av
@@ -89,6 +91,8 @@ epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2020-06-12
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 1–4 days
 #> 
 #> # A tibble: 44 × 4
 #>    geo_value time_value percent_cli case_rate_7d_av
@@ -136,6 +140,8 @@ epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-12-01
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 1–5 days
 #> 
 #> # A tibble: 2,192 × 4
 #>    geo_value time_value percent_cli case_rate_7d_av

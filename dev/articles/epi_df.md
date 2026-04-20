@@ -132,6 +132,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>   geo_value time_value cases cases_7sd
@@ -173,6 +175,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>   geo_value time_value cases slide_value
@@ -199,6 +203,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>   geo_value time_value cases slide_value
@@ -239,6 +245,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 5
 #>   geo_value time_value cases cases_mean cases_sd
@@ -273,6 +281,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>   geo_value time_value cases cases_7dav
@@ -290,6 +300,8 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>   geo_value time_value cases cases_7dsum
@@ -331,7 +343,7 @@ flu_data_api <- pub_flusurv(
   epiweeks = epirange(201801, 202001)
 )
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■                  
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
@@ -397,7 +409,9 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-04-20 02:31:01.96289
+#> * as_of     = 2026-04-20 07:50:37.55678
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 329 weeks
 #> 
 #> # A tibble: 305 × 4
 #>   geo_value age_group time_value  rate
@@ -491,7 +505,9 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-04-20 02:31:01.96289
+#> * as_of     = 2026-04-20 07:50:37.55678
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 329 weeks
 #> 
 #> # A tibble: 61 × 3
 #>   geo_value time_value rate_overall_recalc
@@ -555,6 +571,8 @@ edf_missing %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 1475 days
 #> 
 #> # A tibble: 10 × 3
 #>    geo_value time_value cases
@@ -588,6 +606,8 @@ edf_missing %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 1475 days
 #> 
 #> # A tibble: 12 × 3
 #>    geo_value time_value cases
@@ -923,7 +943,14 @@ xt %>%
 #> * geo_type  = custom
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> 
+#> Warning: There were 2 warnings in `dplyr::summarize()`.
+#> The first warning was:
+#> ℹ In argument: `min_t = if (...) NULL`.
+#> Caused by warning in `min.default()`:
+#> ! no non-missing arguments to min; returning Inf
+#> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
+#> Latency (lag from as_of to latest observation by time series):
+#> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,
 #> #   cases_7dav <dbl>
@@ -942,7 +969,14 @@ xt_filled %>%
 #> * geo_type  = custom
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> 
+#> Warning: There were 2 warnings in `dplyr::summarize()`.
+#> The first warning was:
+#> ℹ In argument: `min_t = if (...) NULL`.
+#> Caused by warning in `min.default()`:
+#> ! no non-missing arguments to min; returning Inf
+#> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
+#> Latency (lag from as_of to latest observation by time series):
+#> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,
 #> #   cases_7dav <dbl>

@@ -6,7 +6,7 @@ Difference between two time value vectors in terms of number of time
 ## Usage
 
 ``` r
-time_minus_time_in_n_steps(x, y, time_type)
+time_minus_time_in_n_steps(x, y, time_type, require_integer = TRUE)
 ```
 
 ## Arguments

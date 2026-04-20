@@ -258,6 +258,8 @@ with_cfr_estimates %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 7
 #>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av
@@ -344,6 +346,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>    geo_value time_value cases slide_packed$cases_7sd $cases_7dav
@@ -373,6 +377,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag  = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>    geo_value time_value cases slide_packed$cases_7sd $cases_7dav
@@ -408,7 +414,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> 
+#> Latency (lag from as_of to latest observation by time series):
+#> * No time series detected
 #> # A tibble: 4,026 × 3
 #>    geo_value time_value slide_value     
 #>    <chr>     <date>     <list>          
@@ -432,6 +439,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 7
 #>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av
@@ -455,6 +464,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 7
 #>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av

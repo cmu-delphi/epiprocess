@@ -6,7 +6,7 @@ values
 ## Usage
 
 ``` r
-time_delta_to_n_steps(time_delta, time_type)
+time_delta_to_n_steps(time_delta, time_type, require_integer = TRUE)
 ```
 
 ## Arguments

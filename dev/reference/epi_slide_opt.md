@@ -230,6 +230,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>    geo_value time_value cases cases_7dsum
@@ -253,6 +255,8 @@ covid_case_death_rates_extended %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2023-03-10
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 434 days
 #> 
 #> # A tibble: 37,576 × 5
 #>    geo_value time_value case_rate death_rate case_rate_7dav
@@ -276,6 +280,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 7
 #>    geo_value time_value case_rate_7d_av death_rate_7d_av cases cases_7d_av
@@ -303,6 +309,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>    geo_value time_value cases case_sum
@@ -327,6 +335,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
 #>    geo_value time_value cases sum_cases
@@ -412,6 +422,8 @@ covid_case_death_rates_extended %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2023-03-10
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 434 days
 #> 
 #> # A tibble: 37,576 × 5
 #>    geo_value time_value case_rate death_rate case_rate_7dav
@@ -456,6 +468,8 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 6
 #>    geo_value time_value case_rate_7d_av death_rate_7d_av case_rate_7d_av_28d_m…¹

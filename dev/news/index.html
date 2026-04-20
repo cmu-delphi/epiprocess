@@ -44,14 +44,18 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.12.1" id="epiprocess-0121">epiprocess 0.12.1<a class="anchor" aria-label="anchor" href="#epiprocess-0121"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.12.0.9999" id="epiprocess-01209999">epiprocess 0.12.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-01209999"></a></h2>
 <div class="section level3">
-<h3 id="improvements-0-12-1">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-1"></a></h3>
+<h3 id="improvements-0-12-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-0-9999"></a></h3>
 <ul><li>Includes the <code>linelist_to_archive</code> function to convert a linelist database in an <code>epi_archive</code>.</li>
+<li>
+<code><a href="../reference/print.epi_df.html">print.epi_df()</a></code> now includes a <strong>Latency info</strong> section that summarizes reporting lags and identifies “lagging keys”.</li>
+<li>
+<code><a href="../reference/print.epi_df.html">summary.epi_df()</a></code> now includes detailed notes about even/uneven min and max <code>time_value</code> (by <code>epikey</code>) and detects implicit or explicit gaps.</li>
 <li>Improved metadata handling and consistency in <code>epi_df</code> methods, including <code>pivot_wider</code> and <code>pivot_longer</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-12-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-1"></a></h3>
+<h3 id="bug-fixes-0-12-0-9999">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-0-9999"></a></h3>
 <ul><li>
 <code>autoplot.epi_archive</code> now works properly on archives that contain a column named <code>v</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues/674" class="external-link">#674</a>, thanks to <a href="https://github.com/pcollender" class="external-link">@pcollender</a> for the report).</li>
 </ul></div>

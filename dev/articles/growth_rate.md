@@ -111,6 +111,8 @@ head(x, 10)
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
+#> Latency (lag from as_of to latest observation by time series):
+#> * lag across all time series = 1379 days
 #> 
 #> # A tibble: 10 × 4
 #> # Groups:   geo_value [1]
