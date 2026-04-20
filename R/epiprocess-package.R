@@ -17,6 +17,7 @@
 #' @importFrom cli pluralize
 #' @importFrom cli qty
 #' @importFrom data.table as.data.table
+#' @importFrom data.table fifelse
 #' @importFrom data.table key
 #' @importFrom data.table setkeyv
 #' @importFrom dplyr arrange

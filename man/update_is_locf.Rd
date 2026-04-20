@@ -4,22 +4,24 @@
 \alias{update_is_locf}
 \title{Internal helper; lgl; which updates are LOCF}
 \usage{
-update_is_locf(arranged_updates_df, ukey_names, abs_tol)
+update_is_locf(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf)
 }
 \arguments{
-\item{arranged_updates_df}{an arranged update data frame like an \code{epi_archive} \code{DT}}
+\item{arranged_updates_df}{an arranged update data frame like an
+\code{epi_archive} \code{DT}}
 
 \item{ukey_names}{(not validated:) chr; the archive/equivalent
 \code{\link{key_colnames}}; must include \code{"version"}.}
 
 \item{abs_tol}{(not validated:) as in \code{\link{apply_compactify}}}
+
+\item{init_nas_are_locf}{(not validated:) as in \code{\link{apply_compactify}}}
 }
 \value{
 lgl
 }
 \description{
-(Not validated:) Must be called inside certain dplyr data masking verbs (e.g.,
-\code{filter} or \code{mutate}) being run on an \code{epi_archive}'s \code{DT} or a data frame
+(Not validated:) Must be called on an \code{epi_archive}'s \code{DT} or a data frame
 formatted like one.
 }
 \keyword{internal}

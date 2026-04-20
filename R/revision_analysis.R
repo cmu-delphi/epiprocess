@@ -26,34 +26,49 @@
 #'   the window afterwards at 150.
 #'
 #' @param epi_arch an epi_archive to be analyzed
-#' @param ... <[`tidyselect`][dplyr::dplyr_tidy_select]>, used to choose the column to
-#'   summarize. If empty and there is only one value/measurement column (i.e.,
-#'   not in [`key_colnames`]) in the archive, it will automatically select it.
-#'   If supplied, `...` must select exactly one column.
-#' @param drop_nas bool, drop any `NA` values from the archive? After dropping
-#'   `NA`'s compactify is run again if `compactify` is `TRUE` to make
-#'   sure there are no duplicate values from occasions when the signal is
-#'   revised to `NA`, and then back to its immediately-preceding value.
-#' @param min_waiting_period `difftime`, integer or `NULL`. Sets a cutoff: any
-#'   time_values that have not had at least `min_waiting_period` to stabilize as
-#'   of the `versions_end` are removed. `min_waiting_period` should characterize
-#'   the typical time during which most significant revisions occur. The default
-#'   of 60 days corresponds to a typical near-final value for case counts as
-#'   reported in the context of insurance. To avoid this filtering, either set
-#'   to `NULL` or 0. A `difftime` will be rounded up to the appropriate `time_type` if
-#'   necessary (that is 5 days will be rounded to 1 week if the data is weekly).
-#' @param within_latest double between 0 and 1. Determines the threshold
-#'   used for the `lag_to`
-#' @param compactify bool. If `TRUE`, we will compactify after the signal
-#'   requested in `...` has been selected on its own and the `drop_nas` step.
-#'   This helps, for example, to give similar results when called on
-#'   [merged][epix_merge] and single-signal archives, since merged archives
-#'   record an update when any of the other signals change, not just the
-#'   requested signal. The default is `TRUE`.
-#' @param compactify_abs_tol length-1 double, used if `compactify` is `TRUE`, it
-#'   determines the threshold for when two doubles are considered identical.
-#' @param return_only_tibble boolean to return only the simple `tibble` of
-#'   computational results rather than the complete S3 object.
+#' @param ... <[`tidyselect`][dplyr::dplyr_tidy_select]>, used to
+#'   choose the column to summarize. If empty and there is only one
+#'   value/measurement column (i.e., not in [`key_colnames`]) in the
+#'   archive, it will automatically select it.  If supplied, `...`
+#'   must select exactly one column.
+#' @param min_waiting_period `difftime`, integer or `NULL`. Sets a
+#'   cutoff: any time_values that have not had at least
+#'   `min_waiting_period` to stabilize as of the `versions_end` are
+#'   removed. `min_waiting_period` should characterize the typical
+#'   time during which most significant revisions occur. The default
+#'   of 60 days corresponds to a typical near-final value for case
+#'   counts as reported in the context of insurance. To avoid this
+#'   filtering, either set to `NULL` or 0. A `difftime` will be
+#'   rounded up to the appropriate `time_type` if necessary (that is 5
+#'   days will be rounded to 1 week if the data is weekly).
+#' @param within_latest double between 0 and 1. Determines the
+#'   threshold used for the `lag_to`
+#' @param compactify bool. If `TRUE`, we will compactify after the
+#'   signal requested in `...` has been selected on its own and the
+#'   `drop_nas` step.  This helps, for example, to give similar
+#'   results when called on [merged][epix_merge] and single-signal
+#'   archives, since merged archives record an update when any of the
+#'   other signals change, not just the requested signal. The default
+#'   is `TRUE`.
+#' @param compactify_abs_tol length-1 double, used if `compactify` is
+#'   `TRUE`, it determines the threshold for when two doubles are
+#'   considered identical.
+#' @param compactify_drop_initial_nas bool; should we drop initial
+#'   estimates of NA during the compactification step?  Default is
+#'   TRUE, because these NAs are likely present due to
+#'   [`epix_merge()`]ing with a more timely indicator, and the
+#'   upstream source probably didn't actually report explicit NAs as
+#'   provisional estimates.
+#' @param drop_nas bool, do we drop all `NA` values (not just initial
+#'   estimates of `NA`) from the archive data structure prior to
+#'   (optional) compactification?  This both strips (i) initial
+#'   estimates of NA and (ii) explicit revisions from a non-NA
+#'   estimate to NA.  Equivalent to `compactify_drop_initial_nas` if
+#'   `compactify` is `TRUE`. Default is FALSE, favoring `compactify =
+#'   TRUE, compactify_drop_initial_nas = TRUE`.
+#' @param return_only_tibble boolean to return only the simple
+#'   `tibble` of computational results rather than the complete S3
+#'   object.
 #'
 #' @details Applies to `epi_archive`s with `time_type`s of `"day"`, `"week"`,
 #'   and `"yearmonth"`. It can also work with a `time_type` of `"integer"` if
@@ -86,11 +101,12 @@
 #'   everything ungroup summarize if_else %>%
 revision_analysis <- function(epi_arch,
                               ...,
-                              drop_nas = TRUE,
                               min_waiting_period = as.difftime(60, units = "days"),
                               within_latest = 0.2,
                               compactify = TRUE,
                               compactify_abs_tol = 0,
+                              compactify_drop_initial_nas = TRUE,
+                              drop_nas = FALSE,
                               return_only_tibble = FALSE) {
   assert_class(epi_arch, "epi_archive")
   if (methods::is(min_waiting_period, "difftime")) {
@@ -135,6 +151,8 @@ revision_analysis <- function(epi_arch,
   time_type <- epi_arch$time_type
 
   revision_behavior <- epi_arch$DT %>%
+    as.data.frame() %>%
+    as_tibble() %>%
     select(all_of(unique(c(ukey_names, arg))))
   if (!is.null(min_waiting_period)) {
     last_semistable_time_value <- time_minus_n_steps(
@@ -151,13 +169,15 @@ revision_analysis <- function(epi_arch,
     revision_behavior <-
       revision_behavior %>%
       filter(!is.na(.data[[arg]]))
-  } else {
-    revision_behavior <- epi_arch$DT
   }
   if (compactify) {
     revision_behavior <- revision_behavior %>%
-      apply_compactify(ukey_names, compactify_abs_tol)
+      apply_compactify(ukey_names, compactify_abs_tol, init_nas_are_locf = compactify_drop_initial_nas)
   }
+  total_na <- revision_behavior %>%
+    filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
+    nrow()
+  n_obs <- nrow(revision_behavior)
   revision_behavior <-
     revision_behavior %>%
     mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type)) %>% # nolint: object_usage_linter
@@ -184,9 +204,6 @@ revision_analysis <- function(epi_arch,
       time_value, geo_value, all_of(epikey_names), n_revisions, min_lag, max_lag, # nolint: object_usage_linter
       lag_near_latest, spread, rel_spread, min_value, max_value, median_value # nolint: object_usage_linter
     )
-  total_na <- epi_arch$DT %>%
-    filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
-    nrow()
   if (!return_only_tibble) {
     revision_behavior <- structure(list(
       revision_behavior = revision_behavior,
@@ -196,7 +213,7 @@ revision_analysis <- function(epi_arch,
       time_type = time_type,
       total_na = total_na,
       max_val = max(epi_arch$DT[[arg]], na.rm = TRUE),
-      n_obs = nrow(epi_arch$DT),
+      n_obs = n_obs,
       within_latest = within_latest
     ), class = "revision_analysis")
   }

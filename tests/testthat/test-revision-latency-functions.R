@@ -97,8 +97,8 @@ test_that("revision_summary works for dummy datasets", {
 })
 
 test_that("tidyselect is functional", {
-  expect_no_error(quiet(revision_summary(dummy_ex, value)))
-  expect_no_error(quiet(revision_summary(dummy_ex, starts_with("val"))))
+  expect_no_error(revision_summary(dummy_ex, value))
+  expect_no_error(revision_summary(dummy_ex, starts_with("val")))
   # column order shouldn't matter
   with_later_key_col <- dummy_ex$DT %>%
     select(geo_value, time_value, value, version) %>%

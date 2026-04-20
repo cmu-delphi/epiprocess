@@ -12,10 +12,19 @@ indicate development versions beyond 0.x.
   lags and identifies "lagging keys".
 - `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 - Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
-
+- `revision_summary()` by default no longer removes revisions from
+  non-NA values to explicit NAs, instead only dropping initial
+  estimates of NA that were likely inserted by `epix_merge`ing with a
+  more timely signal.  This behavior is customizable with the
+  `compactify`, `compactify_drop_initial_nas`, and `drop_nas`
+  parameters.
 ## Bug fixes
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
+- `revision_summary()` with `drop_nas = FALSE` no longer ignores
+  `min_waiting_period`.  Summary statistics about number of NAs and
+  overall observations have also been updated to follow
+  `min_waiting_period` and compactification steps.
 
 # epiprocess 0.12
 
