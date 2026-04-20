@@ -15,7 +15,10 @@
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
-  .max_facets = deprecated()
+  .max_facets = deprecated(),
+  .max_keys = 10,
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{autoplot}{epi_archive}(
@@ -24,7 +27,10 @@
   .base_color = "black",
   .versions = NULL,
   .mark_versions = FALSE,
-  .facet_filter = NULL
+  .facet_filter = NULL,
+  .max_keys = 6,
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{plot}{epi_df}(x, ...)
@@ -69,6 +75,23 @@ by using \code{.response_name}. See the examples below.}
 
 \item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 
+\item{.max_keys}{Maximum number of key combinations to display. If the data
+contains more key combinations than this limit, a random sample of size
+\code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
+display all keys. Subsampling is not performed if \code{.interactive = TRUE}
+(though a similar limit may be applied to initial legend visibility) when
+\code{.facet_to_dropdown = FALSE}.}
+
+\item{.interactive}{Logical. If \code{TRUE}, returns an interactive
+\code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+This is especially useful for exploring datasets with many keys. Default is
+\code{FALSE}.}
+
+\item{.facet_to_dropdown}{Logical. If \code{TRUE}, and \code{.interactive = TRUE}, any
+facets will be converted into a dropdown menu. This is useful for
+maximizing screen real estate when there are many facets. Default is
+\code{FALSE}.}
+
 \item{.versions}{Select which versions will be displayed. By default,
 a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
@@ -86,19 +109,31 @@ of versions.}
 a vertical line. Note that displaying many versions can become busy.}
 }
 \value{
-A \link[ggplot2:ggplot]{ggplot2::ggplot} object
+A \code{\link[ggplot2:ggplot]{ggplot2::ggplot}} object, OR \code{\link[plotly:plotly]{plotly::plotly}} object if \code{.interactive = TRUE}
 }
 \description{
 Automatically plot an epi_df or epi_archive
 }
 \examples{
+
 # -- Use it on an `epi_df`
-autoplot(cases_deaths_subset, cases, death_rate_7d_av)
-autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
+
+# Launch interactive version in web browser:
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+  .interactive = TRUE
+)
+
+# Use dropdowns instead of facets for interactive plots
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+  .interactive = TRUE, .facet_to_dropdown = TRUE
+)
+
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",
   .facet_by = "geo_value"
 )
+
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",
   .base_color = "red", .facet_by = "geo_value"
@@ -116,6 +151,7 @@ autoplot(cases_deaths_subset, cases, death_rate_7d_av,
     (.response_name == "death_rate_7d_av" &
       geo_value \%in\% c("ca", "fl", "ga", "ny"))
 )
+
 # Just an alias for convenience
 plot(cases_deaths_subset, cases, death_rate_7d_av,
   .facet_by = "all",

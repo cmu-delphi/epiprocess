@@ -32,6 +32,7 @@ articles:
       - outliers
       - growth_rate
       - correlation
+      - advanced_plotting
 
   - title: Developer
     contents:
@@ -83,6 +84,7 @@ reference:
   - title: Basic analysis and visualization
   - contents:
       - starts_with("autoplot")
+      - plot_heatmap
       - starts_with("print")
       - revision_summary
 
