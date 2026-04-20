@@ -70,6 +70,11 @@
 #'   the internal computations, use `return_only_tibble = TRUE`.
 #'
 #' @examples
+#'
+#' # Print revision summary:
+#' revision_analysis(archive_cases_dv_subset, percent_cli)
+#'
+#' # Print some underlying data:
 #' revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
 #' revision_example$revision_behavior %>% arrange(desc(spread))
 #'
