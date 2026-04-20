@@ -2,16 +2,13 @@
 #'
 #' @inheritParams autoplot-epi
 #' @param x An `epi_df` object.
-#' @param ... <[`tidy-select`][dplyr::dplyr_tidy_select]> One or more unquoted
-#'   expressions separated by commas. Variable names can be used as if they
-#'   were positions in the data frame, so expressions like `x:y` can
-#'   be used to select a range of variables. If no variables are specified,
-#'   all numeric columns will be plotted and a warning issued.
+#' @param .max_keys The maximum number of key combinations to display.
 #' @return A [ggplot2::ggplot] object.
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data theme_get
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_viridis_c .data
+#' @importFrom ggplot2 theme_get
 #' @importFrom ggplot2 theme_gray theme_bw facet_wrap labs coord_cartesian
 #' @importFrom rlang sym !! inject syms
-#' @importFrom dplyr mutate rename
+#' @importFrom dplyr mutate rename group_by ungroup select if_else
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyselect all_of
 #' @importFrom cli cli_abort
@@ -43,43 +40,59 @@ plot_heatmap <- function(x, ..., .max_keys = 60) {
   nvars <- length(vars)
 
   # Create a valid df to plot based on selected vars
-  pos <- tidyselect::eval_select(
-    rlang::expr(c(
-      "time_value", tidyselect::all_of(geo_and_other_keys), names(vars)
-    )), x
-  )
-  if (nvars > 1) {
-    x <- tidyr::pivot_longer(
-      x[pos], tidyselect::all_of(names(vars)),
+  plot_df <- x %>%
+    dplyr::select(
+      "time_value",
+      tidyselect::all_of(geo_and_other_keys),
+      tidyselect::all_of(vars)
+    ) %>%
+    tidyr::pivot_longer(
+      cols = tidyselect::all_of(vars),
       values_to = ".response",
       names_to = ".response_name"
-    )
-  } else {
-    x <- dplyr::rename(x[pos], .response := !!names(vars)) # nolint: object_usage_linter
-  }
-
-  # Key subsampling and y-axis interaction variable
-  plot_df <- x %>%
+    ) %>%
+    # Key subsampling and y-axis interaction variable
     dplyr::mutate(
-      .rows = interaction(!!!rlang::syms(geo_and_other_keys), sep = "; ")
+      .key_interaction = interaction(
+        !!!rlang::syms(geo_and_other_keys),
+        sep = "; "
+      )
     ) %>%
     autoplot_subsample_keys(
-      .max_keys,
+      .max_keys = .max_keys,
       .interactive = FALSE,
       "plot_heatmap"
     )
 
+  # --- Requested standardization logic
+  fill_label <- "Value"
+  if (nvars > 1) {
+    plot_df <- plot_df %>%
+      dplyr::group_by(.data$.key_interaction, .data$.response_name) %>%
+      dplyr::mutate(
+        .mean = mean(.data$.response, na.rm = TRUE),
+        .sd = stats::sd(.data$.response, na.rm = TRUE),
+        .response = dplyr::if_else(
+          .data$.sd == 0 | is.na(.data$.sd),
+          0, (.data$.response - .data$.mean) / .data$.sd
+        )
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-tidyselect::all_of(c(".mean", ".sd")))
+    fill_label <- "Standardized\nValue"
+  }
+
   # Create plot
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(
     x = .data$time_value,
-    y = .data$.rows,
+    y = .data$.key_interaction,
     fill = .data$.response
   )) +
     ggplot2::geom_tile(
       color = "white",
       linewidth = min(0.1, 1 / length(unique(plot_df$time_value)))
     ) +
-    ggplot2::scale_fill_viridis_c(name = "Value") +
+    ggplot2::scale_fill_viridis_c(name = fill_label) +
     ggplot2::labs(x = "Date", y = "") +
     ggplot2::coord_cartesian(expand = FALSE)
 

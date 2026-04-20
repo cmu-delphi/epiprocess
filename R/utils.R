@@ -766,6 +766,97 @@ id_column_names <- function() {
   substitutions
 }
 
+#' potential signal columns
+#' @description
+#' list of potential signal identifier columns (unexported)
+#' @keywords internal
+signal_column_names <- function() {
+  c(
+    "signal", "signal_name", "indicator_name", "variable", "indicator", "metric",
+    "name"
+  )
+}
+
+#' Validate signal format and signal_var
+#' @keywords internal
+validate_signal_format <- function(x, signal_format, signal_var, other_keys, value_var = "value") {
+  # Validation of provided signal_var
+  if (!is.null(signal_var)) {
+    if (length(signal_var) > 1) {
+      cli::cli_abort("`signal_var` must be a single column name.",
+        class = "epiprocess__signal_var_not_scalar"
+      )
+    }
+    if (!(signal_var %in% names(x))) {
+      cli::cli_abort("Column {.var {signal_var}} not found in `x`.",
+        class = "epiprocess__signal_var_not_found"
+      )
+    }
+    forbidden <- c("geo_value", other_keys, "time_value", "version")
+    if (signal_var %in% forbidden) {
+      cli::cli_abort(
+        "`signal_var` ({.val {signal_var}}) cannot be one of the keys:
+         {.var {forbidden}}.",
+        class = "epiprocess__signal_var_is_key"
+      )
+    }
+  }
+
+  # Guessing signal_var if missing
+  candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+  candidates <- setdiff(candidates, other_keys)
+  if (is.null(signal_var) && length(candidates) == 1) {
+    signal_var <- candidates
+  }
+
+  # Auto-detection behavior
+  if (signal_format == "auto") {
+    if (!is.null(signal_var) && value_var %in% names(x)) {
+      # Input looks like long format.
+      if (length(unique(x[[signal_var]])) > 1) {
+        # Our processing was built expecting wide format, so convert:
+        signal_format <- "wide"
+      } else {
+        # It's convenient to be able to just use `value` if there's
+        # only one signal, so let's not auto-convert in this case:
+        signal_format <- "long"
+      }
+    } else {
+      # Input doesn't look like long format; no extra processing needed:
+      return(list(format = "none", signal_var = signal_var, other_keys = other_keys))
+    }
+  }
+
+  # Validation for explicit/resolved formats
+  if (is.null(signal_var)) {
+    if (length(candidates) > 1) {
+      cli::cli_abort(c(
+        "Multiple signal identifier candidates found: {.var {candidates}}.",
+        ">" = "Please specify which one to use via the `signal_var` argument."
+      ), class = "epiprocess__multiple_signal_candidates")
+    }
+    cli::cli_abort(
+      "`signal_var` must be specified when `signal_format = '{signal_format}'`
+       and it cannot be guessed.",
+      class = "epiprocess__unspecified_signal_var"
+    )
+  }
+
+  if (signal_format == "long") {
+    other_keys <- unique(c(other_keys, signal_var))
+    return(list(format = "long", signal_var = signal_var, other_keys = other_keys))
+  }
+
+  # Must be "wide" now
+  if (!(value_var %in% names(x))) {
+    cli::cli_abort("Pivoting to wide requires a {.var {value_var}} column.",
+      class = "epiprocess__wide_pivot_requires_value_col"
+    )
+  }
+
+  return(list(format = "wide", signal_var = signal_var, other_keys = other_keys))
+}
+
 #' rename potential time_value columns
 #'
 #' @description
@@ -775,6 +866,7 @@ id_column_names <- function() {
 #' @keywords internal
 #' @importFrom cli cli_inform cli_abort
 #' @importFrom dplyr rename
+#' @importFrom tidyselect any_of
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column

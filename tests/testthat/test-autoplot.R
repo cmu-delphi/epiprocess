@@ -59,20 +59,47 @@ test_that("autoplot warns when a variable is not specified, and lists the auto-s
   )
 })
 
+test_that("autoplot prefers `value` when multiple numeric columns are present", {
+  test_date <- as.Date("2020-01-01")
+  df <- dplyr::tibble(
+    geo_value = "ak", time_value = test_date + 1:5,
+    value = 11:15, other = 1:5
+  ) %>% as_epi_df()
+
+  expect_warning(
+    autoplot(df),
+    regexp = "Automatically selecting `value`",
+    class = "epiprocess__unspecified_plot_var"
+  )
+})
+
+test_that("autoplot warns when multiple numeric columns are present and no `value` exists, and selects all", {
+  test_date <- as.Date("2020-01-01")
+  df <- dplyr::tibble(
+    geo_value = "ak", time_value = test_date + 1:5,
+    cases = 11:15, deaths = 1:5
+  ) %>% as_epi_df()
+
+  expect_warning(
+    autoplot(df),
+    class = "epiprocess__unspecified_plot_var"
+  )
+})
+
 test_that("autoplot errors when all specified columns are not numeric, and lists column names", {
   expect_error(autoplot(ungrouped_chr, value),
-    regexp = ".*value.*",
+    regexp = "`value` is not numeric",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 
   testdf <- mutate(ungrouped_chr, value2 = "d")
   expect_error(autoplot(testdf, value, value2),
-    regexp = ".*variables `value` and `value2` are.*",
+    regexp = "None of the requested variables `value` and `value2` are numeric.",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 
   expect_error(autoplot(grouped_chr, value),
-    regexp = ".*variables `value` are.*",
+    regexp = "The requested variable `value` is not numeric.",
     class = "epiprocess__all_requested_vars_not_numeric"
   )
 })
@@ -80,13 +107,13 @@ test_that("autoplot errors when all specified columns are not numeric, and lists
 test_that("autoplot warns when some specified columns are not numeric, and lists column names", {
   testdf <- mutate(ungrouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*`value` are numeric.*cannot display `value2`.*",
+    regexp = "cannot display `value2`, as they are not numeric",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 
   testdf <- mutate(grouped_num, value2 = "d")
   expect_warning(autoplot(testdf, value, value2),
-    regexp = ".*`value` are numeric.*cannot display `value2`.*",
+    regexp = "cannot display `value2`, as they are not numeric",
     class = "epiprocess__some_requested_vars_not_numeric"
   )
 })
@@ -106,9 +133,9 @@ test_that("autoplot_subsample_keys warning/hints", {
   )
   expect_equal(length(unique(sampled$.colours)), 10)
 
-  # Fallback to .rows if .colours is missing
+  # Fallback to .key_interaction if .colours is missing
   df_rows <- df_many_keys %>%
-    mutate(.rows = factor(geo_value))
+    mutate(.key_interaction = factor(geo_value))
 
   expect_warning(
     sampled <- epiprocess:::autoplot_subsample_keys(
@@ -117,7 +144,7 @@ test_that("autoplot_subsample_keys warning/hints", {
     ),
     class = "epiprocess__autoplot__max_keys_exceeded"
   )
-  expect_equal(length(unique(sampled$.rows)), 10)
+  expect_equal(length(unique(sampled$.key_interaction)), 10)
 
   # Add .facets to df_many_keys (20 levels)
   df_facets <- df_many_keys %>%

@@ -129,18 +129,14 @@ autoplot.epi_df <- function(
 
   # --- create a viable df to plot
   pos <- tidyselect::eval_select(
-    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), names(vars))), object
+    rlang::expr(c("time_value", tidyselect::all_of(geo_and_other_keys), tidyselect::all_of(vars))), object,
+    allow_rename = FALSE
   )
-  # if there are multiple numeric variables, pivot longer to create a .response column
-  if (nvars > 1) {
-    object <- tidyr::pivot_longer(
-      object[pos], tidyselect::all_of(names(vars)),
-      values_to = ".response",
-      names_to = ".response_name"
-    )
-  } else {
-    object <- dplyr::rename(object[pos], .response := !!names(vars)) # nolint: object_usage_linter
-  }
+  object <- tidyr::pivot_longer(
+    object[pos], tidyselect::all_of(vars),
+    values_to = ".response",
+    names_to = ".response_name"
+  )
   all_avail_names <- c(
     geo_and_other_keys,
     if (nvars > 1) ".response_name" else NULL
@@ -198,7 +194,7 @@ autoplot.epi_df <- function(
     }
 
     # Set y-axis title based on facet variable
-    yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(names(vars), collapse = ", ")
+    yaxis_title <- if (.facet_by %in% c("all", ".response")) "" else paste0(vars, collapse = ", ")
 
     return(autoplot_plotly_dropdown(
       data = object,
@@ -267,30 +263,52 @@ autoplot_check_viable_response_vars <- function(
       call = call
     )
   }
-  vars <- tidyselect::eval_select(rlang::expr(c(...)), object)
+  vars <- tidyselect::eval_select(rlang::expr(c(...)), object, allow_rename = FALSE)
   if (rlang::is_empty(vars)) { # find them automatically if unspecified
-    vars <- tidyselect::eval_select(names(allowed)[1], object)
-    cli::cli_warn(
-      "Plot variable was unspecified. Automatically selecting {.var {names(allowed)[1]}}.",
-      class = "epiprocess__unspecified_plot_var",
-      call = call
-    )
+    if (length(allowed) == 1L) {
+      vars <- names(allowed)[1]
+      cli::cli_warn(
+        "Plot variable was unspecified. Automatically selecting {.var {vars}}.",
+        class = "epiprocess__unspecified_plot_var",
+        call = call
+      )
+    } else if ("value" %in% names(allowed)) {
+      vars <- "value"
+      cli::cli_warn(
+        "Plot variable was unspecified. Automatically selecting {.var value}.",
+        class = "epiprocess__unspecified_plot_var",
+        call = call
+      )
+    } else {
+      vars <- names(allowed)
+      cli::cli_warn(
+        c(
+          "Plot variable was unspecified. Automatically selecting all numeric columns: {.var {names(allowed)}}.",
+          ">" = "To plot specific columns, specify them, e.g. `autoplot(x, {names(allowed)[1]})`."
+        ),
+        class = "epiprocess__unspecified_plot_var",
+        call = call
+      )
+    }
   } else { # if variables were specified, ensure that they are numeric
-    ok <- names(vars) %in% names(allowed)
+    vars <- names(vars)
+    ok <- vars %in% names(allowed)
     if (!any(ok)) {
       cli::cli_abort(
-        "None of the requested variables {.var {names(vars)}} are numeric.",
+        "{?The requested variable /None of the requested variables }{.var {vars}} {?is not/are} numeric.",
         class = "epiprocess__all_requested_vars_not_numeric",
-        call = call
+        call = call,
+        qty = length(vars)
       )
     } else if (!all(ok)) {
       cli::cli_warn(
         c(
-          "Only the requested variables {.var {names(vars)[ok]}} are numeric.",
-          i = "`autoplot()` cannot display {.var {names(vars)[!ok]}}."
+          "`autoplot()` cannot display {.var {vars[!ok]}}, as they are not numeric",
+          "i" = "Only plotting {.var {vars[ok]}}."
         ),
         class = "epiprocess__some_requested_vars_not_numeric",
-        call = call
+        call = call,
+        qty = sum(ok)
       )
       vars <- vars[ok]
     }
@@ -313,8 +331,8 @@ autoplot_subsample_keys <- function(
   }
   color_col <- if (".colours" %in% names(object)) {
     ".colours"
-  } else if (".rows" %in% names(object)) {
-    ".rows"
+  } else if (".key_interaction" %in% names(object)) {
+    ".key_interaction"
   } else {
     NULL
   }
@@ -354,21 +372,23 @@ autoplot_subsample_keys <- function(
   if (n_c < n_colors_all) {
     object <- object[object[[color_col]] %in% sample(color_lvls, n_c), ]
   }
+  # This is to drop the levels of the factors that were removed during
+  # subsampling to keep facets/legends clean.
   object <- dplyr::mutate(object, dplyr::across(
-    tidyselect::any_of(c(".facets", ".colours", ".rows")), droplevels
+    tidyselect::any_of(c(".facets", ".colours", ".key_interaction")), droplevels
   ))
   caller <- .caller
 
   msg <- c(
     "Too many key combinations to display clearly. Showing {n_f * n_c} of {n_facets_all * n_colors_all}.",
-    i = "To plot all keys, use {.code {caller}(..., .max_keys = Inf)}."
+    ">" = "To plot all keys, use {.code {caller}(..., .max_keys = Inf)}."
   )
   if (caller == "autoplot") {
     msg <- c(
       msg,
-      i = "To explore all keys interactively, use {.code autoplot(..., .interactive = TRUE)}.",
+      ">" = "To explore all keys interactively, use {.code autoplot(..., .interactive = TRUE)}.",
       if (length(facet_lvls) > 0L) {
-        c(i = "To plot specific keys, use {.code autoplot(..., .facet_filter = ...)}.")
+        c(">" = "To plot specific keys, use {.code autoplot(..., .facet_filter = ...)}.")
       }
     )
   }
@@ -550,8 +570,7 @@ autoplot_get_label <- function(type, vars = character(0), format = c("none", "pr
 autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
   p_plotly <- plotly::ggplotly(p)
 
-  if (!is.infinite(.max_keys) &&
-        (".colours" %in% names(object))) {
+  if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
     keys <- unique(trace_names[trace_names != ""])
     if (length(keys) > .max_keys) {
@@ -566,8 +585,8 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
         c(
           "Plotting {.val {(length(keys))}} keys can be hard to read.",
           "i" = "Showing a random subset of {.val {(.max_keys)}} keys by default.",
-          "i" = "Select additional keys in the legend on the right.",
-          "i" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
+          ">" = "Select additional keys in the legend on the right.",
+          ">" = "To see all keys, set {.code .max_keys = Inf} or use {.code plotly::style(p, visible = TRUE)}."
         ),
         class = "epiprocess__autoplot_interactive_subsetting"
       )
@@ -706,12 +725,12 @@ autoplot.epi_archive <- function(object, ...,
 
   if (nvars > 1) {
     snapshots <- tidyr::pivot_longer(
-      snapshots, tidyselect::all_of(names(vars)),
+      snapshots, tidyselect::all_of(vars),
       values_to = ".response",
       names_to = ".response_name"
     )
   } else {
-    snapshots <- dplyr::rename(snapshots, .response := !!names(vars)) # nolint: object_usage_linter
+    snapshots <- dplyr::rename(snapshots, .response := !!vars) # nolint: object_usage_linter
   }
 
   all_avail_names <- c(

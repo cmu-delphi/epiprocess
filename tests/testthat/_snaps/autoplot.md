@@ -5,9 +5,9 @@
     Condition
       Warning:
       Too many key combinations to display clearly. Showing 10 of 20.
-      i To plot all keys, use `autoplot(..., .max_keys = Inf)`.
-      i To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
-      i To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
+      > To plot all keys, use `autoplot(..., .max_keys = Inf)`.
+      > To explore all keys interactively, use `autoplot(..., .interactive = TRUE)`.
+      > To plot specific keys, use `autoplot(..., .facet_filter = ...)`.
     Output
       An `epi_df` object, 30 x 4 with metadata:
       * geo_type  = custom

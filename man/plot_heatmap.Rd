@@ -12,15 +12,9 @@ plot_heatmap(x, ..., .max_keys = 60)
 \item{...}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> One or more unquoted
 expressions separated by commas. Variable names can be used as if they
 were positions in the data frame, so expressions like \code{x:y} can
-be used to select a range of variables. If no variables are specified,
-all numeric columns will be plotted and a warning issued.}
+be used to select a range of variables.}
 
-\item{.max_keys}{Maximum number of key combinations to display. If the data
-contains more key combinations than this limit, a random sample of size
-\code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
-display all keys. Subsampling is not performed if \code{.interactive = TRUE}
-(though a similar limit may be applied to initial legend visibility) when
-\code{.facet_to_dropdown = FALSE}.}
+\item{.max_keys}{The maximum number of key combinations to display.}
 }
 \value{
 A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
