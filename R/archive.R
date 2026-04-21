@@ -555,6 +555,7 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
+#' @inheritParams as_epi_df
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
@@ -567,6 +568,7 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #'
 #' @export
 as_epi_archive <- function(
+<<<<<<< lcb/fix-revision-summary-on-data-dumps
     x,
     geo_type = deprecated(),
     time_type = deprecated(),
@@ -576,6 +578,22 @@ as_epi_archive <- function(
     clobberable_versions_start = NA,
     .versions_end = max_version_with_row_in(x), ...,
     versions_end = .versions_end) {
+=======
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(),
+  compactify = TRUE,
+  compactify_abs_tol = 0,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...,
+  versions_end = .versions_end
+) {
+  signal_format <- rlang::arg_match(signal_format)
+>>>>>>> dev
   assert_data_frame(x)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
@@ -592,10 +610,19 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
-  result <- validate_epi_archive(new_epi_archive(
+  result <- new_epi_archive(
     x, geo_type, time_type, other_keys,
     clobberable_versions_start, versions_end
-  ))
+  )
+
+  result <- process_signal_archive(
+    result,
+    signal_format = signal_format,
+    signal_var = signal_var,
+    other_keys = other_keys
+  )
+
+  result <- validate_epi_archive(result)
 
   # Compactification:
   if (!list(compactify) %in% list(TRUE, FALSE, "message")) {
@@ -877,6 +904,98 @@ clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
 }
+
+#' Process signal column in epi archive
+#'
+#' Handles signal detection and transformation based on `signal_format`.
+#'
+#' @return A list with `x` (the transformed archive) and `other_keys`.
+#' @keywords internal
+#' @noRd
+#' @return The transformed `epi_archive`.
+#' @keywords internal
+#' @noRd
+process_signal_archive <- function(
+  archive,
+  signal_format,
+  signal_var,
+  other_keys,
+  value_var = "value"
+) {
+  res <- validate_signal_format(
+    archive$DT,
+    signal_format,
+    signal_var,
+    other_keys,
+    value_var
+  )
+
+  if (res$format == "none") {
+    return(archive)
+  }
+
+  if (res$format == "long") {
+    cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
+    archive$other_keys <- res$other_keys
+    data.table::setkeyv(
+      archive$DT,
+      c("geo_value", "time_value", archive$other_keys, "version")
+    )
+    return(archive)
+  }
+
+  # Wide
+  cli::cli_inform("Pivoting long to wide based on {.var {res$signal_var}} column.")
+  archive$other_keys <- unique(c(archive$other_keys, res$signal_var))
+  archive <- epix_pivot_wider(
+    archive,
+    names_from = res$signal_var,
+    values_from = value_var
+  )
+  archive
+}
+#' Pivot an archive from long to wide
+#'
+#' @keywords internal
+epix_pivot_wider <- function(x, names_from, values_from) {
+  assert_class(x, "epi_archive")
+  assert_string(names_from)
+  assert_string(values_from)
+
+  # Use vctrs::vec_split to split the data table by the names_from column.
+  # This returns an object with 'key' and 'val'.
+  data <- tibble::as_tibble(as.data.frame(x$DT))
+  split_data <- vctrs::vec_split(data, data[[names_from]])
+
+  archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {
+    sig_name <- as.character(sig_name)
+    df <- df %>%
+      dplyr::select(
+        tidyselect::all_of(
+          c(
+            "geo_value", setdiff(x$other_keys, names_from),
+            "time_value", "version"
+          )
+        ),
+        !!rlang::sym(values_from)
+      ) %>%
+      dplyr::rename(
+        !!sig_name := !!rlang::sym(values_from)
+      )
+
+    new_epi_archive(
+      df,
+      geo_type = x$geo_type,
+      time_type = x$time_type,
+      other_keys = setdiff(x$other_keys, names_from),
+      clobberable_versions_start = x$clobberable_versions_start,
+      versions_end = x$versions_end
+    )
+  })
+
+  purrr::reduce(archives, epix_merge)
+}
+
 
 #' Test for `epi_archive` format
 #'

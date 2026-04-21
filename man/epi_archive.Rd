@@ -18,6 +18,8 @@ as_epi_archive(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...,
   versions_end = .versions_end
 )
@@ -82,6 +84,19 @@ some pipelines is \code{max_version_with_row_in(x)}.}
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
 used to rename columns.}
+
+\item{signal_format}{Format of the signal data. If \code{"auto"} (default),
+the function will try to detect if the data is in long format and pivot
+to wide if necessary. This happens only if a unique signal identifier
+column (see \code{signal_var}) and a \code{value} column are both present,
+and the signal column contains more than one unique value. \code{"long"} format
+treats the signal as a metadata key by adding it to \code{other_keys}. \code{"wide"}
+format tries to pivot to wide.}
+
+\item{signal_var}{The name of the column that contains the signal
+identifiers. If \code{NULL}, the function will try to guess this column
+(see \code{signal_column_names()} for a list of column names that will be
+checked).}
 
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example \code{version = release_date}}
