@@ -568,7 +568,6 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #'
 #' @export
 as_epi_archive <- function(
-<<<<<<< lcb/fix-revision-summary-on-data-dumps
     x,
     geo_type = deprecated(),
     time_type = deprecated(),
@@ -576,24 +575,12 @@ as_epi_archive <- function(
     compactify = TRUE,
     compactify_abs_tol = 0,
     clobberable_versions_start = NA,
-    .versions_end = max_version_with_row_in(x), ...,
+    .versions_end = max_version_with_row_in(x),
+    signal_format = c("auto", "wide", "long"),
+    signal_var = NULL,
+    ...,
     versions_end = .versions_end) {
-=======
-  x,
-  geo_type = deprecated(),
-  time_type = deprecated(),
-  other_keys = character(),
-  compactify = TRUE,
-  compactify_abs_tol = 0,
-  clobberable_versions_start = NA,
-  .versions_end = max_version_with_row_in(x),
-  signal_format = c("auto", "wide", "long"),
-  signal_var = NULL,
-  ...,
-  versions_end = .versions_end
-) {
   signal_format <- rlang::arg_match(signal_format)
->>>>>>> dev
   assert_data_frame(x)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())

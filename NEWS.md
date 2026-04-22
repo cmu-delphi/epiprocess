@@ -6,15 +6,8 @@ indicate development versions beyond 0.x.
 # epiprocess 0.12.0.9999
 
 ## New features
-<<<<<<< lcb/fix-revision-summary-on-data-dumps
-
 - `revision_summary()` now detects bulk reporting adding new time
   values, and excludes bulk reporting for some statistics.
-
-## Improvements
-=======
->>>>>>> dev
-
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
 - Added `plot_heatmap()`, which provides heatmap visualization for `epi_df` objects.
 - `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"long"`, the signal column is added to `other_keys` instead of pivoting. When `"wide"`, it always pivots to wide.
