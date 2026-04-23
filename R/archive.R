@@ -120,11 +120,11 @@ next_after.POSIXct <- function(x) {
   unchanged <- result_dbl == x_dbl
   result_dbl[unchanged] <- result_dbl[unchanged] + 2^-1074 # subnormal step
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps*x_abs # for x == -2^k
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps * x_abs # for x == -2^k
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs*2 # hedge against rounding weirdness
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs * 2 # hedge against rounding weirdness
   stop("FIXME TODO finish")
 }
 
@@ -290,12 +290,13 @@ next_after.POSIXct <- function(x) {
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    x,
-    geo_type,
-    time_type,
-    other_keys,
-    clobberable_versions_start,
-    versions_end) {
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  clobberable_versions_start,
+  versions_end
+) {
   assert_data_frame(x)
   assert_string(geo_type)
   assert_string(time_type)
@@ -502,7 +503,9 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_ar
     rep(TRUE, nrow(arranged_updates_df))
 
   if (init_nas_are_locf) {
-    value_is_missing <- vctrs::vec_detect_missing(vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df)))
+    value_is_missing <- vctrs::vec_detect_missing(
+      vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df))
+    )
     fifelse(ekt_is_locf, value_is_locf, value_is_missing)
   } else {
     ekt_is_locf & value_is_locf
@@ -568,18 +571,19 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #'
 #' @export
 as_epi_archive <- function(
-    x,
-    geo_type = deprecated(),
-    time_type = deprecated(),
-    other_keys = character(),
-    compactify = TRUE,
-    compactify_abs_tol = 0,
-    clobberable_versions_start = NA,
-    .versions_end = max_version_with_row_in(x),
-    signal_format = c("auto", "wide", "long"),
-    signal_var = NULL,
-    ...,
-    versions_end = .versions_end) {
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(),
+  compactify = TRUE,
+  compactify_abs_tol = 0,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
+  ...,
+  versions_end = .versions_end
+) {
   signal_format <- rlang::arg_match(signal_format)
   assert_data_frame(x)
   x <- rename(x, ...)
@@ -692,7 +696,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
         if (vec_equal(max_update_version, x$versions_end)) {
           "Version range: {min(x$DT$version)} -- {max_update_version}"
         } else {
-          "Version range: {min(x$DT$version)} -- {x$versions_end}, but no row updates recorded after {max_update_version}"
+          "Version range: {min(x$DT$version)} -- {x$versions_end},
+           but no row updates recorded after {max_update_version}"
         }
       },
       "i" = if (!is.na(x$clobberable_versions_start)) {

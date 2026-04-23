@@ -188,13 +188,13 @@ test_that("revision_summary default min_waiting_period works as expected", {
 })
 
 test_that("revision_summary bulk reporting summary works as expected", {
-    expect_snapshot(
-        bind_rows(
-            tibble(geo_value = 1, time_value = 1:100, version = (100 + 9) %/% 7 * 7, value = 1:100),
-            tibble(geo_value = 1, time_value = 101:200, version = (time_value + 9) %/% 7 * 7, value = 1:100)
-        ) %>%
-        mutate(across(c(time_value, version), ~ as.Date("2020-01-01") + .x - 1)) %>%
-        as_epi_archive() %>%
-        revision_summary()
-    )
+  expect_snapshot(
+    bind_rows(
+      tibble(geo_value = 1, time_value = 1:100, version = (100 + 9) %/% 7 * 7, value = 1:100),
+      tibble(geo_value = 1, time_value = 101:200, version = (time_value + 9) %/% 7 * 7, value = 1:100)
+    ) %>%
+      mutate(across(c(time_value, version), ~ as.Date("2020-01-01") + .x - 1)) %>%
+      as_epi_archive() %>%
+      revision_summary()
+  )
 })

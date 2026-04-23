@@ -197,22 +197,30 @@ revision_analysis <- function(epi_arch,
   initial_reporting <- revision_behavior %>%
     setDT() %>%
     .[, .SD[1], by = c(epikeytime_names)] %>%
-    .[, list(min_initial_lag = min(lag),
-             max_initial_lag = max(lag)),
-      by = c(epikey_names, "version")] %>%
+    .[, list(
+      min_initial_lag = min(lag),
+      max_initial_lag = max(lag)
+    ),
+    by = c(epikey_names, "version")
+    ] %>%
     setDF() %>%
     as_tibble()
   assert_numeric(bulk_reporting_level, lower = 0, upper = 1, any.missing = FALSE, len = 1L)
   assert_numeric(bulk_reporting_multiplier, lower = 1, any.missing = FALSE, len = 1L)
-  max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * unname(quantile(initial_reporting$max_initial_lag, bulk_reporting_level)))
+  bulk_reporting_quantile <- unname(quantile(initial_reporting$max_initial_lag, bulk_reporting_level))
+  max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * bulk_reporting_quantile)
   initial_reporting %>%
     mutate(blah = .data$max_initial_lag > .env$max_nonbulk_initial_lag)
   bulk_reporting_versions <- initial_reporting %>%
     filter(.data$max_initial_lag > .env$max_nonbulk_initial_lag) %>%
-    .$version %>% vec_unique() %>% vec_sort()
-  nonbulk_expanding_versions <- vec_set_difference(initial_reporting$version, bulk_reporting_versions) %>%
+    .$version %>%
+    vec_unique() %>%
     vec_sort()
-  revision_only_versions <- vec_set_difference(revision_behavior$version, c(bulk_reporting_versions, nonbulk_expanding_versions)) %>%
+  nonbulk_expanding_versions <-
+    vec_set_difference(initial_reporting$version, bulk_reporting_versions) %>%
+    vec_sort()
+  revision_only_versions <-
+    vec_set_difference(revision_behavior$version, c(bulk_reporting_versions, nonbulk_expanding_versions)) %>%
     vec_sort()
 
   revision_behavior <-
@@ -307,12 +315,13 @@ print.revision_analysis <- function(x,
   }
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
-  cli::cli_h2("Revision analysis for archive spanning time values {.val {x$range_time_values[1]}} to {.val {x$range_time_values[2]}}.")
+  cli::cli_h2("Revision analysis for archive spanning time values
+               {.val {x$range_time_values[1]}} to {.val {x$range_time_values[2]}}.")
   cli::cli_h3("Across epi_key + versions that add new time values:")
   cli::cli_inform("Freshest new time value's lag/latency:")
-  time_delta_summary(x$initial_reporting$min_initial_lag , x$time_type) %>% print()
+  time_delta_summary(x$initial_reporting$min_initial_lag, x$time_type) %>% print()
   cli::cli_inform("Farthest-back new time value's lag/latency:")
-  time_delta_summary(x$initial_reporting$max_initial_lag , x$time_type) %>% print()
+  time_delta_summary(x$initial_reporting$max_initial_lag, x$time_type) %>% print()
   if (!x$drop_nas) {
     cli::cli_h3("Across epi_key + time_value + versions:")
     cli_inform("Fraction of all versions that are `NA`:")
@@ -335,7 +344,8 @@ print.revision_analysis <- function(x,
                 would have been counted as bulk reporting.")
   }
 
-  cli::cli_h3("Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available.")
+  cli::cli_h3("Remaining information is for non-bulk-reported epikey + time values
+               with semi-stable versions past the waiting period available.")
 
   cli::cli_h3("Fraction of epi_key + time_values with")
   total_num <- nrow(rev_beh) # nolint: object_usage_linter

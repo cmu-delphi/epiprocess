@@ -7,12 +7,11 @@ format:
 ---
 
 ```{r setup, include=FALSE}
-
-#' To install mytidyfunctions, you need 
+#' To install mytidyfunctions, you need
 #' remotes::install_github("JavierMtzRdz/mytidyfunctions")
 if (!require("pacman")) install.packages("pacman")
 if (!require("devtools")) install.packages("devtools")
-if (require("mytidyfunctions")) mytidyfunctions::set_mytheme() 
+if (require("mytidyfunctions")) mytidyfunctions::set_mytheme()
 
 Sys.setlocale("LC_ALL", "en.US.UTF-8")
 
@@ -20,7 +19,7 @@ knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
   warning = FALSE,
-  comment =  "#>"
+  comment = "#>"
 )
 ```
 
@@ -40,7 +39,6 @@ Create linelist data of different sizes to benchmark scaling behavior.
 
 ```{r generate-data}
 generate_linelist <- function(n_events, n_geos = 5, date_range_days = 365) {
-
   # Scenario: constant flow of cases over 50 days
   days <- seq(as.Date("2023-01-01"), by = "day", length.out = date_range_days)
   geos <- paste0("state_", sprintf("%02d", 1:n_geos))
@@ -66,7 +64,7 @@ generate_linelist <- function(n_events, n_geos = 5, date_range_days = 365) {
   linelist <- cases %>%
     select(id, geo_value, time_value, version_recorded, version_deleted) %>%
     arrange(version_recorded)
-  
+
   linelist
 }
 ```
@@ -78,14 +76,14 @@ set.seed(42)
 linelist <- generate_linelist(1000, 1, 30)
 
 ea <- linelist_to_archive(
-    linelist,
-    geo_value = geo_value,
-    time_value = time_value,
-    version_recorded = version_recorded,
-    version_deleted = version_deleted,
-    id = id,
-    value = "cases"
-  )
+  linelist,
+  geo_value = geo_value,
+  time_value = time_value,
+  version_recorded = version_recorded,
+  version_deleted = version_deleted,
+  id = id,
+  value = "cases"
+)
 
 autoplot(ea)
 ```
@@ -135,7 +133,6 @@ scaling_bench <- bench::press(
 scaling_bench %>%
   select(size, median, mem_alloc, n_itr) %>%
   arrange(median)
-
 ```
 
 ### Cost of ID Validation
@@ -149,13 +146,13 @@ convert_to_chart_style <- function(df) {
   recs <- df %>%
     select(id, geo_value, time_value, version_recorded) %>%
     mutate(is_deletion = FALSE)
-  
+
   # Rows that are deletions
   dels <- df %>%
     filter(!is.na(version_deleted)) %>%
     select(id, geo_value, time_value, version_recorded = version_deleted) %>%
     mutate(is_deletion = TRUE)
-  
+
   bind_rows(recs, dels) %>%
     arrange(version_recorded)
 }
@@ -209,7 +206,7 @@ This section benchmarks using versioned NHSN data for California (CA) and Florid
 ```{r nhsn-bench}
 states <- c("ca", "fl")
 start_week <- 202301
-end_week   <- 202352
+end_week <- 202352
 
 nhsn_data <- pub_covidcast(
   source = "nhsn",
@@ -218,7 +215,7 @@ nhsn_data <- pub_covidcast(
   time_type = "week",
   geo_values = states,
   time_values = epirange(start_week, end_week),
-  issues = "*" 
+  issues = "*"
 )
 
 message("Fetched ", nrow(nhsn_data), " rows of versioned history.")
@@ -246,12 +243,16 @@ print(archive_linelist)
 cat("\n--- Validation ---\n")
 cat("Direct archive rows:", nrow(archive_direct$DT), "\n")
 cat("Linelist archive rows:", nrow(archive_linelist$DT), "\n")
-cat("Direct version range:", 
-    as.character(min(archive_direct$DT$version)), "to", 
-    as.character(max(archive_direct$DT$version)), "\n")
-cat("Linelist version range:", 
-    as.character(min(archive_linelist$DT$version)), "to", 
-    as.character(max(archive_linelist$DT$version)), "\n")
+cat(
+  "Direct version range:",
+  as.character(min(archive_direct$DT$version)), "to",
+  as.character(max(archive_direct$DT$version)), "\n"
+)
+cat(
+  "Linelist version range:",
+  as.character(min(archive_linelist$DT$version)), "to",
+  as.character(max(archive_linelist$DT$version)), "\n"
+)
 ```
 
 ### Benchmark
