@@ -686,8 +686,7 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
         # \u00a0 is non-breaking space cli won't crush, to align with version range
         line <- 'Time range:{strrep("\u00a0", 3)} {min(x$DT$time_value)} -- {max(x$DT$time_value)}'
         if (time_type(x) %in% c("day", "week")) {
-          line <- paste0(line, " (times are {time_type(x)}s")
-          line <- paste0(line, ")")
+          line <- paste0(line, " (times are {time_type(x)}s)")
         }
         line
       },

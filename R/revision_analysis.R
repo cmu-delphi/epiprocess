@@ -315,8 +315,7 @@ print.revision_analysis <- function(x,
   }
   if (is.null(abs_spread_threshold)) abs_spread_threshold <- .05 * x$max_val
   rev_beh <- x$revision_behavior
-  cli::cli_h2("Revision analysis for archive spanning time values
-               {.val {x$range_time_values[1]}} to {.val {x$range_time_values[2]}}.")
+  cli::cli_h2("Revision analysis for archive spanning time values {.val {x$range_time_values[1]}} to {.val {x$range_time_values[2]}}.") # nolint: line_length_linter
   cli::cli_h3("Across epi_key + versions that add new time values:")
   cli::cli_inform("Freshest new time value's lag/latency:")
   time_delta_summary(x$initial_reporting$min_initial_lag, x$time_type) %>% print()
@@ -344,8 +343,9 @@ print.revision_analysis <- function(x,
                 would have been counted as bulk reporting.")
   }
 
+  # \u00a0 is non-breaking space to align text across lines here:
   cli::cli_h3("Remaining information is for non-bulk-reported epikey + time values
-               with semi-stable versions past the waiting period available.")
+               \u00a0\u00a0\u00a0with semi-stable versions past the waiting period available.")
 
   cli::cli_h3("Fraction of epi_key + time_values with")
   total_num <- nrow(rev_beh) # nolint: object_usage_linter

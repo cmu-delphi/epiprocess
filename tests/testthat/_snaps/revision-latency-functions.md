@@ -25,7 +25,8 @@
       -- Bulk reporting of older epikey + time values: none detected 
       Initial lags above 5 days would have been counted as bulk reporting.
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
@@ -104,7 +105,8 @@
       -- Bulk reporting of older epikey + time values: none detected 
       Initial lags above 5 days would have been counted as bulk reporting.
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
@@ -183,7 +185,8 @@
       -- Bulk reporting of older epikey + time values: none detected 
       Initial lags above 5 weeks would have been counted as bulk reporting.
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
@@ -262,7 +265,8 @@
       -- Bulk reporting of older epikey + time values: none detected 
       Initial lags above 5 months would have been counted as bulk reporting.
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
@@ -341,7 +345,8 @@
       -- Bulk reporting of older epikey + time values: none detected 
       Initial lags above 5 time steps would have been counted as bulk reporting.
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
@@ -430,7 +435,8 @@
       Versions adding epikey + time values but no bulk reporting: 6
       Revision-only versions: 0
       
-      -- Remaining information is for non-bulk-reported epikey + time values with semi-stable versions past the waiting period available. 
+      -- Remaining information is for non-bulk-reported epikey + time values
+         with semi-stable versions past the waiting period available. 
       
       -- Fraction of epi_key + time_values with 
       No revisions:
