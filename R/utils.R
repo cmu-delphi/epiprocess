@@ -862,6 +862,9 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
 #' @description
 #' potentially renames
 #' @param x the tibble to potentially rename
+#' @param column_name str; both the column name to complain about
+#'     lacking, and the basis for the `*_column_name()` function to
+#'     suggest looking at
 #' @param substitutions a named vector. the potential substitions, with every name `time_value`
 #' @keywords internal
 #' @importFrom cli cli_inform cli_abort
@@ -872,8 +875,8 @@ guess_column_name <- function(x, column_name, substitutions) {
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
     if (!any(names(x) %in% substitutions)) {
       cli_abort(
-        "There is no {column_name} column or similar name.
-         See e.g. [`time_column_name()`] for a complete list",
+        'There is no {.var {column_name}} column or similar name.
+         See {.code epiprocess:::{sub("_value", "", column_name)}_column_names()} for a complete list',
         class = "epiprocess__guess_column__multiple_substitution_error"
       )
     }
