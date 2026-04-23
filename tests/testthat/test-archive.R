@@ -8,13 +8,13 @@ archive_data <- archive_cases_dv_subset$DT
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive(select(archive_data, -geo_value), compactify = FALSE),
-    regexp = "There is no geo_value column or similar name"
+    regexp = "There is no `geo_value` column or similar name"
   )
   expect_error(as_epi_archive(select(archive_data, -time_value), compactify = FALSE),
-    regexp = "There is no time_value column or similar name"
+    regexp = "There is no `time_value` column or similar name"
   )
   expect_error(as_epi_archive(select(archive_data, -version), compactify = FALSE),
-    regexp = "There is no version column or similar name"
+    regexp = "There is no `version` column or similar name"
   )
 })
 

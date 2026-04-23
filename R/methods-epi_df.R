@@ -159,7 +159,7 @@ print_latency_info <- function(x) {
     lag_msg <- ""
   }
   # Print the latency info
-  cat("Latency (lag from as_of to latest observation by time series):\n")
+  cat("Latency (lag between last available observation and epi_df's as_of, by time series):\n")
   cat(lag_msg)
   cat(empty_serie)
 }
@@ -220,7 +220,7 @@ epi_ts_range <- function(x, key_no_t, sigs) {
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
-#' @importFrom stats median
+#' @importFrom stats na.omit
 #' @rdname print.epi_df
 #' @export
 summary.epi_df <- function(object, ...) {
@@ -357,7 +357,7 @@ epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
 
 # Internal helper for latency reporting summary
 epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time) {
-  cat("Latency (lag from as_of to latest observation by time series):\n")
+  cat("Latency (lag between last available time_value and epi_df's as_of, by time series):\n")
 
   # Check for empty time series and return message if none detected
   if (length(sigs) == 0) {

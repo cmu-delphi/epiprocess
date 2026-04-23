@@ -37,6 +37,7 @@ Other contributors:
   \item Chloe You [contributor]
   \item Quang Nguyen [contributor]
   \item David Weber \email{davidweb@andrew.cmu.edu} [contributor]
+  \item Javier Martinez-Rodriguez [contributor]
   \item Lionel Henry (Author of included rlang fragments) [contributor]
   \item Hadley Wickham (Author of included rlang fragments) [contributor]
   \item Posit (Copyright holder of included rlang fragments) [copyright holder]

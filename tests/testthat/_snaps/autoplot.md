@@ -13,7 +13,7 @@
       * geo_type  = custom
       * time_type = day
       * as_of     = 2023-01-04
-      Latency (lag from as_of to latest observation by time series):
+      Latency (lag between last available observation and epi_df's as_of, by time series):
       * lag  = 1 days
       
       # A tibble: 30 x 4
