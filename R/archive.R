@@ -682,21 +682,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
         # \u00a0 is non-breaking space cli won't crush, to align with version range
         line <- 'Time range:{strrep("\u00a0", 3)} {min(x$DT$time_value)} -- {max(x$DT$time_value)}'
         if (time_type(x) %in% c("day", "week")) {
-          ending_lt_wday <- attr(time_type(x), "ending_lt_wday")
-          if (time_type(x) == "week" && !is.null(ending_lt_wday)) {
-            repr_lt_wday <- as.POSIXlt(x$DT$time_value[[1L]])$wday
-            line <- paste0(line, " (times are
-                                    {lt_wday_abbr((ending_lt_wday-6L)%%7L)}--{lt_wday_abbr(ending_lt_wday)}
-                                    weeks, represented by {lt_wday_abbr(repr_lt_wday)}")
-          } else {
-            line <- paste0(line, " (times are {time_type(x)}s")
-          }
-          time_tz <- attr(time_type(x), "tzone")
-          if (is.null(time_tz)) {
-            line <- paste0(line, ")")
-          } else {
-            line <- paste0(line, ', in {format_chr_deparse(time_tz)} time zone)')
-          }
+          line <- paste0(line, " (times are {time_type(x)}s")
+          line <- paste0(line, ")")
         }
         line
       },
