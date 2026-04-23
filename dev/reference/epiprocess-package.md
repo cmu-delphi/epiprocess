@@ -46,6 +46,8 @@ Other contributors:
 
 - David Weber <davidweb@andrew.cmu.edu> \[contributor\]
 
+- Javier Martinez-Rodriguez \[contributor\]
+
 - Lionel Henry (Author of included rlang fragments) \[contributor\]
 
 - Hadley Wickham (Author of included rlang fragments) \[contributor\]

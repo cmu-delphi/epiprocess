@@ -137,7 +137,7 @@ head(x)
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-10-28
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 512 days
 #> 
 #> # A tibble: 6 × 15
@@ -256,7 +256,7 @@ y %>% filter(cases != cases_corrected)
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-10-28
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 152–173 days (see summary() for per-signal details)
 #> 
 #> # A tibble: 22 × 4

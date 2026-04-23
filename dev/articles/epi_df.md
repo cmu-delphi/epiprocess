@@ -132,7 +132,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
@@ -175,7 +175,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
@@ -203,7 +203,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
@@ -245,7 +245,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 5
@@ -281,7 +281,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
@@ -300,7 +300,7 @@ edf %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 4
@@ -343,7 +343,7 @@ flu_data_api <- pub_flusurv(
   epiweeks = epirange(201801, 202001)
 )
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■               
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
@@ -409,8 +409,8 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-04-20 13:45:31.600053
-#> Latency (lag from as_of to latest observation by time series):
+#> * as_of     = 2026-04-23 18:22:29.281143
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 329 weeks
 #> 
 #> # A tibble: 305 × 4
@@ -505,8 +505,8 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-04-20 13:45:31.600053
-#> Latency (lag from as_of to latest observation by time series):
+#> * as_of     = 2026-04-23 18:22:29.281143
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 329 weeks
 #> 
 #> # A tibble: 61 × 3
@@ -571,7 +571,7 @@ edf_missing %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 1475 days
 #> 
 #> # A tibble: 10 × 3
@@ -606,7 +606,7 @@ edf_missing %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 1475 days
 #> 
 #> # A tibble: 12 × 3
@@ -949,7 +949,7 @@ xt %>%
 #> Caused by warning in `min.default()`:
 #> ! no non-missing arguments to min; returning Inf
 #> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,
@@ -975,7 +975,7 @@ xt_filled %>%
 #> Caused by warning in `min.default()`:
 #> ! no non-missing arguments to min; returning Inf
 #> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,

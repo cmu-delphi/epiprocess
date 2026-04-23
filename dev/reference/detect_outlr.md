@@ -246,7 +246,7 @@ covid_incidence_outliers %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-10-28
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 150 days
 #> 
 #> # A tibble: 730 × 4
@@ -277,7 +277,7 @@ covid_incidence_outliers %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-10-28
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag  = 150 days
 #> 
 #> # A tibble: 730 × 4

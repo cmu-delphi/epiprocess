@@ -189,7 +189,7 @@ computation would be the following, which is easy to get wrong:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
@@ -236,7 +236,7 @@ to be able to forward to your function</li>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
@@ -264,7 +264,7 @@ references to the columns must be made with the prefix
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
@@ -303,7 +303,7 @@ cases:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 5</span></span></span>
@@ -335,7 +335,7 @@ over fewer than 7 observations if there is missingness
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
@@ -354,7 +354,7 @@ over fewer than 7 observations if there is missingness
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
@@ -398,7 +398,7 @@ Epidata API</a>.</p>
 <span>  epiweeks <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">201801</span>, <span class="fl">202001</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■                       </span></span></span>
-<span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■   </span></span></span>
+<span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■               </span></span></span>
 <span><span class="co">#&gt; Waiting 4s for retry backoff <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  </span></span></span></code></pre></div>
 <p>We’re interested in the age-specific rates:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -458,8 +458,8 @@ the <code>age_group</code> column as an additional group key:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
 <span><span class="co">#&gt; * other_keys = age_group</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:31.600053</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-23 18:22:29.281143</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 329 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
@@ -544,8 +544,8 @@ rate.</p>
 <span><span class="co">#&gt; An `epi_df` object, 61 x 3 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-04-20 13:45:31.600053</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-04-23 18:22:29.281143</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 329 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 61 × 3</span></span></span>
@@ -604,7 +604,7 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 1475 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 3</span></span></span>
@@ -636,7 +636,7 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * lag  = 1475 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 3</span></span></span>
@@ -938,7 +938,7 @@ MA around July 1, 2021.</p>
 <span><span class="co">#&gt; Caused by warning in `min.default()`:</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> no non-missing arguments to min; returning Inf</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * No time series detected</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 variables: </span><span style="color: #949494; font-weight: bold;">geo_value</span><span style="color: #949494;"> &lt;chr&gt;, </span><span style="color: #949494; font-weight: bold;">time_value</span><span style="color: #949494;"> &lt;date&gt;, </span><span style="color: #949494; font-weight: bold;">cases</span><span style="color: #949494;"> &lt;dbl&gt;,</span></span></span>
@@ -964,7 +964,7 @@ MA around July 1, 2021.</p>
 <span><span class="co">#&gt; Caused by warning in `min.default()`:</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> no non-missing arguments to min; returning Inf</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</span></span>
-<span><span class="co">#&gt; Latency (lag from as_of to latest observation by time series):</span></span>
+<span><span class="co">#&gt; Latency (lag between last available observation and epi_df's as_of, by time series):</span></span>
 <span><span class="co">#&gt; * No time series detected</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 variables: </span><span style="color: #949494; font-weight: bold;">geo_value</span><span style="color: #949494;"> &lt;chr&gt;, </span><span style="color: #949494; font-weight: bold;">time_value</span><span style="color: #949494;"> &lt;date&gt;, </span><span style="color: #949494; font-weight: bold;">cases</span><span style="color: #949494;"> &lt;dbl&gt;,</span></span></span>

@@ -174,7 +174,7 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810–811 days
 #> 
 #> # A tibble: 4,026 × 7
@@ -206,7 +206,7 @@ cases_deaths_subset %>%
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Latency (lag from as_of to latest observation by time series):
+#> Latency (lag between last available observation and epi_df's as_of, by time series):
 #> * lag across all time series = 810 days
 #> 
 #> # A tibble: 4,026 × 7

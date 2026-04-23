@@ -28,6 +28,8 @@
 
 - **David Weber**. Contributor.
 
+- **Javier Martinez-Rodriguez**. Contributor.
+
 - **Lionel Henry**. Contributor.  
   Author of included rlang fragments
 
