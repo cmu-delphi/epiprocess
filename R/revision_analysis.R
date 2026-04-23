@@ -195,12 +195,12 @@ revision_analysis <- function(epi_arch,
   n_obs <- nrow(revision_behavior)
 
   initial_reporting <- revision_behavior %>%
-    data.table::setDT() %>%
+    setDT() %>%
     .[, .SD[1], by = c(epikeytime_names)] %>%
     .[, list(min_initial_lag = min(lag),
              max_initial_lag = max(lag)),
       by = c(epikey_names, "version")] %>%
-    data.table::setDF() %>%
+    setDF() %>%
     as_tibble()
   assert_numeric(bulk_reporting_level, lower = 0, upper = 1, any.missing = FALSE, len = 1L)
   assert_numeric(bulk_reporting_multiplier, lower = 1, any.missing = FALSE, len = 1L)
