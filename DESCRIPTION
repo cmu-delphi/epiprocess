@@ -57,6 +57,7 @@ Imports:
     purrr,
     rlang,
     slider,
+    stats,
     tibble,
     tidyr,
     tidyselect (>= 1.2.0),

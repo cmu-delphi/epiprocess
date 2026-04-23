@@ -220,7 +220,7 @@ epi_ts_range <- function(x, key_no_t, sigs) {
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
-#' @importFrom stats median
+#' @importFrom stats na.omit
 #' @rdname print.epi_df
 #' @export
 summary.epi_df <- function(object, ...) {
