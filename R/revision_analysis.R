@@ -197,6 +197,11 @@ revision_analysis <- function(epi_arch,
   n_obs <- nrow(revision_behavior)
 
   initial_reporting <- revision_behavior %>%
+  # Note: `setDT()` modifies `revision_behavior` in-place, changing it from a tibble 
+  # to a data.table for the remainder of this function. 
+  # We extract the initial report for each epikey-time combination using `.SD[1]` 
+  # (relying on chronological sorting by version), then calculate the min/max lag 
+  # for all first-time data introduced in each version dump.
     setDT() %>%
     .[, .SD[1], by = c(epikeytime_names)] %>%
     .[, list(
