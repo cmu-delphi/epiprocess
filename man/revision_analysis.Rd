@@ -136,11 +136,13 @@ results of the computations are available in
 the internal computations, use \code{return_only_tibble = TRUE}.
 }
 \description{
-\code{revision_summary} removes all missing values (if requested), and then
-computes some basic statistics about the revision behavior of an archive,
-returning a tibble summarizing the revisions per time_value+epi_key
-features. If \code{print_inform} is true, it prints a concise summary. The
-columns returned are:
+\code{revision_summary} removes all missing values (if requested), and
+then computes some basic statistics about the revision behavior
+of an archive, returning a tibble summarizing the revisions per
+time_value+epi_key features (limited to those that have data
+available past the min waiting period to compare against, and are
+not detected as added in a bulk report). The columns returned
+are:
 \enumerate{
 \item \code{n_revisions}: the total number of revisions for that entry
 \item \code{min_lag}: the minimum time to any value (if \code{drop_nas=FALSE}, this

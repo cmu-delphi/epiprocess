@@ -1,11 +1,13 @@
 #' A function to describe revision behavior for an archive.
 #'
 #' @description
-#' `revision_summary` removes all missing values (if requested), and then
-#'   computes some basic statistics about the revision behavior of an archive,
-#'   returning a tibble summarizing the revisions per time_value+epi_key
-#'   features. If `print_inform` is true, it prints a concise summary. The
-#'   columns returned are:
+#' `revision_summary` removes all missing values (if requested), and
+#'   then computes some basic statistics about the revision behavior
+#'   of an archive, returning a tibble summarizing the revisions per
+#'   time_value+epi_key features (limited to those that have data
+#'   available past the min waiting period to compare against, and are
+#'   not detected as added in a bulk report). The columns returned
+#'   are:
 #'  1. `n_revisions`: the total number of revisions for that entry
 #'  2. `min_lag`: the minimum time to any value (if `drop_nas=FALSE`, this
 #'   includes `NA`'s)
