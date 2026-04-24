@@ -6,7 +6,8 @@ indicate development versions beyond 0.x.
 # epiprocess 0.12.0.9999
 
 ## New features
-
+- `revision_summary()` now detects bulk reporting adding new time
+  values, and excludes bulk reporting for some statistics.
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
 - Added `plot_heatmap()`, which provides heatmap visualization for `epi_df` objects.
 - `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"long"`, the signal column is added to `other_keys` instead of pivoting. When `"wide"`, it always pivots to wide.
@@ -19,11 +20,20 @@ indicate development versions beyond 0.x.
 - Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
 - `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
 - Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
-
+- `revision_summary()` by default no longer removes revisions from
+  non-NA values to explicit NAs, instead only dropping initial
+  estimates of NA that were likely inserted by `epix_merge`ing with a
+  more timely and/or more widely available signal.  This behavior is
+  customizable with the `compactify`, `compactify_drop_initial_nas`,
+  and `drop_nas` parameters.  It also runs more quickly.
 ## Bug fixes
 
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
+- `revision_summary()` with `drop_nas = FALSE` no longer ignores
+  `min_waiting_period`.  Summary statistics about number of NAs and
+  overall observations have also been updated to follow
+  `min_waiting_period` and compactification steps.
 
 # epiprocess 0.12
 
