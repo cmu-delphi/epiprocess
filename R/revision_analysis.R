@@ -51,7 +51,7 @@
 #'   group x version pairs that add initial observations for new time
 #'   values; a bulk reporting lag threshold is determined by taking
 #'   the `bulk_reporting_level`-th quantile of this distribution,
-#'   multiplying by `bulk_reporting_level`, and rounding to the an
+#'   multiplying by `bulk_reporting_multiplier `, and rounding to an
 #'   integer number of time intervals.  To avoid flagging anything as
 #'   bulk reporting, set `bulk_reporting_level = 1`.
 #' @param compactify bool. If `TRUE`, we will compactify after the
