@@ -213,7 +213,7 @@ revision_analysis <- function(epi_arch,
   max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * bulk_reporting_quantile)
   bulk_reporting_versions <- initial_reporting %>%
     filter(.data$max_initial_lag > .env$max_nonbulk_initial_lag) %>%
-    .$version %>%
+    pull(version) %>%
     vec_unique() %>%
     vec_sort()
   nonbulk_expanding_versions <-
