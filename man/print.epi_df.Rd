@@ -38,8 +38,39 @@ Currently unused.}
 \item{data}{an \code{epi_df}}
 }
 \description{
-Print and summary functions for an \code{epi_df} object.
+The \code{print} and \code{summary} methods provide informative displays of an
+\code{epi_df} object. Both show the data's dimensions and core metadata
+such as \code{geo_type}, \code{time_type}, \code{other_keys}, and \code{as_of}.
 
-Prints a variety of summary statistics about the \code{epi_df} object, such as
-the time range included and geographic coverage.
+\code{summary()} provides detailed statistics about the \code{epi_df} object, including
+the time range included, gap analysis, and per-signal latency. See the
+\code{print} method documentation for a comprehensive description of the output.
+}
+\details{
+\subsection{print method}{
+
+This method also includes a brief latency summary, representing the
+difference between the \code{as_of} date and the most recent observation
+found in the data.
+}
+
+\subsection{summary method}{
+
+This method provides a more detailed look at the data's structure:
+\itemize{
+\item The time range section reports the global minimum and maximum time
+values found across all time series. It notes whether every series covers
+this full span or if some start later or end earlier, providing insight
+into staggered data availability across different geographic units.
+\item The gap analysis section identifies missing data patterns by
+distinguishing between missing rows (implicit gaps where time steps
+are skipped) and missing values (explicit NAs within the observed
+range of a series). It also reports the average number of rows per
+time value to help detect potential coverage issues.
+\item The latency section details the time difference between the most recent
+observation and the \code{as_of} date of the \code{epi_df}. This breakdown is
+provided per signal to highlight specific key combinations that
+are lagging or entirely empty.
+}
+}
 }
