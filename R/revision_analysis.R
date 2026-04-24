@@ -209,8 +209,6 @@ revision_analysis <- function(epi_arch,
   assert_numeric(bulk_reporting_multiplier, lower = 1, any.missing = FALSE, len = 1L)
   bulk_reporting_quantile <- unname(quantile(initial_reporting$max_initial_lag, bulk_reporting_level))
   max_nonbulk_initial_lag <- round(bulk_reporting_multiplier * bulk_reporting_quantile)
-  initial_reporting %>%
-    mutate(blah = .data$max_initial_lag > .env$max_nonbulk_initial_lag)
   bulk_reporting_versions <- initial_reporting %>%
     filter(.data$max_initial_lag > .env$max_nonbulk_initial_lag) %>%
     .$version %>%
