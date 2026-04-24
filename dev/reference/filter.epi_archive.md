@@ -69,10 +69,9 @@ currently support
 # Filter to one location and a particular time range:
 archive_cases_dv_subset %>%
   filter(geo_value == "fl", time_value >= as.Date("2020-10-01"))
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-10-01 / 2021-11-30
-#> ℹ First/last version with update: 2020-10-02 / 2021-12-01
-#> ℹ Versions end: 2021-12-01
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-10-01 -- 2021-11-30 (times are days)
+#> ℹ Version range: 2020-10-02 -- 2021-12-01
 #> ℹ A preview of the table (23619 rows x 5 columns):
 #> Key: <geo_value, time_value, version>
 #>        geo_value time_value    version percent_cli case_rate_7d_av
@@ -93,10 +92,10 @@ archive_cases_dv_subset %>%
 # `case_rate_7d_av` represents a Sun--Sat average:
 archive_cases_dv_subset %>%
   filter(as.POSIXlt(time_value)$wday == 6L)
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-06-06 / 2021-11-27
-#> ℹ First/last version with update: 2020-06-07 / 2021-11-29
-#> ℹ Versions end: 2021-12-01
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-06-06 -- 2021-11-27 (times are weeks)
+#> ℹ Version range: 2020-06-07 -- 2021-12-01, but no row updates recorded after
+#>   2021-11-29
 #> ℹ A preview of the table (18416 rows x 5 columns):
 #> Key: <geo_value, time_value, version>
 #>        geo_value time_value    version percent_cli case_rate_7d_av
@@ -123,10 +122,9 @@ archive_cases_dv_subset %>%
     version <= time_value + as.difftime(60, units = "days"),
     .format_aware = TRUE
   )
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-06-01 / 2021-11-30
-#> ℹ First/last version with update: 2020-06-02 / 2021-12-01
-#> ℹ Versions end: 2021-12-01
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-06-01 -- 2021-11-30 (times are days)
+#> ℹ Version range: 2020-06-02 -- 2021-12-01
 #> ℹ A preview of the table (104394 rows x 5 columns):
 #> Key: <geo_value, time_value, version>
 #>         geo_value time_value    version percent_cli case_rate_7d_av

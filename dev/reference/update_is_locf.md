@@ -1,13 +1,12 @@
 # Internal helper; lgl; which updates are LOCF
 
-(Not validated:) Must be called inside certain dplyr data masking verbs
-(e.g., `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a
-data frame formatted like one.
+(Not validated:) Must be called on an `epi_archive`'s `DT` or a data
+frame formatted like one.
 
 ## Usage
 
 ``` r
-update_is_locf(arranged_updates_df, ukey_names, abs_tol)
+update_is_locf(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf)
 ```
 
 ## Arguments
@@ -23,6 +22,11 @@ update_is_locf(arranged_updates_df, ukey_names, abs_tol)
   must include `"version"`.
 
 - abs_tol:
+
+  (not validated:) as in
+  [`apply_compactify`](https://cmu-delphi.github.io/epiprocess/dev/reference/apply_compactify.md)
+
+- init_nas_are_locf:
 
   (not validated:) as in
   [`apply_compactify`](https://cmu-delphi.github.io/epiprocess/dev/reference/apply_compactify.md)

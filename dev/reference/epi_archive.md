@@ -257,10 +257,9 @@ tib <- tibble::tibble(
 
 toy_epi_archive <- tib %>% as_epi_archive()
 toy_epi_archive
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-01-01 / 2020-01-05
-#> ℹ First/last version with update: 2020-01-02 / 2020-01-06
-#> ℹ Versions end: 2020-01-06
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-01-01 -- 2020-01-05 (times are days)
+#> ℹ Version range: 2020-01-02 -- 2020-01-06
 #> ℹ A preview of the table (10 rows x 4 columns):
 #> Key: <geo_value, time_value, version>
 #>     geo_value time_value    version     value

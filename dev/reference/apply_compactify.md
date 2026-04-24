@@ -8,7 +8,12 @@ version has changed, and so is kept.
 ## Usage
 
 ``` r
-apply_compactify(updates_df, ukey_names, abs_tol = 0)
+apply_compactify(
+  updates_df,
+  ukey_names,
+  abs_tol = 0,
+  init_nas_are_locf = FALSE
+)
 ```
 
 ## Arguments
@@ -30,3 +35,20 @@ apply_compactify(updates_df, ukey_names, abs_tol = 0)
   columns when determining whether something can be compactified away;
   see
   [`is_locf`](https://cmu-delphi.github.io/epiprocess/dev/reference/is_locf.md)
+
+- init_nas_are_locf:
+
+  bool; do we treat [entirely-missing
+  values](https://vctrs.r-lib.org/reference/missing.html) in the initial
+  measurement for each epikey-time as LOCF? Ordinarily `FALSE`, but
+  `TRUE` if we're trying to "invert" an
+  [`epix_merge`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_merge.md),
+  i.e., we've just narrowed down the value column set and are trying to
+  remove extra `NA`s (and other rows) created by using
+  [`epix_merge`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_merge.md)
+  / the `epi_archive` format. Currently, this is ordinarily `FALSE` in
+  order to preserve explicit measurements of `NA` provided by the user;
+  this also matches "vanilla expectations", as outer joins / the data
+  frame format also promote some implicit NAs into explicit ones,
+  conflating their origins. We're forced into a judgment call here by
+  the current `epi_archive` format.

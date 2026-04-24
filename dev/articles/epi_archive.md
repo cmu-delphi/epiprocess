@@ -87,10 +87,9 @@ dv_archive <- dv %>%
   select(geo_value, time_value, version, percent_cli) %>%
   as_epi_archive()
 dv_archive
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-06-01 / 2021-11-30
-#> ℹ First/last version with update: 2020-06-02 / 2021-12-01
-#> ℹ Versions end: 2021-12-01
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-06-01 -- 2021-11-30 (times are days)
+#> ℹ Version range: 2020-06-02 -- 2021-12-01
 #> ℹ A preview of the table (119316 rows x 4 columns):
 #> Key: <geo_value, time_value, version>
 #>         geo_value time_value    version percent_cli
@@ -208,37 +207,43 @@ also returns an overall summary. Here is an a sample of the output:
 revision_details <- revision_summary(dv_archive)
 revision_details
 #> 
-#> ── An epi_archive spanning 2020-06-01 to 2021-11-30. ──
+#> ── Revision analysis for archive spanning time values 2020-06-01 to 2021-11-30. ──
 #> 
-#> ── Min lag (time to first version):
+#> ── Across epi_key + versions that add new time values:
+#> Freshest new time value's lag/latency:
+#>      min median     mean    max
+#>   3 days 3 days 3.1 days 4 days
+#> Farthest-back new time value's lag/latency:
 #>      min median     mean     max
-#>   3 days 3 days 3.5 days 12 days
+#>   3 days 3 days 3.3 days 12 days
 #> 
-#> ── Fraction of epi_key + time_values with
-#> No revisions:
-#> • 0 out of 1,956 (0%)
+#> ── Across epi_key + time_value + versions: 
+#> Fraction of all versions that are `NA`:• 0 out of 112,360 (0%)
 #> 
-#> Quick revisions (last revision within 3 days of the `time_value`):
-#> • 0 out of 1,956 (0%)
+#> ── Bulk reporting adding initial observations for older epikey + time values: 
+#> Initial lags above 5 days were counted as bulk reporting.Fraction of epi_key + time_values initially added by bulk reporting:• 116 out of 1,956 (5.93%)
+#> Versions containing bulk reporting: 10• (2020-08-03, 2020-08-16, 2020-08-23, 2020-09-25, 2021-02-22, 2021-04-15,
+#> 2021-07-24, 2021-08-24, 2021-09-23, and 2021-09-30)
+#> Versions adding epikey + time values but no bulk reporting: 400Revision-only versions: 45
+#> ── Remaining information is for non-bulk-reported epikey + time values
+#>    with semi-stable versions past the waiting period available. 
 #> 
-#> Few revisions (At most 3 revisions for that `time_value`):
-#> • 0 out of 1,956 (0%)
-#> 
-#> 
+#> ── Fraction of epi_key + time_values with 
+#> No revisions:• 0 out of 1,840 (0%)
+#> Quick revisions (last revision within 3 days of the `time_value`):• 0 out of 1,840 (0%)
+#> Few revisions (At most 3 revisions for that `time_value`):• 0 out of 1,840 (0%)
 #> 
 #> ── Fraction of revised epi_key + time_values which have: 
-#> 
-#> Less than 0.1 spread in relative value:
-#> • 91 out of 1,956 (4.65%)
-#> 
-#> Spread of more than 2.221 in actual value (when revised):
-#> • 671 out of 1,956 (34.3%)
-#> 
-#> 
+#> Less than 0.1 spread in relative value:• 66 out of 1,840 (3.59%)
+#> Spread of more than 2.221 in actual value (when revised):• 658 out of 1,840 (35.76%)
 #> 
 #> ── Days until within 20% of the latest value:
 #>      min median     mean     max
-#>   3 days 5 days 9.1 days 67 days
+#>   3 days 5 days 8.9 days 67 days
+#> 
+#> ── Days until at the latest lag:
+#>       min  median      mean     max
+#>   58 days 73 days 70.7 days 74 days
 ```
 
 We can see from the output that, as mentioned above, this data set has a
@@ -263,10 +268,10 @@ revision_details$revision_behavior %>%
 #> # A tibble: 4 × 7
 #>   geo_value n_rev min_lag max_lag spread rel_spread lag_near_latest
 #>   <chr>     <dbl> <drtn>  <drtn>   <dbl>      <dbl> <drtn>         
-#> 1 ca         56.4 3 days  74 days   2.53      0.304 11.278119 days 
-#> 2 fl         56.4 3 days  74 days   2.29      0.280 10.830266 days 
-#> 3 ny         56.4 3 days  74 days   1.98      0.206  6.977505 days 
-#> 4 tx         56.4 3 days  74 days   1.63      0.218  7.398773 days
+#> 1 ca         57.0 3 days  74 days   2.60      0.307 11.347826 days 
+#> 2 fl         57   3 days  74 days   2.32      0.282 10.280435 days 
+#> 3 ny         57   3 days  74 days   2.05      0.208  6.600000 days 
+#> 4 tx         57.0 3 days  74 days   1.67      0.221  7.280435 days
 ```
 
 Most of the states have similar stats on most of these features, except
@@ -308,10 +313,9 @@ dv_cases_archive <- epix_merge(dv_archive, y, sync = "locf")
 print(dv_cases_archive)
 ```
 
-    #> → An `epi_archive` object, with metadata:
-    #> ℹ Min/max time values: 2020-06-01 / 2021-11-30
-    #> ℹ First/last version with update: 2020-06-02 / 2021-12-01
-    #> ℹ Versions end: 2021-12-01
+    #> An `epi_archive` object, with:
+    #> ℹ Time range:    2020-06-01 -- 2021-11-30 (times are days)
+    #> ℹ Version range: 2020-06-02 -- 2021-12-01
     #> ℹ A preview of the table (129638 rows x 5 columns):
     #> Key: <geo_value, time_value, version>
     #>         geo_value time_value    version percent_cli case_rate_7d_av

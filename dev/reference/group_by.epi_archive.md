@@ -112,9 +112,8 @@ grouped_archive %>% print()
 #> A `grouped_epi_archive` object:
 #> * Groups: geo_value
 #> It wraps an ungrouped `epi_archive`, with metadata:
-#> ℹ Min/max time values: 2020-06-01 / 2021-11-30
-#> ℹ First/last version with update: 2020-06-02 / 2021-12-01
-#> ℹ Versions end: 2021-12-01
+#> ℹ Time range:    2020-06-01 -- 2021-11-30 (times are days)
+#> ℹ Version range: 2020-06-02 -- 2021-12-01
 #> ℹ A preview of the table (129638 rows x 5 columns):
 #> Key: <geo_value, time_value, version>
 #>         geo_value time_value    version percent_cli case_rate_7d_av
@@ -185,9 +184,8 @@ toy_archive %>% group_by(geo_value, age_group)
 #> * Drops groups formed by factor levels that don't appear in the data
 #> It wraps an ungrouped `epi_archive`, with metadata:
 #> ℹ Other DT keys: age_group
-#> ℹ Min/max time values: 2000-01-01 / 2000-01-02
-#> ℹ First/last version with update: 2000-01-02 / 2000-01-03
-#> ℹ Versions end: 2000-01-03
+#> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
+#> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
 #> Key: <geo_value, time_value, age_group, version>
 #>    geo_value age_group time_value    version value
@@ -204,9 +202,8 @@ toy_archive %>%
 #> * Drops groups formed by factor levels that don't appear in the data
 #> It wraps an ungrouped `epi_archive`, with metadata:
 #> ℹ Other DT keys: age_group
-#> ℹ Min/max time values: 2000-01-01 / 2000-01-02
-#> ℹ First/last version with update: 2000-01-02 / 2000-01-03
-#> ℹ Versions end: 2000-01-03
+#> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
+#> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
 #> Key: <geo_value, time_value, age_group, version>
 #>    geo_value age_group time_value    version value
@@ -222,9 +219,8 @@ toy_archive %>% group_by(across(all_of(grouping_cols)))
 #> * Drops groups formed by factor levels that don't appear in the data
 #> It wraps an ungrouped `epi_archive`, with metadata:
 #> ℹ Other DT keys: age_group
-#> ℹ Min/max time values: 2000-01-01 / 2000-01-02
-#> ℹ First/last version with update: 2000-01-02 / 2000-01-03
-#> ℹ Versions end: 2000-01-03
+#> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
+#> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
 #> Key: <geo_value, time_value, age_group, version>
 #>    geo_value age_group time_value    version value
@@ -240,9 +236,8 @@ toy_archive %>% group_by(geo_value)
 #> * Groups: geo_value
 #> It wraps an ungrouped `epi_archive`, with metadata:
 #> ℹ Other DT keys: age_group
-#> ℹ Min/max time values: 2000-01-01 / 2000-01-02
-#> ℹ First/last version with update: 2000-01-02 / 2000-01-03
-#> ℹ Versions end: 2000-01-03
+#> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
+#> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
 #> Key: <geo_value, time_value, age_group, version>
 #>    geo_value age_group time_value    version value
@@ -258,9 +253,8 @@ toy_archive %>%
 #> * Groups: geo_value
 #> It wraps an ungrouped `epi_archive`, with metadata:
 #> ℹ Other DT keys: age_group
-#> ℹ Min/max time values: 2000-01-01 / 2000-01-02
-#> ℹ First/last version with update: 2000-01-02 / 2000-01-03
-#> ℹ Versions end: 2000-01-03
+#> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
+#> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
 #> Key: <geo_value, time_value, age_group, version>
 #>    geo_value age_group time_value    version value

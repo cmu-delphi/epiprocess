@@ -70,9 +70,9 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-23 18:23:00.994781
+#> * as_of     = 2026-04-24 21:20:52.36089
 #> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1543 days
+#> * lag across all time series = 1544 days
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -114,9 +114,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-23 18:23:00.994781
+#> * as_of     = 2026-04-24 21:20:52.36089
 #> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1543 days
+#> * lag across all time series = 1544 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -142,9 +142,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-23 18:23:00.994781
+#> * as_of     = 2026-04-24 21:20:52.36089
 #> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1543–1544 days
+#> * lag across all time series = 1544–1545 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -171,9 +171,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-23 18:23:00.994781
+#> * as_of     = 2026-04-24 21:20:52.36089
 #> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1543 days
+#> * lag across all time series = 1544 days
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
@@ -206,8 +206,8 @@ df <- pub_covidcast(
   as_epi_df() %>%
   arrange_canonical()
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■                    
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■     
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 edf <- inner_join(edf, df, by = c("geo_value", "time_value"))
 edf %>%
   group_by(geo_value) %>%
@@ -271,10 +271,9 @@ dv <- pub_covidcast(
 dv
 ```
 
-    #> → An `epi_archive` object, with metadata:
-    #> ℹ Min/max time values: 2020-06-01 / 2021-11-26
-    #> ℹ First/last version with update: 2020-06-06 / 2021-11-29
-    #> ℹ Versions end: 2021-11-29
+    #> An `epi_archive` object, with:
+    #> ℹ Time range:    2020-06-01 -- 2021-11-26 (times are days)
+    #> ℹ Version range: 2020-06-06 -- 2021-11-29
     #> ℹ A preview of the table (117124 rows x 4 columns):
     #> Key: <geo_value, time_value, version>
     #>         geo_value time_value    version percent_cli

@@ -3,8 +3,9 @@
 `revision_summary` removes all missing values (if requested), and then
 computes some basic statistics about the revision behavior of an
 archive, returning a tibble summarizing the revisions per
-time_value+epi_key features. If `print_inform` is true, it prints a
-concise summary. The columns returned are:
+time_value+epi_key features (limited to those that have data available
+past the min waiting period to compare against, and are not detected as
+added in a bulk report). The columns returned are:
 
 1.  `n_revisions`: the total number of revisions for that entry
 
@@ -39,11 +40,14 @@ concise summary. The columns returned are:
 revision_analysis(
   epi_arch,
   ...,
-  drop_nas = TRUE,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
+  compactify_drop_initial_nas = TRUE,
+  drop_nas = FALSE,
   return_only_tibble = FALSE
 )
 
@@ -60,11 +64,14 @@ print(
 revision_summary(
   epi_arch,
   ...,
-  drop_nas = TRUE,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
+  compactify_drop_initial_nas = TRUE,
+  drop_nas = FALSE,
   return_only_tibble = FALSE
 )
 ```
@@ -84,13 +91,6 @@ revision_summary(
   in the archive, it will automatically select it. If supplied, `...`
   must select exactly one column.
 
-- drop_nas:
-
-  bool, drop any `NA` values from the archive? After dropping `NA`'s
-  compactify is run again if `compactify` is `TRUE` to make sure there
-  are no duplicate values from occasions when the signal is revised to
-  `NA`, and then back to its immediately-preceding value.
-
 - min_waiting_period:
 
   `difftime`, integer or `NULL`. Sets a cutoff: any time_values that
@@ -107,6 +107,19 @@ revision_summary(
 
   double between 0 and 1. Determines the threshold used for the `lag_to`
 
+- bulk_reporting_level, bulk_reporting_multiplier:
+
+  numeric; the former between 0 and 1, typically close to but less than
+  one, and the latter `>= 1`; defaults of 0.8 and 1.2, respectively.
+  Determines how to detect bulk reporting. Consider the distribution of
+  "max initial lags" across geodemographic group x version pairs that
+  add initial observations for new time values; a bulk reporting lag
+  threshold is determined by taking the `bulk_reporting_level`-th
+  quantile of this distribution, multiplying by
+  `bulk_reporting_multiplier`, and rounding to an integer number of time
+  intervals. To avoid flagging anything as bulk reporting, set
+  `bulk_reporting_level = 1`.
+
 - compactify:
 
   bool. If `TRUE`, we will compactify after the signal requested in
@@ -121,6 +134,25 @@ revision_summary(
 
   length-1 double, used if `compactify` is `TRUE`, it determines the
   threshold for when two doubles are considered identical.
+
+- compactify_drop_initial_nas:
+
+  bool; should we drop initial estimates of NA during the
+  compactification step? Default is TRUE, because these NAs are likely
+  present due to
+  [`epix_merge()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_merge.md)ing
+  with a more timely indicator, and the upstream source probably didn't
+  actually report explicit NAs as provisional estimates.
+
+- drop_nas:
+
+  bool, do we drop all `NA` values (not just initial estimates of `NA`)
+  from the archive data structure prior to (optional) compactification?
+  This both strips (i) initial estimates of NA and (ii) explicit
+  revisions from a non-NA estimate to NA. Equivalent to
+  `compactify_drop_initial_nas` if `compactify` is `TRUE`. Default is
+  FALSE, favoring
+  `compactify = TRUE, compactify_drop_initial_nas = TRUE`.
 
 - return_only_tibble:
 
@@ -179,11 +211,64 @@ contains jumps at year boundaries.
 ## Examples
 
 ``` r
+# Print revision summary:
+revision_analysis(archive_cases_dv_subset, percent_cli)
+#> 
+#> ── Revision analysis for archive spanning time values 2020-06-01 to 2021-11-30. ──
+#> 
+#> ── Across epi_key + versions that add new time values: 
+#> Freshest new time value's lag/latency:
+#>      min median     mean    max
+#>   3 days 3 days 3.1 days 4 days
+#> Farthest-back new time value's lag/latency:
+#>      min median     mean     max
+#>   3 days 3 days 3.3 days 12 days
+#> 
+#> ── Across epi_key + time_value + versions: 
+#> Fraction of all versions that are `NA`:
+#> • 0 out of 112,360 (0%)
+#> 
+#> ── Bulk reporting adding initial observations for older epikey + time values: 
+#> Initial lags above 5 days were counted as bulk reporting.
+#> Fraction of epi_key + time_values initially added by bulk reporting:
+#> • 116 out of 1,956 (5.93%)
+#> Versions containing bulk reporting: 10
+#> • (2020-08-03, 2020-08-16, 2020-08-23, 2020-09-25, 2021-02-22, 2021-04-15,
+#> 2021-07-24, 2021-08-24, 2021-09-23, and 2021-09-30)
+#> Versions adding epikey + time values but no bulk reporting: 400
+#> Revision-only versions: 45
+#> 
+#> ── Remaining information is for non-bulk-reported epikey + time values
+#>    with semi-stable versions past the waiting period available. 
+#> 
+#> ── Fraction of epi_key + time_values with 
+#> No revisions:
+#> • 0 out of 1,840 (0%)
+#> Quick revisions (last revision within 3 days of the `time_value`):
+#> • 0 out of 1,840 (0%)
+#> Few revisions (At most 3 revisions for that `time_value`):
+#> • 0 out of 1,840 (0%)
+#> 
+#> ── Fraction of revised epi_key + time_values which have: 
+#> Less than 0.1 spread in relative value:
+#> • 66 out of 1,840 (3.59%)
+#> Spread of more than 2.221 in actual value (when revised):
+#> • 658 out of 1,840 (35.76%)
+#> 
+#> ── Days until within 20% of the latest value: 
+#>      min median     mean     max
+#>   3 days 5 days 8.9 days 67 days
+#> 
+#> ── Days until at the latest lag: 
+#>       min  median      mean     max
+#>   58 days 73 days 70.7 days 74 days
+
+# Print some underlying data:
 revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
 revision_example$revision_behavior %>% arrange(desc(spread))
-#> # A tibble: 1,956 × 11
+#> # A tibble: 1,840 × 11
 #>    time_value geo_value n_revisions min_lag max_lag lag_near_latest spread
-#>    <date>     <chr>           <dbl> <drtn>  <drtn>  <drtn>           <dbl>
+#>    <date>     <chr>           <int> <drtn>  <drtn>  <drtn>           <dbl>
 #>  1 2020-12-26 ca                 62 3 days  73 days  6 days          14.1 
 #>  2 2020-12-25 ca                 62 3 days  73 days  7 days          13.2 
 #>  3 2020-11-27 fl                 66 3 days  73 days  4 days          12.0 
@@ -194,7 +279,7 @@ revision_example$revision_behavior %>% arrange(desc(spread))
 #>  8 2021-09-25 fl                 43 5 days  65 days 61 days           8.83
 #>  9 2020-11-05 ny                 66 3 days  73 days 11 days           8.64
 #> 10 2020-11-27 tx                 66 3 days  73 days 10 days           8.56
-#> # ℹ 1,946 more rows
+#> # ℹ 1,830 more rows
 #> # ℹ 4 more variables: rel_spread <dbl>, min_value <dbl>, max_value <dbl>,
 #> #   median_value <dbl>
 ```

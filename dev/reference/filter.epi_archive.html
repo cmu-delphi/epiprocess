@@ -104,10 +104,9 @@ not currently support <code><a href="https://dplyr.tidyverse.org/reference/filte
 <span class="r-in"><span><span class="co"># Filter to one location and a particular time range:</span></span></span>
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">geo_value</span> <span class="op">==</span> <span class="st">"fl"</span>, <span class="va">time_value</span> <span class="op">&gt;=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-10-01"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-10-01 / 2021-11-30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-10-02 / 2021-12-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Time range:    2020-10-01 -- 2021-11-30 (times are days)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Version range: 2020-10-02 -- 2021-12-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (23619 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        geo_value time_value    version percent_cli case_rate_7d_av</span>
@@ -128,10 +127,10 @@ not currently support <code><a href="https://dplyr.tidyverse.org/reference/filte
 <span class="r-in"><span><span class="co"># `case_rate_7d_av` represents a Sun--Sat average:</span></span></span>
 <span class="r-in"><span><span class="va">archive_cases_dv_subset</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXlt</a></span><span class="op">(</span><span class="va">time_value</span><span class="op">)</span><span class="op">$</span><span class="va">wday</span> <span class="op">==</span> <span class="fl">6L</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-06 / 2021-11-27</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-07 / 2021-11-29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Time range:    2020-06-06 -- 2021-11-27 (times are weeks)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Version range: 2020-06-07 -- 2021-12-01, but no row updates recorded after</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2021-11-29</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (18416 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        geo_value time_value    version percent_cli case_rate_7d_av</span>
@@ -158,10 +157,9 @@ not currently support <code><a href="https://dplyr.tidyverse.org/reference/filte
 <span class="r-in"><span>    <span class="va">version</span> <span class="op">&lt;=</span> <span class="va">time_value</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">as.difftime</a></span><span class="op">(</span><span class="fl">60</span>, units <span class="op">=</span> <span class="st">"days"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    .format_aware <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Time range:    2020-06-01 -- 2021-11-30 (times are days)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Version range: 2020-06-02 -- 2021-12-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (104394 rows x 5 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         geo_value time_value    version percent_cli case_rate_7d_av</span>

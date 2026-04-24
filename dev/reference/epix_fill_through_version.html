@@ -107,10 +107,10 @@ with <code>NA</code> and the rest will be implicit.</p></li>
 <span class="r-in"><span>  value <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">6</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">epix_fill_through_version</span><span class="op">(</span><span class="va">ea_orig</span>, <span class="va">test_date</span> <span class="op">+</span> <span class="fl">8</span>, <span class="st">"na"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-01-01 / 2020-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-01-02 / 2020-01-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2020-01-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Time range:    2020-01-01 -- 2020-01-02 (times are days)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Version range: 2020-01-02 -- 2020-01-09, but no row updates recorded after</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2020-01-07</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (8 rows x 4 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value    version value</span>
@@ -124,10 +124,10 @@ with <code>NA</code> and the rest will be implicit.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7:        ak 2020-01-02 2020-01-03     6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8:        ak 2020-01-02 2020-01-07    NA</span>
 <span class="r-in"><span><span class="fu">epix_fill_through_version</span><span class="op">(</span><span class="va">ea_orig</span>, <span class="va">test_date</span> <span class="op">+</span> <span class="fl">8</span>, <span class="st">"locf"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> → An `epi_archive` object, with metadata:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-01-01 / 2020-01-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-01-02 / 2020-01-06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Versions end: 2020-01-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> An `epi_archive` object, with:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Time range:    2020-01-01 -- 2020-01-02 (times are days)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Version range: 2020-01-02 -- 2020-01-09, but no row updates recorded after</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2020-01-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> A preview of the table (6 rows x 4 columns):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key: &lt;geo_value, time_value, version&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    geo_value time_value    version value</span>

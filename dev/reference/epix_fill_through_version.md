@@ -60,10 +60,10 @@ ea_orig <- as_epi_archive(data.table::data.table(
   value = 1:6
 ))
 epix_fill_through_version(ea_orig, test_date + 8, "na")
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-01-01 / 2020-01-02
-#> ℹ First/last version with update: 2020-01-02 / 2020-01-07
-#> ℹ Versions end: 2020-01-09
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-01-01 -- 2020-01-02 (times are days)
+#> ℹ Version range: 2020-01-02 -- 2020-01-09, but no row updates recorded after
+#>   2020-01-07
 #> ℹ A preview of the table (8 rows x 4 columns):
 #> Key: <geo_value, time_value, version>
 #>    geo_value time_value    version value
@@ -77,10 +77,10 @@ epix_fill_through_version(ea_orig, test_date + 8, "na")
 #> 7:        ak 2020-01-02 2020-01-03     6
 #> 8:        ak 2020-01-02 2020-01-07    NA
 epix_fill_through_version(ea_orig, test_date + 8, "locf")
-#> → An `epi_archive` object, with metadata:
-#> ℹ Min/max time values: 2020-01-01 / 2020-01-02
-#> ℹ First/last version with update: 2020-01-02 / 2020-01-06
-#> ℹ Versions end: 2020-01-09
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-01-01 -- 2020-01-02 (times are days)
+#> ℹ Version range: 2020-01-02 -- 2020-01-09, but no row updates recorded after
+#>   2020-01-06
 #> ℹ A preview of the table (6 rows x 4 columns):
 #> Key: <geo_value, time_value, version>
 #>    geo_value time_value    version value
