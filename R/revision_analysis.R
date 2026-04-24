@@ -91,7 +91,7 @@
 #'   produce incorrect results for some calculations, since week numbering
 #'   contains jumps at year boundaries.
 #'
-#' @return An S3 object with class `revision_behavior`. This function is typically
+#' @return An S3 object with class `revision_analysis`. This function is typically
 #'   called for the purposes of inspecting the printed output. The
 #'   results of the computations are available in
 #'   `revision_analysis(...)$revision_behavior`. If you only want to access
