@@ -53,7 +53,7 @@
 #'   group x version pairs that add initial observations for new time
 #'   values; a bulk reporting lag threshold is determined by taking
 #'   the `bulk_reporting_level`-th quantile of this distribution,
-#'   multiplying by `bulk_reporting_multiplier `, and rounding to an
+#'   multiplying by `bulk_reporting_multiplier`, and rounding to an
 #'   integer number of time intervals.  To avoid flagging anything as
 #'   bulk reporting, set `bulk_reporting_level = 1`.
 #' @param compactify bool. If `TRUE`, we will compactify after the
@@ -196,13 +196,17 @@ revision_analysis <- function(epi_arch,
     nrow()
   n_obs <- nrow(revision_behavior)
 
+  # Note: `setDT()` modifies `revision_behavior` in-place, changing
+  # the object it points to from a tibble to a data.table for the
+  # remainder of this function, though we eventually point it to
+  # something that's a tibble later on.
+  setDT(revision_behavior)
+
   initial_reporting <- revision_behavior %>%
-  # Note: `setDT()` modifies `revision_behavior` in-place, changing it from a tibble 
-  # to a data.table for the remainder of this function. 
-  # We extract the initial report for each epikey-time combination using `.SD[1]` 
-  # (relying on chronological sorting by version), then calculate the min/max lag 
-  # for all first-time data introduced in each version dump.
-    setDT() %>%
+    #   We extract the initial report
+    # for each epikey-time combination using `.SD[1]` (relying on
+    # chronological sorting by version), then calculate the min/max lag
+    # for all first-time data introduced in each version dump.
     .[, .SD[1], by = c(epikeytime_names)] %>%
     .[, list(
       min_initial_lag = min(lag),
@@ -228,10 +232,10 @@ revision_analysis <- function(epi_arch,
     vec_set_difference(revision_behavior$version, c(bulk_reporting_versions, nonbulk_expanding_versions)) %>%
     vec_sort()
 
+  data.table::setnames(revision_behavior, arg, ".VAL") # faster than .SD[[arg]] later on
+
   revision_behavior <-
     revision_behavior %>%
-    rename(.VAL = !!arg) %>% # faster than .SD[[arg]]
-    data.table::setDT() %>%
     {
       with_missing <- .[, list(
         n_revisions = .N - 1L,
@@ -246,7 +250,7 @@ revision_analysis <- function(epi_arch,
       ), by = c(epikeytime_names)]
       merge(with_missing, without_missing, by = epikeytime_names, all = TRUE)
     } %>%
-    data.table::setDF() %>%
+    setDF() %>%
     as_tibble()
   n_epikeytimes <- nrow(revision_behavior)
   revision_behavior <- revision_behavior %>%

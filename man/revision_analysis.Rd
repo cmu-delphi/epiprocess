@@ -74,7 +74,7 @@ the distribution of "max initial lags" across geodemographic
 group x version pairs that add initial observations for new time
 values; a bulk reporting lag threshold is determined by taking
 the \code{bulk_reporting_level}-th quantile of this distribution,
-multiplying by \code{bulk_reporting_level}, and rounding to the an
+multiplying by \code{bulk_reporting_multiplier}, and rounding to an
 integer number of time intervals.  To avoid flagging anything as
 bulk reporting, set \code{bulk_reporting_level = 1}.}
 
