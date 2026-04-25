@@ -24,6 +24,7 @@ indicate development versions beyond 0.x.
 
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
+- `epi_slide_opt` (and wrappers `epi_slide_mean`, `epi_slide_sum`) now throw an informative error if the `.col_names` argument is omitted.
 
 # epiprocess 0.12
 
