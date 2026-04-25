@@ -4,7 +4,12 @@
 \alias{apply_compactify}
 \title{Given a tibble as would be found in an epi_archive, remove duplicate entries.}
 \usage{
-apply_compactify(updates_df, ukey_names, abs_tol = 0)
+apply_compactify(
+  updates_df,
+  ukey_names,
+  abs_tol = 0,
+  init_nas_are_locf = FALSE
+)
 }
 \arguments{
 \item{updates_df}{DT of an \code{epi_archive} or something analogous (though
@@ -17,6 +22,18 @@ would be \code{key(DT)}.}
 \item{abs_tol}{numeric, >=0; absolute tolerance to use on numeric measurement
 columns when determining whether something can be compactified away; see
 \code{\link{is_locf}}}
+
+\item{init_nas_are_locf}{bool; do we treat \link[vctrs:missing]{entirely-missing values} in the initial measurement for
+each epikey-time as LOCF?  Ordinarily \code{FALSE}, but \code{TRUE} if
+we're trying to "invert" an \code{\link{epix_merge}}, i.e., we've just
+narrowed down the value column set and are trying to remove extra
+\code{NA}s (and other rows) created by using \code{\link{epix_merge}} / the
+\code{epi_archive} format.  Currently, this is ordinarily \code{FALSE} in
+order to preserve explicit measurements of \code{NA} provided by the
+user; this also matches "vanilla expectations", as outer joins /
+the data frame format also promote some implicit NAs into
+explicit ones, conflating their origins.  We're forced into a
+judgment call here by the current \code{epi_archive} format.}
 }
 \description{
 Works by shifting all rows except the version, then comparing values to see
