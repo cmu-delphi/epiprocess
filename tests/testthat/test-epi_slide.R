@@ -733,6 +733,13 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
   )
 })
 
+test_that("`epi_slide_opt` errors when `.col_names` is omitted", {
+  expect_error(
+    epi_slide_mean(test_data, .window_size = 7),
+    class = "epiprocess__epi_slide_opt__missing_col_names"
+  )
+})
+
 test_that("no dplyr warnings from selecting multiple columns", {
   multi_columns <- dplyr::bind_rows(
     dplyr::tibble(geo_value = "ak", time_value = test_date + 1:200, value = 1:200, value2 = -1:-200),
