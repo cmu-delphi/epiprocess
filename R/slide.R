@@ -826,6 +826,13 @@ epi_slide_opt <- function(
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
   col_names_quo <- enquo(.col_names)
+  if (rlang::quo_is_missing(col_names_quo)) {
+    cli_abort(
+      paste0("`.col_names` must be specified. Please provide the columns you want to ",
+             "slide over (e.g., `value` or `c(cases, deaths)`)."),
+      class = "epiprocess__epi_slide_opt__missing_col_names"
+    )
+  }
   pos <- eval_select(col_names_quo, data = .x, allow_rename = FALSE)
   col_names_chr <- names(.x)[pos]
 

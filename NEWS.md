@@ -26,10 +26,12 @@ indicate development versions beyond 0.x.
   more timely and/or more widely available signal.  This behavior is
   customizable with the `compactify`, `compactify_drop_initial_nas`,
   and `drop_nas` parameters.  It also runs more quickly.
+
 ## Bug fixes
 
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
+- `epi_slide_opt` (and wrappers `epi_slide_mean`, `epi_slide_sum`) now throw an informative error if the `.col_names` argument is omitted.
 - `revision_summary()` with `drop_nas = FALSE` no longer ignores
   `min_waiting_period`.  Summary statistics about number of NAs and
   overall observations have also been updated to follow
