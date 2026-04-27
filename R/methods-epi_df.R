@@ -244,9 +244,8 @@ epi_ts_range <- function(x, key_no_t, sigs) {
 #' See Details: section for what specifically is included.
 #'
 #' @param object an `epi_df`
-#' @param ... Additional arguments; unused in `print()` and
-#'     `summary()`; forwarded to underlying `{dplyr}` methods in the
-#'     rest.
+#' @param ... Additional arguments; unused in `summary()`; forwarded
+#'     to underlying base or `{dplyr}` methods in the rest.
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
