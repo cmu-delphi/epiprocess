@@ -239,10 +239,12 @@ epi_ts_range <- function(x, key_no_t, sigs) {
 #' `summary()` provides detailed statistics about the `epi_df` object, including
 #' the time range included, gap analysis, and per-signal latency. See the
 #' `print` method documentation for a comprehensive description of the output.
+#' See Details: section for what specifically is included.
 #'
 #' @param object an `epi_df`
-#' @param ... Additional arguments, for compatibility with `summary()`.
-#'   Currently unused.
+#' @param ... Additional arguments; unused in `print()` and
+#'     `summary()`; forwarded to underlying `{dplyr}` methods in the
+#'     rest.
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data

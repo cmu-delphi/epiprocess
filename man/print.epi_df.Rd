@@ -24,8 +24,9 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{Additional arguments, for compatibility with \code{summary()}.
-Currently unused.}
+\item{...}{Additional arguments; unused in \code{print()} and
+\code{summary()}; forwarded to underlying \code{{dplyr}} methods in the
+rest.}
 
 \item{object}{an \code{epi_df}}
 
@@ -45,6 +46,7 @@ such as \code{geo_type}, \code{time_type}, \code{other_keys}, and \code{as_of}.
 \code{summary()} provides detailed statistics about the \code{epi_df} object, including
 the time range included, gap analysis, and per-signal latency. See the
 \code{print} method documentation for a comprehensive description of the output.
+See Details: section for what specifically is included.
 }
 \details{
 \subsection{print method}{
