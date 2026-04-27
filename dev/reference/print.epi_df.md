@@ -41,9 +41,8 @@ unnest(data, ...)
 - ...:
 
   Additional arguments; unused in
-  [`print()`](https://rdrr.io/r/base/print.html) and
   [`summary()`](https://rdrr.io/r/base/summary.html); forwarded to
-  underlying `{dplyr}` methods in the rest.
+  underlying base or `{dplyr}` methods in the rest.
 
 - object:
 

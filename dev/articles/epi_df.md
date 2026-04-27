@@ -343,7 +343,7 @@ flu_data_api <- pub_flusurv(
   epiweeks = epirange(201801, 202001)
 )
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■             
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■               
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
@@ -409,7 +409,7 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-04-27 08:45:48.623322
+#> * as_of     = 2026-04-27 10:03:42.782159
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency  = 330 weeks
 #> 
@@ -505,7 +505,7 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-04-27 08:45:48.623322
+#> * as_of     = 2026-04-27 10:03:42.782159
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency  = 330 weeks
 #> 
