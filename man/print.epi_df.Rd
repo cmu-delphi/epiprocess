@@ -24,9 +24,8 @@
 \arguments{
 \item{x}{an \code{epi_df}}
 
-\item{...}{Additional arguments; unused in \code{print()} and
-\code{summary()}; forwarded to underlying \code{{dplyr}} methods in the
-rest.}
+\item{...}{Additional arguments; unused in \code{summary()}; forwarded
+to underlying base or \code{{dplyr}} methods in the rest.}
 
 \item{object}{an \code{epi_df}}
 
