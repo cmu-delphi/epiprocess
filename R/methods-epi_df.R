@@ -59,7 +59,31 @@ as_tsibble.epi_df <- function(x, key, ...) {
 
 #' Base S3 methods for an `epi_df` object
 #'
-#' Print and summary functions for an `epi_df` object.
+#' The `print` and `summary` methods provide informative displays of an
+#' `epi_df` object. Both show the data's dimensions and core metadata
+#' such as `geo_type`, `time_type`, `other_keys`, and `as_of`.
+#'
+#' ### print method
+#' This method also includes a brief latency summary, representing the
+#' difference between the `as_of` date and the most recent observation
+#' found in the data.
+#'
+#' ### summary method
+#' This method provides a more detailed look at the data's structure:
+#'
+#' * The time range section reports the global minimum and maximum time
+#'   values found across all time series. It notes whether every series covers
+#'   this full span or if some start later or end earlier, providing insight
+#'   into staggered data availability across different geographic units.
+#' * The gap analysis section identifies missing data patterns by
+#'   distinguishing between missing rows (implicit gaps where time steps
+#'   are skipped) and missing values (explicit NAs within the observed
+#'   range of a series). It also reports the average number of rows per
+#'   time value to help detect potential coverage issues.
+#' * The latency section details the time difference between the most recent
+#'   observation and the `as_of` date of the `epi_df`. This breakdown is
+#'   provided per signal to highlight specific key combinations that
+#'   are lagging or entirely empty.
 #'
 #' @param x an `epi_df`
 #' @method print epi_df
@@ -154,12 +178,12 @@ print_latency_info <- function(x) {
       sent_series <- "across all time series"
     }
 
-    lag_msg <- sprintf("* lag %s = %s%s\n", sent_series, range_str, hint)
+    lag_msg <- sprintf("* latency %s = %s%s\n", sent_series, range_str, hint)
   } else {
     lag_msg <- ""
   }
   # Print the latency info
-  cat("Latency (lag between last available observation and epi_df's as_of, by time series):\n")
+  cat("Latency (time between last available observation and epi_df's as_of, by time series):\n")
   cat(lag_msg)
   cat(empty_serie)
 }
@@ -211,12 +235,16 @@ epi_ts_range <- function(x, key_no_t, sigs) {
 
 #' Summarize `epi_df` object
 #'
-#' Prints a variety of summary statistics about the `epi_df` object, such as
-#' the time range included and geographic coverage.
+#' @description
+#' `summary()` provides detailed statistics about the `epi_df` object, including
+#' the time range included, gap analysis, and per-signal latency. See the
+#' `print` method documentation for a comprehensive description of the output.
+#' See Details: section for what specifically is included.
 #'
 #' @param object an `epi_df`
-#' @param ... Additional arguments, for compatibility with `summary()`.
-#'   Currently unused.
+#' @param ... Additional arguments; unused in `print()` and
+#'     `summary()`; forwarded to underlying `{dplyr}` methods in the
+#'     rest.
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
@@ -331,7 +359,7 @@ epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
     n_sig <- sum(smry_all_gaps$n_sig_imp)
     sig_label <- if (n_sig == 1) "signal" else "signals"
     cat(sprintf(
-      "* implicit (missing rows in %d/%d key combinations, affecting %d %s)\n",
+      "* missing rows (unobserved time values in %d/%d key combinations, affecting %d %s)\n",
       n_imp_keys, nrow(smry_all_gaps), n_sig, sig_label
     ))
     n_printed <- 1
@@ -340,7 +368,7 @@ epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
     n_sig <- sum(smry_all_gaps$n_sig_gap)
     sig_label <- if (n_sig == 1) "signal" else "signals"
     cat(sprintf(
-      "* explicit (non-lag NAs in %d/%d key combinations, affecting %d %s)\n",
+      "* missing values (NAs within the time series in %d/%d key combinations, affecting %d %s)\n",
       n_gap_keys, nrow(smry_all_gaps), n_sig, sig_label
     ))
     n_printed <- 1
@@ -357,7 +385,7 @@ epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
 
 # Internal helper for latency reporting summary
 epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time) {
-  cat("Latency (lag between last available time_value and epi_df's as_of, by time series):\n")
+  cat("Latency (time between last available time_value and epi_df's as_of, by time series):\n")
 
   # Check for empty time series and return message if none detected
   if (length(sigs) == 0) {
@@ -387,7 +415,7 @@ epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, int
     # Range based on non-empty time series
     ts_non_empty <- ts_sig[!ts_sig$empty, ]
     lags <- if (as_of_valid) {
-      time_minus_time_in_n_steps(as_of, ts_non_empty$max_t, md$time_type)
+      time_minus_time_in_n_steps(as_of, ts_non_empty$max_t, md$time_type, require_integer = FALSE)
     } else {
       NA_real_
     }
@@ -398,9 +426,9 @@ epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, int
     # Format the lag range
     range_str <- if (as_of_valid && !all(is.na(lags))) {
       if (lag_min == lag_max) {
-        sprintf("lag %d%s ", lag_min, unit)
+        sprintf("latency %d%s ", lag_min, unit)
       } else {
-        sprintf("lag %d\u2013%d%s ", lag_min, lag_max, unit)
+        sprintf("latency %d\u2013%d%s ", lag_min, lag_max, unit)
       }
     } else {
       ""
@@ -437,7 +465,7 @@ epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, int
       unit_pl <- cli::pluralize(paste0(" {qty(", lag_max, ")}", unit_format))
       reasons <- c(
         reasons,
-        sprintf("lag > %d%s", notable_threshold, unit_pl)
+        sprintf("latency > %d%s", notable_threshold, unit_pl)
       )
     }
     if (n_lagging > 0) reasons <- c(reasons, "lagging keys")
