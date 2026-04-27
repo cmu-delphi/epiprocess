@@ -82,6 +82,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reexports.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/removed_by_compactify.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/set_time_type0.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/set_versions_end.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/signal_column_names.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/sum_groups_epi_df.html</loc></url>
@@ -94,6 +95,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_delta_to_n_steps.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_minus_time_in_n_steps.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_plus_n_steps.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_abbr.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_abbrs.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/time_type_unit_pluralizer.html</loc></url>

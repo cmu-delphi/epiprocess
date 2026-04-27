@@ -33,7 +33,12 @@ df <- pub_covidcast(
 ) %>%
   as_epi_df()
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■                   
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
+#> Keeping this data in "long" format, with `signal` and `value` columns.
+#> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
+#>   instead, pass `signal_format = "wide"` instead.
+#> → Silence with `signal_format = "long"`
 #> Adding `signal` to `other_keys`.
 
 # Static plot with many keys (subsampling will occur)
@@ -151,8 +156,12 @@ df_versions <- pub_covidcast(
   rename(version = issue) %>%
   as_epi_archive()
 #> Waiting 4s for retry backoff ■■■■■■■■                        
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■                 
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■              
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
+#> Keeping this data in "long" format, with `signal` and `value` columns.
+#> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
+#>   instead, pass `signal_format = "wide"` instead.
+#> → Silence with `signal_format = "long"`
 #> Adding `signal` to `other_keys`.
 
 # Static epi_archive plot showing all captured versions

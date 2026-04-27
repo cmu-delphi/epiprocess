@@ -192,7 +192,7 @@ revision_summary(
 
 ## Value
 
-An S3 object with class `revision_behavior`. This function is typically
+An S3 object with class `revision_analysis`. This function is typically
 called for the purposes of inspecting the printed output. The results of
 the computations are available in
 `revision_analysis(...)$revision_behavior`. If you only want to access

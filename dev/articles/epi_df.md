@@ -343,7 +343,7 @@ flu_data_api <- pub_flusurv(
   epiweeks = epirange(201801, 202001)
 )
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■              
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■             
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
@@ -409,7 +409,7 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-04-27 08:14:25.205323
+#> * as_of     = 2026-04-27 08:45:48.623322
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency  = 330 weeks
 #> 
@@ -505,7 +505,7 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-04-27 08:14:25.205323
+#> * as_of     = 2026-04-27 08:45:48.623322
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency  = 330 weeks
 #> 
@@ -943,14 +943,6 @@ xt %>%
 #> * geo_type  = custom
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Warning: There were 2 warnings in `dplyr::summarize()`.
-#> The first warning was:
-#> ℹ In argument: `min_t = if (...) NULL`.
-#> Caused by warning in `min.default()`:
-#> ! no non-missing arguments to min; returning Inf
-#> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
-#> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,
 #> #   cases_7dav <dbl>
@@ -969,14 +961,6 @@ xt_filled %>%
 #> * geo_type  = custom
 #> * time_type = day
 #> * as_of     = 2024-03-20
-#> Warning: There were 2 warnings in `dplyr::summarize()`.
-#> The first warning was:
-#> ℹ In argument: `min_t = if (...) NULL`.
-#> Caused by warning in `min.default()`:
-#> ! no non-missing arguments to min; returning Inf
-#> ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
-#> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * No time series detected
 #> # A tibble: 0 × 4
 #> # ℹ 4 variables: geo_value <chr>, time_value <date>, cases <dbl>,
 #> #   cases_7dav <dbl>
