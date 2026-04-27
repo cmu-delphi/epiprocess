@@ -813,12 +813,20 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
   if (signal_format == "auto") {
     if (!is.null(signal_var) && value_var %in% names(x)) {
       # Input looks like long format.
-      if (length(unique(x[[signal_var]])) > 1) {
+      unique_signals <- unique(x[[signal_var]])
+      if (length(unique_signals) > 1) {
         # Our processing was built expecting wide format, so convert:
         signal_format <- "wide"
       } else {
         # It's convenient to be able to just use `value` if there's
         # only one signal, so let's not auto-convert in this case:
+        cli::cli_inform(c(
+          'Keeping this data in "long" format,
+           with {.var {signal_var}} and {.var {value_var}} columns.',
+          ">" = 'To convert to wide format with a(n) {.var {unique_signals}} column instead,
+                 pass {.code signal_format = "wide"} instead.',
+          ">" = 'Silence with {.code signal_format = "long"}'
+        ))
         signal_format <- "long"
       }
     } else {

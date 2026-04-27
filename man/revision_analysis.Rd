@@ -129,7 +129,7 @@ appropriate for the scale of the dataset.}
 don't actually change very much. Default is .1, or 10\% of the final value}
 }
 \value{
-An S3 object with class \code{revision_behavior}. This function is typically
+An S3 object with class \code{revision_analysis}. This function is typically
 called for the purposes of inspecting the printed output. The
 results of the computations are available in
 \code{revision_analysis(...)$revision_behavior}. If you only want to access

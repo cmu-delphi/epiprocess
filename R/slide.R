@@ -828,8 +828,10 @@ epi_slide_opt <- function(
   col_names_quo <- enquo(.col_names)
   if (rlang::quo_is_missing(col_names_quo)) {
     cli_abort(
-      paste0("`.col_names` must be specified. Please provide the columns you want to ",
-             "slide over (e.g., `value` or `c(cases, deaths)`)."),
+      paste0(
+        "`.col_names` must be specified. Please provide the columns you want to ",
+        "slide over (e.g., `value` or `c(cases, deaths)`)."
+      ),
       class = "epiprocess__epi_slide_opt__missing_col_names"
     )
   }

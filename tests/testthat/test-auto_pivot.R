@@ -33,6 +33,8 @@ test_that("as_epi_df and as_epi_archive handle auto-detection and pivoting", {
   expect_snapshot(arch_locf <- as_epi_archive(tib))
   expect_equal(arch_locf$DT$a, c(1, 2))
   expect_equal(arch_locf$DT$b, c(11, 11))
+
+  expect_snapshot(invisible(as_epi_df(raw[1:5, ])))
 })
 
 test_that("Explicit signal formats (long/wide) and guessing", {

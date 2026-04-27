@@ -333,3 +333,10 @@ test_that("sum_groups_epi_df works", {
     sum_groups_epi_df(x:y, group_cols = c("time_value", "geo_value", "indic_var1"))
   expect_equal(out, expected_out)
 })
+
+test_that("print on 0-row edf does not malfunction", {
+  expect_snapshot(as_epi_df(
+    tibble(geo_value = character(), time_value = integer(), value = integer()),
+    as_of = 5
+  ))
+})

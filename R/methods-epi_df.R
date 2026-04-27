@@ -105,11 +105,13 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
   # Latency info:
   # Note: sections below use tryCatch as a defensive programming measure.
-  tryCatch(
-    print_latency_info(x),
-    error = function(e) NULL
-  )
-  cat("\n")
+  if (nrow(x) != 0L) {
+    tryCatch(
+      print_latency_info(x),
+      error = function(e) NULL
+    )
+    cat("\n")
+  }
   NextMethod()
 }
 

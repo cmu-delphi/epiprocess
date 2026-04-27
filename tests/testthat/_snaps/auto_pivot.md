@@ -26,6 +26,16 @@
     Message
       Pivoting long to wide based on `signal` column.
 
+---
+
+    Code
+      invisible(as_epi_df(raw[1:5, ]))
+    Message
+      Keeping this data in "long" format, with `signal` and `value` columns.
+      > To convert to wide format with a(n) `cases` column instead, pass `signal_format = "wide"` instead.
+      > Silence with `signal_format = "long"`
+      Adding `signal` to `other_keys`.
+
 # Explicit signal formats (long/wide) and guessing
 
     Code
