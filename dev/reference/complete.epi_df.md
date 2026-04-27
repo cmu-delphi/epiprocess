@@ -54,8 +54,8 @@ daily_edf %>%
 #> * geo_type  = hhs
 #> * time_type = day
 #> * as_of     = 2020-01-04
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = 0 days
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = 0 days
 #> 
 #> # A tibble: 6 × 3
 #>   geo_value time_value value
@@ -75,8 +75,8 @@ daily_edf %>%
 #> * geo_type  = hhs
 #> * time_type = day
 #> * as_of     = 2020-01-04
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = 0 days
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = 0 days
 #> 
 #> # A tibble: 5 × 3
 #> # Groups:   geo_value [2]
@@ -109,8 +109,8 @@ daily_edf %>%
 #> * geo_type  = hhs
 #> * time_type = day
 #> * as_of     = 2020-01-04
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = 0 days
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = 0 days
 #> 
 #> # A tibble: 6 × 3
 #>   geo_value time_value value
@@ -141,8 +141,8 @@ weekly_edf %>%
 #> * geo_type  = hhs
 #> * time_type = week
 #> * as_of     = 2020-01-04
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = -1 weeks
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = -1 weeks
 #> 
 #> # A tibble: 6 × 3
 #>   geo_value time_value value
@@ -164,8 +164,8 @@ weekly_edf %>%
 #> * geo_type  = hhs
 #> * time_type = week
 #> * as_of     = 2020-01-04
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = -1 weeks
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = -1 weeks
 #> 
 #> # A tibble: 5 × 3
 #> # Groups:   geo_value [2]

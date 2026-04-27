@@ -70,9 +70,9 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-24 21:20:52.36089
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1544 days
+#> * as_of     = 2026-04-27 08:14:56.279278
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency across all time series = 1547 days
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -114,9 +114,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-24 21:20:52.36089
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1544 days
+#> * as_of     = 2026-04-27 08:14:56.279278
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency across all time series = 1547 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -142,9 +142,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-24 21:20:52.36089
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1544–1545 days
+#> * as_of     = 2026-04-27 08:14:56.279278
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency across all time series = 1547–1548 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -171,9 +171,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-24 21:20:52.36089
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag across all time series = 1544 days
+#> * as_of     = 2026-04-27 08:14:56.279278
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency across all time series = 1547 days
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
@@ -206,7 +206,7 @@ df <- pub_covidcast(
   as_epi_df() %>%
   arrange_canonical()
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■     
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■                  
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 edf <- inner_join(edf, df, by = c("geo_value", "time_value"))
 edf %>%

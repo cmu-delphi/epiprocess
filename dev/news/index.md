@@ -43,30 +43,30 @@
   [`plot_heatmap()`](https://cmu-delphi.github.io/epiprocess/dev/reference/plot_heatmap.md)
   have been standardized to use `;` as a separator for improved
   readability.
-
 - [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
   now more intelligently selects a plot column when multiple numeric
   candidates are available. If a column named `value` is present, it is
   favored. If no column named `value` is present and multiple numeric
   candidates exist, the function now aborts and asks for explicit
   selection.
-
 - Improved metadata handling and consistency in `epi_df` methods,
   including `pivot_wider` and `pivot_longer`.
-
 - [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.md)
   by default no longer removes revisions from non-NA values to explicit
   NAs, instead only dropping initial estimates of NA that were likely
   inserted by `epix_merge`ing with a more timely and/or more widely
   available signal. This behavior is customizable with the `compactify`,
   `compactify_drop_initial_nas`, and `drop_nas` parameters. It also runs
-  more quickly. \## Bug fixes
+  more quickly.
+
+### Bug fixes
 
 - `autoplot.epi_archive` now works properly on archives that contain a
   column named `v`
   ([\#674](https://github.com/cmu-delphi/epiprocess/issues/674), thanks
   to [@pcollender](https://github.com/pcollender) for the report).
-
+- `epi_slide_opt` (and wrappers `epi_slide_mean`, `epi_slide_sum`) now
+  throw an informative error if the `.col_names` argument is omitted.
 - [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.md)
   with `drop_nas = FALSE` no longer ignores `min_waiting_period`.
   Summary statistics about number of NAs and overall observations have

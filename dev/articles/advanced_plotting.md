@@ -33,7 +33,6 @@ df <- pub_covidcast(
 ) %>%
   as_epi_df()
 #> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■                   
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 #> Adding `signal` to `other_keys`.
 
@@ -152,7 +151,7 @@ df_versions <- pub_covidcast(
   rename(version = issue) %>%
   as_epi_archive()
 #> Waiting 4s for retry backoff ■■■■■■■■                        
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■         
+#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■                 
 #> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 #> Adding `signal` to `other_keys`.
 

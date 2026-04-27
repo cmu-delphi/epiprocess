@@ -126,8 +126,8 @@ print(edf)
 #> * geo_type  = state
 #> * time_type = day
 #> * as_of     = 2021-06-01
-#> Latency (lag between last available observation and epi_df's as_of, by time series):
-#> * lag  = 3 days
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = 3 days
 #> 
 #> # A tibble: 1,460 × 3
 #>   geo_value time_value percent_cli
