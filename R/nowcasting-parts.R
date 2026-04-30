@@ -768,3 +768,43 @@ pipeline <- function(...) {
 # in pipeline.  Column name management may still keep later processing
 # steps that do require inversion from working without including the
 # inversion step.
+
+# Defining features and/or nowcasts and/or targets?
+# - function from epikeytimeversion-set to values?
+#   - works for lag and template sum features fine, and seems sort of
+#     mandatory, but then it seems like a lot of other operations may
+#     actually be covered by this concept, and the question is
+#     absorption vs. allow redundant vs. .....
+#   - untrained variable transformations... feels easier to have
+#     tibble with original values available and maybe specify DAG
+#     dependencies
+#   - trained variable transformations... centering and
+#     scaling... raises questions/complications about whether, when at
+#     a single forecast date, they are based on evolving scaling
+#     factors or a nowcast-date-based factor.  The evolving part then
+#     requires knowledge about how back and maybe over which epikeys
+#     we're looking, maybe stuff about the target if we're trying to
+#     match its scale, etc.; might be annoying to encode and work
+#     with.  Though some definitions of non-evolving actually are
+#     evolving when you look at later steps, and that may turn this
+#     into an entire triangle... except hopefully only when talking
+#     about nowcasts (below) at multiple nowcast dates, where it'd
+#     actually be natural.  Though caching storage w/o quadratic
+#     growth... annoying.  But since we might only be interested in
+#     parts at the end, and internal components might be interested in
+#     different parts, then just wording as archive -> archive
+#     functions seems like it is not going to deliver all the
+#     necessary info / trip up caching?
+#   - sensors... along with trained variable transformations and
+#     nowcasts, seem to have some shared concerns.  Though for sensors
+#     and nowcasts, we are likely more inclined to say to use rolling
+#     fits.  Also, if we're rigid on this spec, it may help with any
+#     caching we want to implement.  Though again, we may have issues
+#     with potential repeated recomputation without some sort of DAG
+#     nonsense counter to that.
+#   - nowcasts... allowing multiple times and forecast dates (and
+#     maybe allowing multiple epikeys) seems annoying, but this might?
+#     also provide a path to making bake&prep&fit&predict make sense,
+#     and would make backtesting a special case, and would allow
+#     optimizing with transient caching during backtesting
+#   - XXX targets... (potential another triangle issue)
