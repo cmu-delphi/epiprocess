@@ -25,13 +25,13 @@ test_that("Errors are thrown due to bad epix_as_of inputs", {
 
 test_that("Warning against max_version being clobberable", {
   # none by default
-  expect_warning(regexp = NA, ea %>% epix_as_of(max(ea$DT$version)))
-  expect_warning(regexp = NA, ea %>% epix_as_of(min(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(max(archive_col(ea, "version"))))
+  expect_warning(regexp = NA, ea %>% epix_as_of(min(archive_col(ea, "version"))))
   # but with `clobberable_versions_start` non-`NA`, yes
   ea_with_clobberable <- ea
-  ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
-  expect_warning(ea_with_clobberable %>% epix_as_of(max(ea$DT$version)))
-  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(ea$DT$version)))
+  ea_with_clobberable$clobberable_versions_start <- max(archive_col(ea_with_clobberable, "version"))
+  expect_warning(ea_with_clobberable %>% epix_as_of(max(archive_col(ea, "version"))))
+  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(archive_col(ea, "version"))))
 })
 
 test_that("epix_as_of properly grabs the data and doesn't mutate key", {

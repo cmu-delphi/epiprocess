@@ -3,121 +3,147 @@
 ## Glossary
 
 ### epi_archive
-A **bitemporal** data store: for every `(geo_value, other_keys..., time_value)` (the "epikey-time") there may be many rows, one per `version`. Tracks the full revision history of public-health data as it gets republished over time.
 
-The unique key (ukey) is `c("geo_value", other_keys..., "time_value", "version")`. The non-version subset is the **epikey-time**.
+An **epi_archive** is a bitemporal data store: for every `(geo_value, other_keys..., time_value)` (the **epikey-time**) there may be many rows, one per `version`. It tracks the full revision history of public-health data as it gets republished over time.
+
+The unique key is:
+
+```r
+c("geo_value", other_keys..., "time_value", "version")
+```
+
+The non-version subset, `c("geo_value", other_keys..., "time_value")`, identifies the epikey-time.
 
 ### Backend abstraction
-The storage layer behind `epi_archive` is abstracted so it can swap between:
-- **data.table** — original implementation; in-memory, mutate-by-reference, keyed indexes. Subclass `epi_archive_dt`.
-- **duckplyr** — DuckDB-backed lazy frame, for performance/scale. Subclass `epi_archive_duck`.
 
-tsibble was considered and rejected: it requires one row per (key, index), which contradicts the bitemporal model. A pure dplyr/tibble backend may be added later but isn't a near-term goal.
+`epi_archive` storage can be backed by:
+
+- **data.table** — original implementation; in-memory, mutate-by-reference, keyed indexes. Archives carry subclass `epi_archive_dt`.
+- **duckplyr** — DuckDB-backed lazy frame, for larger data and engine-optimized query plans. Archives carry subclass `epi_archive_duck`.
+
+`tsibble` was considered and rejected: it requires one row per `(key, index)`, which conflicts with the bitemporal model. A pure dplyr/tibble backend may be useful later, but is not a near-term goal.
 
 ## Backend abstraction design
 
-The abstraction is at the **dplyr verb level**. Backends produce a handle that dplyr verbs operate on; algorithms write pipelines in pure dplyr. Custom verbs (`archive_distinct`, `archive_mutate`, ...) were rejected as reinventing dplyr with worse coverage.
+The abstraction lives at the **dplyr verb level**. Backends expose a handle that dplyr verbs operate on; archive algorithms should be written as dplyr pipelines plus a small number of domain primitives. Custom verbs such as `archive_distinct()` or `archive_mutate()` were rejected as reinventing dplyr with worse coverage.
 
 ### Per-archive dispatch
 
-Each archive carries its backend tag as an S3 subclass: `c("epi_archive_dt", "epi_archive")` or `c("epi_archive_duck", "epi_archive")`. Accessors are S3 generics with one method per backend. This supports mixing backends in one session (e.g. small in-memory test fixtures alongside a large DuckDB-backed archive).
+Each archive carries its backend as an S3 subclass:
 
-### Accessor contract
+```r
+c("epi_archive_dt", "epi_archive")
+c("epi_archive_duck", "epi_archive")
+```
 
-The abstraction is **dplyr verbs + a small set of domain primitives**. The dplyr verbs cover ~95% of what `epi_archive` algorithms need; the domain primitives are operations that dplyr can't express cleanly and that each backend implements differently.
-
-**Core accessors:**
-- `archive_data(x)` — returns the backend-native handle that dplyr verbs operate on. For the data.table backend: `dtplyr::lazy_dt(x$DT)`. For duckplyr: the lazy duckplyr frame. Algorithms write `archive_data(x) %>% distinct(...) %>% mutate(...)` etc.
-- `archive_set_data(x, data)` — accepts any tabular (`lazy_dt`, tibble, `data.table`, duckplyr handle), normalizes to the backend's storage. **Eager backends** (data.table) materialize and re-key on each call; **lazy backends** (duckplyr) just store the new lazy reference and let the engine optimize across stages. Does not validate; use `validate_epi_archive` for that.
-- `archive_col(x, col)` — returns a bare vector. On lazy backends this forces materialization of that column. Hot sites that aggregate (`max`, `range`, ...) can be migrated to a future `archive_summarize(x, expr)` push-down accessor if profiling demands it.
-- `archive_columns_as_list(x)` — shallow list of column references; used by tidyeval machinery (`epix_detailed_restricted_mutate`) that needs pointer-equality between input and output columns.
-
-**Domain primitives** (operations dplyr can't express cleanly across all backends):
-- `archive_locf_join(left, right, by)` — rolling join with last-version-carried-forward semantics; last `by` column is the LOCF axis. Backend implementations: data.table's `[i, , on=by, roll=TRUE, nomatch=NA]`; DuckDB's `ASOF JOIN`.
-
-### Lifecycle / mutation semantics
-
-- **Eager (data.table)**: `archive_set_data` materializes to a keyed `data.table`. Mutation produces a new archive sharing nothing with the old.
-- **Lazy (duckplyr)**: `archive_set_data` stores the new query plan. No table rewrite until something forces collection (`archive_col`, `validate_epi_archive`, or an explicit `archive_collect`). This is the whole reason duckplyr is interesting — pipelines compose into one optimized engine query, not N table rewrites.
-
-### Connection model (duckdb)
-
-In-memory only: each archive holds its own duckdb in-memory handle, opened transparently by duckplyr. No persistence, no shared connections. File-backed (`as_duckdb_epi_archive(data, path=...)`) is a small additive change if/when needed; would not change the accessor methods.
+Accessors are S3 generics with backend methods. This supports mixing backends in one R session, e.g. small in-memory fixtures alongside a large DuckDB-backed archive.
 
 ### Construction
 
-Two factory functions:
-- `as_epi_archive(data, ...)` — data.table-backed (the original; unchanged behavior).
-- `as_duckdb_epi_archive(data, ...)` — duckdb-backed.
+Backend choice is explicit at construction time:
 
-Backend choice as a constructor argument (`as_epi_archive(data, backend = "duckdb")`) was rejected: separate factories make the return type, lifecycle, and perf characteristics obvious at call sites. A future `as_epi_archive_from_duck(duck_table, ...)` would let users wrap an existing remote table without round-tripping through an R data.frame.
+- `as_epi_archive(data, ...)` — data.table-backed, original behavior.
+- `as_duckdb_epi_archive(data, ...)` — duckdb/duckplyr-backed.
+
+A constructor argument like `as_epi_archive(data, backend = "duckdb")` was rejected: separate factories make return type, lifecycle, and performance characteristics visible at call sites. A future `as_epi_archive_from_duck(duck_table, ...)` could wrap an existing remote table without round-tripping through an R data frame.
 
 ### The `$DT` public field
 
-Stays as-is on the data.table backend; documented as a power-user escape hatch into raw data.table. The duck backend exposes a different field (`$duck`) for its escape hatch. There is intentionally no uniform `$data` field — eager vs lazy semantics differ enough that a single name would mislead.
+`$DT` remains the data.table backend's documented power-user escape hatch. The duck backend exposes `$duck` instead. There is intentionally no uniform `$data` field: eager and lazy semantics differ enough that a shared name would invite misleading assumptions.
 
-### dtplyr coverage gotchas
+Backend-neutral package code and behavior-level tests should use accessors rather than `$DT`/`$duck`.
 
-Notes from migrating algorithms; future migrations should expect:
+## Accessor contract
 
-- **`bind_rows` doesn't dispatch on `lazy_dt`.** Use `union_all` (which is an S3 generic and dispatches via dtplyr to `data.table::funion`).
-- **`funion` is type-strict.** Logical `NA`s introduced via `mutate(across(..., ~ NA))` break the set-op when the target columns are typed. Use `~ .x[NA]` to preserve the source column's type.
-- **`as.data.table()` on a `dtplyr_step` ignores the `key` argument.** The DT setter collects first, then sets the key explicitly via `setkeyv` if it differs from `key_colnames(x)`.
+The abstraction is **dplyr verbs + domain primitives**. Dplyr handles most archive algorithms; domain primitives cover operations that dplyr cannot express cleanly or portably across backends.
 
-## Current task: adding the duckplyr backend
-
-Sequence:
-1. **Convert accessors to S3 generics**, with the existing implementations becoming `.epi_archive_dt` methods. Pure mechanical refactor, no behavior change.
-2. **Tag existing archives with the `epi_archive_dt` subclass** in `new_epi_archive` so dispatch finds the right methods.
-3. **Add the duck backend**: `duckplyr` to Suggests; `as_duckdb_epi_archive()` constructor; `.epi_archive_duck` methods for every accessor.
-4. **Parameterize the refactor-readiness test suite** to run against both backends, validating that public API behavior is identical.
-
-## Refactor status
-
-### Accessor layer (`R/archive_accessors.R`)
-All accessors are S3 generics dispatching on the backend subclass tag
-(`epi_archive_dt`, `epi_archive_duck`):
+### Core accessors
 
 - `archive_data(x)` — backend-native dplyr handle. DT: `dtplyr::lazy_dt(x$DT)`. Duck: `x$duck`.
-- `archive_set_data(x, data)` — replaces storage; normalizes any tabular input. DT materializes + re-keys; duck stores lazy ref.
-- `archive_col(x, col)` — bare vector. Forces materialization on duck (one column).
-- `archive_tbl(x)` — eager tibble. **Load-bearing**: used wherever downstream code needs a real data frame (compactify, `vec_split`, `vctrs::vec_split`, `validate_signal_format`, slide chunking, tidyeval requiring `.env$`). Not retiring.
-- `archive_colmask(x)` — 0-row tibble with the archive's columns. For tidyselect data masks that only need schema (`eval_select`, `eval_pure_select_names_from_dots`).
-- `archive_colnames`, `archive_nrow`, `archive_ncol`, `archive_any_duplicated_key`, `archive_deep_copy`, `archive_filter_rows`, `archive_col_is_factor`, `archive_columns_as_list` — all duck-implemented.
-- `archive_locf_join(left, right, by)` — domain primitive with backend dispatch. DT/default impl uses data.table roll-join; duck impl uses dplyr rolling join syntax, which duckplyr lowers to DuckDB ASOF JOIN.
+- `archive_set_data(x, data)` — replace storage with a tabular result. DT materializes and re-keys; duck stores a lazy reference. Does not validate; call validation separately when needed.
+- `archive_tbl(x)` — eager tibble. **Load-bearing** wherever code needs a real data frame: compactification, `vec_split()`, validation, slide chunking, snapshot comparisons, and tidyeval contexts requiring `.env$`. The public `tibble::as_tibble()` method for `epi_archive` uses this to materialize full archive history backend-neutrally.
+- `archive_col(x, col)` — bare vector. On lazy backends this forces materialization of that column. Hot aggregate sites may eventually want a push-down helper like `archive_summarize(x, expr)`.
+- `archive_colmask(x)` — 0-row tibble with the archive schema; useful for tidyselect/data-mask operations that only need column names.
+- `archive_colnames(x)`, `archive_nrow(x)`, `archive_ncol(x)` — schema/size helpers.
+- `archive_filter_rows(x, rows)` — backend-preserving row filter.
+- `archive_deep_copy(x)` — independent copy preserving backend.
+- `archive_col_is_factor(x, col)` — factor detection. Duck always returns `FALSE` because DuckDB does not preserve R factor/ordered columns.
+- `archive_columns_as_list(x)` — shallow list of column references; used by tidyeval code that needs pointer-equality between input and output columns.
+- `archive_any_duplicated_key(x)` — duplicate-key detector. Returns `TRUE` if any key is duplicated, otherwise `FALSE`; it deliberately does not expose backend-specific details such as first duplicate row index or duplicate-group count.
+
+### Domain primitives
+
+- `archive_locf_join(left, right, by)` — rolling join with last-version-carried-forward semantics. The last `by` column is the LOCF axis. DT/default uses data.table roll join; duck uses dplyr rolling join syntax, which duckplyr lowers to DuckDB ASOF JOIN.
 
 ### Backend-preserving construction
-`as_epi_archive_like(template, x, ...)` (in `archive_duck.R`) is an S3 generic that picks the right factory based on `template`'s subclass tag. Used by `filter.epi_archive` and `epix_merge` so the output archive's backend matches the input's.
 
-### Duck backend
-- Constructor: `as_duckdb_epi_archive(data, ...)` builds via `as_epi_archive` then swaps storage via `as_duckdb_archive` (short-circuits if input is already duck).
-- Storage field: `$duck` (a `duckplyr_df` lazy frame). In-memory only; each archive owns its handle.
-- Caveat: `archive_col_is_factor` always returns FALSE on duck — duckdb has no factor type, and round-tripping drops factors to character.
+`as_epi_archive_like(template, x, ...)` chooses the right archive factory from `template`'s subclass tag. Use it when an archive method returns a new archive and should preserve the input backend.
 
-### Algorithms migrated
-- `epix_fill_through_version` — `archive_data` + `union_all` + `archive_set_data`.
-- `epix_merge` — `full_join` on key cols + `archive_locf_join` chain. ~190 → ~95 lines.
-- `epix_detailed_restricted_mutate` — `archive_columns_as_list` + `archive_set_data`.
-- `epix_slide.grouped_epi_archive` `all_versions=TRUE` path — `archive_tbl` + per-chunk `archive_set_data`.
-- `epix_as_of` — `archive_data %>% filter %>% arrange(desc(version)) %>% distinct(across(nonversion_keys), .keep_all=TRUE) %>% arrange(nonversion_keys) %>% collect`. Replaces the data.table-only `unique(by=, fromLast=TRUE)`. Caveat: `slice_max(order_by=)` is not dtplyr-portable (translation emits unqualified `desc()`), hence the arrange+distinct form.
+## Lifecycle and mutation semantics
 
-### Read-side sweep
-All non-test `R/` code paths go through accessors. Printing now dispatches by backend: DT prints `$DT[]`; duck prints an eager `archive_tbl()` preview.
+- **Eager/data.table:** `archive_set_data()` materializes to a keyed `data.table`; mutation produces a new archive sharing nothing with the old.
+- **Lazy/duckplyr:** `archive_set_data()` stores a new query plan. No table rewrite occurs until collection is forced by `archive_tbl()`, `archive_col()`, validation, printing, or similar eager operations.
 
-### Tests
-- `tests/testthat/test-epi_archive-refactor-readiness.R` parameterized over both backends. Duck tests skip when duckplyr isn't installed. Includes backend-preservation assertions for `filter`, `epix_merge`, `epix_truncate_versions_after`, and grouped `epix_slide(.all_versions = TRUE)`, plus coverage for `epix_fill_through_version`.
-- `tests/testthat/helper-archive-backend.R` is a POC for broader backend switching. `EPIPROCESS_TEST_ARCHIVE_BACKEND=duck` shadows unqualified `as_epi_archive()` calls in tests so they construct duck archives; default `dt` leaves the exported constructor alone. Use `test_dir()`/`test_check()` rather than bare `test_file()` so helpers are loaded.
-- Full local test suite passing after the latest accessor/duck updates.
+This distinction is the reason the duck backend exists: composed pipelines can become one optimized DuckDB query rather than a chain of in-memory rewrites.
 
-### Algorithms not yet exercised on the duck backend
-The parameterized refactor-readiness suite covers `key_colnames`, `clone`, `epix_as_of`, `epix_merge`, `filter.epi_archive`, `epix_slide.grouped_epi_archive` (`.all_versions = TRUE`), `epix_truncate_versions_after`, and `epix_fill_through_version`. Likely-works-but-unverified on duck:
-- `revision_analysis`
-- `epix_pivot_wider`
+## DuckDB connection model
 
-Natural follow-up: extend the parameterized suite to cover these.
+Duck archives are in-memory only. Each archive owns its own duckdb handle via duckplyr. There are no shared connections and no persistence. A file-backed option such as `as_duckdb_epi_archive(data, path = ...)` would be additive and should not change accessor contracts.
 
-### Lower-priority cleanups (deferred)
-- **Roxygen on internal accessors** — `archive_accessors.R` has full `@param`/`@return` blocks on 1-line wrappers. File-level comment already explains purpose.
-- **`archive_any_duplicated_key()` contract mismatch** — DT returns the index of the first duplicated key (`anyDuplicated` semantics); duck currently returns a positive duplicate-group count. Existing validation only needs zero/nonzero, but the accessor docs and implementations should be reconciled before broader use.
-- **Tests using `$DT`** (~89 refs in `tests/testthat/`) — to be migrated when the parameterized suite is broadened.
-- **Roxygen examples that use `$DT`** (~12 refs) — public field, intentionally left.
+## Algorithm portability notes
+
+Archive algorithms should prefer `archive_data()` pipelines and return through `archive_set_data()` / `as_epi_archive_like()`.
+
+Useful patterns:
+
+- Use `union_all()` rather than `bind_rows()` for lazy-dt compatibility; `bind_rows()` does not dispatch on `lazy_dt`.
+- Preserve typed missing values with `~ .x[NA]`; plain `NA` can become logical and break type-strict set operations.
+- For `epix_as_of()`, prefer `arrange(desc(version)) %>% distinct(across(nonversion_keys), .keep_all = TRUE)` over `slice_max()`: dtplyr can emit non-portable translations for `slice_max(order_by = ...)`.
+- Printing should dispatch by backend. DT can print `$DT[]`; duck should print an eager `archive_tbl()` preview.
+- For grouped `epix_slide(..., .all_versions = TRUE)`, chunking currently needs eager `archive_tbl()` data before constructing per-group archives.
+
+### dtplyr gotchas
+
+- `funion()` is type-strict; logical `NA`s introduced during mutation can break it.
+- `as.data.table()` on a `dtplyr_step` ignores the `key` argument. The DT setter should collect first, then set the key explicitly with `setkeyv()`.
+
+### Duck gotchas
+
+- DuckDB does not preserve R factor/ordered columns. Code relying on factor semantics, especially `.drop = FALSE` grouping behavior, needs DT-specific tests or explicit coercion.
+- Some R-specific vector classes may round-trip differently through DuckDB (e.g. `difftime` units). Tests should assert semantic equality where backend representation can differ.
+
+## Testing strategy
+
+Behavior-level archive tests should avoid backend internals and assert through accessors:
+
+```r
+archive_tbl(x)
+archive_col(x, "version")
+archive_colnames(x)
+archive_nrow(x)
+key_colnames(x)
+```
+
+DT implementation details such as `data.table::key(x$DT)`, by-reference mutation, or `$DT` class should be DT-specific tests and skipped in duck mode. Snapshot tests whose expected text includes backend-specific formatting should remain DT-only; duck should get semantic assertions instead of separate formatting snapshots.
+
+`tests/testthat/helper-archive-backend.R` provides a backend-switching test mode. With:
+
+```sh
+EPIPROCESS_TEST_ARCHIVE_BACKEND=duck
+```
+
+unqualified test calls to `as_epi_archive()` construct duck archives. Default mode leaves `as_epi_archive()` unchanged. Use `test_dir()`, `test_local()`, or `test_check()` so helpers are loaded; bare `test_file()` does not load helpers automatically.
+
+Common commands are in `Justfile`:
+
+```sh
+distrobox enter rocker -- just test-dt
+distrobox enter rocker -- just test-duck
+distrobox enter rocker -- just test-backends
+```
+
+The duck-switched suite uses `TESTTHAT_PARALLEL=false` because the current helper-shadowing approach and duck/testthat subprocess startup are not reliably parallel-safe.
+
+## Known follow-ups
+
+- Consider push-down helpers for hot materialization sites, especially repeated `archive_col()` aggregations on lazy backends.
