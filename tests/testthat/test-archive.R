@@ -58,6 +58,53 @@ test_that("as_epi_archive default compactification (no longer messages/warns)", 
   expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
+test_that("as_tibble() materializes archive rows backend-neutrally", {
+  ea <- dumb_ex %>% as_epi_archive(compactify = FALSE)
+
+  expect_s3_class(tibble::as_tibble(ea), "tbl_df")
+  expect_equal(tibble::as_tibble(ea), archive_tbl(ea))
+
+  if (rlang::is_installed("duckplyr")) {
+    duck_ea <- as_duckdb_archive(as_epi_archive(dumb_ex, compactify = FALSE))
+    expect_equal(tibble::as_tibble(duck_ea), archive_tbl(duck_ea))
+  }
+})
+
+test_that("archive_any_duplicated_key returns logicals across backends", {
+  duplicate_data <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-02"),
+    value = 1:2
+  )
+  unique_data <- duplicate_data[1, ]
+
+  duplicate_dt <- new_epi_archive(
+    duplicate_data,
+    geo_type = "custom",
+    time_type = "day",
+    other_keys = character(),
+    clobberable_versions_start = NA,
+    versions_end = as.Date("2020-01-03")
+  )
+  unique_dt <- new_epi_archive(
+    unique_data,
+    geo_type = "custom",
+    time_type = "day",
+    other_keys = character(),
+    clobberable_versions_start = NA,
+    versions_end = as.Date("2020-01-03")
+  )
+
+  expect_identical(archive_any_duplicated_key(duplicate_dt), TRUE)
+  expect_identical(archive_any_duplicated_key(unique_dt), FALSE)
+
+  if (rlang::is_installed("duckplyr")) {
+    expect_identical(archive_any_duplicated_key(as_duckdb_archive(duplicate_dt)), TRUE)
+    expect_identical(archive_any_duplicated_key(as_duckdb_archive(unique_dt)), FALSE)
+  }
+})
+
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
     regexp = "missing the following expected columns: xyz"

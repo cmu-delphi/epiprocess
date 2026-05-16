@@ -94,14 +94,14 @@ archive_ncol.epi_archive_dt <- function(x) {
 #' Check whether the archive's data has any duplicate rows by key
 #'
 #' @param x an `epi_archive`
-#' @return integer; 0 if no duplicates, otherwise the index of the first
+#' @return `TRUE` if any key is duplicated, otherwise `FALSE`
 #' @keywords internal
 #' @noRd
 archive_any_duplicated_key <- function(x) UseMethod("archive_any_duplicated_key")
 
 #' @export
 archive_any_duplicated_key.epi_archive_dt <- function(x) {
-  anyDuplicated(x$DT, by = key_colnames(x))
+  anyDuplicated(x$DT, by = key_colnames(x)) > 0L
 }
 
 #' Deep-copy the archive's underlying data in place

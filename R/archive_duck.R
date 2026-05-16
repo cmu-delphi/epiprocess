@@ -124,14 +124,12 @@ archive_ncol.epi_archive_duck <- function(x) {
 #' @export
 archive_any_duplicated_key.epi_archive_duck <- function(x) {
   key_cols <- key_colnames(x)
-  dup_count <- x$duck %>%
+  dup_groups <- x$duck %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(key_cols))) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
     dplyr::filter(.data$n > 1L) %>%
-    dplyr::summarise(d = dplyr::n()) %>%
-    dplyr::collect() %>%
-    dplyr::pull(.data$d)
-  as.integer(dup_count)
+    dplyr::collect()
+  nrow(dup_groups) > 0L
 }
 
 #' @export
