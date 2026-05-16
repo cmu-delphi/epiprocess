@@ -30,7 +30,7 @@ dummy_ex <- tibble::tribble(
 ) %>%
   as_epi_archive(versions_end = as.Date("2022-01-01"), compactify = FALSE)
 
-dummy_ex_weekly <- dummy_ex$DT %>%
+dummy_ex_weekly <- archive_tbl(dummy_ex) %>%
   mutate(across(
     c(time_value, version),
     ~ as.Date("2020-01-01") + 7 * as.numeric(.x - as.Date("2020-01-01"))
@@ -41,18 +41,22 @@ dummy_ex_weekly <- dummy_ex$DT %>%
   )
 stopifnot(dummy_ex_weekly$time_type == "week")
 
-dummy_ex_yearmonthly <- dummy_ex$DT %>%
-  mutate(across(
-    c(time_value, version),
-    ~ tsibble::make_yearmonth(2020, 1) + as.numeric(.x - as.Date("2020-01-01"))
-  )) %>%
-  as_epi_archive(
-    versions_end = tsibble::make_yearmonth(2020, 1) + as.numeric(as.Date("2022-01-01") - as.Date("2020-01-01")),
-    compactify = FALSE
-  )
-stopifnot(dummy_ex_yearmonthly$time_type == "yearmonth")
+if (!using_duck_backend()) {
+  dummy_ex_yearmonthly <- archive_tbl(dummy_ex) %>%
+    mutate(across(
+      c(time_value, version),
+      ~ tsibble::make_yearmonth(2020, 1) + as.numeric(.x - as.Date("2020-01-01"))
+    )) %>%
+    as_epi_archive(
+      versions_end = tsibble::make_yearmonth(2020, 1) + as.numeric(as.Date("2022-01-01") - as.Date("2020-01-01")),
+      compactify = FALSE
+    )
+  stopifnot(dummy_ex_yearmonthly$time_type == "yearmonth")
+} else {
+  dummy_ex_yearmonthly <- NULL
+}
 
-dummy_ex_integerly <- dummy_ex$DT %>%
+dummy_ex_integerly <- archive_tbl(dummy_ex) %>%
   mutate(across(
     c(time_value, version),
     ~ 1 + as.numeric(.x - as.Date("2020-01-01"))
@@ -64,6 +68,7 @@ dummy_ex_integerly <- dummy_ex$DT %>%
 stopifnot(dummy_ex_integerly$time_type == "integer")
 
 test_that("revision_summary works for dummy datasets", {
+  skip_if_duck_backend("snapshot output currently records DT-backed formatting")
   rs1 <- dummy_ex %>% revision_summary(bulk_reporting_level = 1)
   rs2 <- dummy_ex %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
   expect_snapshot(rs1)
@@ -77,10 +82,12 @@ test_that("revision_summary works for dummy datasets", {
   expect_snapshot(rs3$revision_behavior %>% print(n = 10, width = 300))
   # Yearmonthly has the same story. It would have been close to encountering
   # min_waiting_period-based filtering but we actually set its versions_end to
-  # sometime in 2080 rather than 2022:
-  rs4 <- dummy_ex_yearmonthly %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
-  expect_snapshot(rs4)
-  expect_snapshot(rs4$revision_behavior %>% print(n = 10, width = 300))
+  # sometime in 2080 rather than 2022. DuckDB does not round-trip yearmonth.
+  if (!using_duck_backend()) {
+    rs4 <- dummy_ex_yearmonthly %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
+    expect_snapshot(rs4)
+    expect_snapshot(rs4$revision_behavior %>% print(n = 10, width = 300))
+  }
   # Integer is very much like daily. We have to provide some of the
   # configuration arguments since we have no idea about what the integers
   # represent. If the possible integers being used have large jumps like
@@ -101,7 +108,7 @@ test_that("tidyselect is functional", {
   expect_no_error(revision_summary(dummy_ex, value))
   expect_no_error(revision_summary(dummy_ex, starts_with("val")))
   # column order shouldn't matter
-  with_later_key_col <- dummy_ex$DT %>%
+  with_later_key_col <- archive_tbl(dummy_ex) %>%
     select(geo_value, time_value, value, version) %>%
     as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
   expect_equal(
@@ -109,7 +116,7 @@ test_that("tidyselect is functional", {
     quiet(revision_summary(dummy_ex))
   )
   # extra column shouldn't interfere
-  with_later_val_col <- dummy_ex$DT %>%
+  with_later_val_col <- archive_tbl(dummy_ex) %>%
     mutate(value2 = 0) %>%
     as_epi_archive(versions_end = dummy_ex$versions_end, compactify = FALSE)
   expect_equal(
@@ -118,7 +125,7 @@ test_that("tidyselect is functional", {
   )
   # error when which column we're summarizing is ambiguous
   expect_error(
-    dummy_ex$DT %>%
+    archive_tbl(dummy_ex) %>%
       copy() %>%
       mutate(value2 = value) %>%
       as_epi_archive(
@@ -160,19 +167,21 @@ test_that("revision_summary default min_waiting_period works as expected", {
       pull(time_value),
     as.Date("2020-01-01")
   )
-  # just outside the window for monthly data
-  expect_equal(
-    tibble(
-      geo_value = 1,
-      time_value = tsibble::make_yearmonth(2000, 1:2),
-      version = time_value + 1,
-      value = 1:2
-    ) %>%
-      as_epi_archive(versions_end = tsibble::make_yearmonth(2000, 3)) %>%
-      revision_summary(return_only_tibble = TRUE) %>%
-      pull(time_value),
-    tsibble::make_yearmonth(2000, 1)
-  )
+  # just outside the window for monthly data. DuckDB does not round-trip yearmonth.
+  if (!using_duck_backend()) {
+    expect_equal(
+      tibble(
+        geo_value = 1,
+        time_value = tsibble::make_yearmonth(2000, 1:2),
+        version = time_value + 1,
+        value = 1:2
+      ) %>%
+        as_epi_archive(versions_end = tsibble::make_yearmonth(2000, 3)) %>%
+        revision_summary(return_only_tibble = TRUE) %>%
+        pull(time_value),
+      tsibble::make_yearmonth(2000, 1)
+    )
+  }
   # we don't know how to interpret the default in terms of "integer" time_type
   expect_error(
     tibble(
@@ -188,6 +197,7 @@ test_that("revision_summary default min_waiting_period works as expected", {
 })
 
 test_that("revision_summary bulk reporting summary works as expected", {
+  skip_if_duck_backend("snapshot output currently records DT-backed formatting")
   expect_snapshot(
     bind_rows(
       tibble(geo_value = 1, time_value = 1:100, version = (100 + 9) %/% 7 * 7, value = 1:100),

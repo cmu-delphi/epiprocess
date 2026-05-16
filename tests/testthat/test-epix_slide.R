@@ -190,7 +190,7 @@ test_that("quosure passing issue in epix_slide is resolved + other potential iss
   # another so that we don't accidentally pass tests due to accidentally
   # matching the default grouping.
   ea <- as_epi_archive(
-    archive_cases_dv_subset$DT %>%
+    archive_tbl(archive_cases_dv_subset) %>%
       dplyr::mutate(modulus = seq_len(nrow(.)) %% 5L),
     other_keys = "modulus",
     compactify = TRUE
@@ -330,10 +330,10 @@ ea <- tibble::tribble(
 test_that("epix_slide with .all_versions option has access to all older versions", {
   slide_fn <- function(x, gk, rtv) {
     tibble(
-      n_versions = length(unique(x$DT$version)),
-      n_row = nrow(x$DT),
-      dt_class1 = class(x$DT)[[1L]],
-      dt_key = list(key(x$DT))
+      n_versions = length(unique(archive_col(x, "version"))),
+      n_row = archive_nrow(x),
+      backend = class(x)[[1L]],
+      key_cols = list(key_colnames(x))
     )
   }
 
@@ -350,13 +350,13 @@ test_that("epix_slide with .all_versions option has access to all older versions
   expect_true(inherits(result1, "tbl_df"))
 
   result2 <- tibble::tribble(
-    ~version, ~n_versions, ~n_row, ~dt_class1, ~dt_key,
-    test_date + 2, 1L, sum(1:1), "data.table", key(ea$DT),
-    test_date + 3, 2L, sum(1:2), "data.table", key(ea$DT),
-    test_date + 4, 3L, sum(1:3), "data.table", key(ea$DT),
-    test_date + 5, 4L, sum(1:4), "data.table", key(ea$DT),
-    test_date + 6, 5L, sum(1:5), "data.table", key(ea$DT),
-    test_date + 7, 6L, sum(1:6), "data.table", key(ea$DT),
+    ~version, ~n_versions, ~n_row, ~backend, ~key_cols,
+    test_date + 2, 1L, sum(1:1), class(ea)[[1L]], key_colnames(ea),
+    test_date + 3, 2L, sum(1:2), class(ea)[[1L]], key_colnames(ea),
+    test_date + 4, 3L, sum(1:3), class(ea)[[1L]], key_colnames(ea),
+    test_date + 5, 4L, sum(1:4), class(ea)[[1L]], key_colnames(ea),
+    test_date + 6, 5L, sum(1:5), class(ea)[[1L]], key_colnames(ea),
+    test_date + 7, 6L, sum(1:6), class(ea)[[1L]], key_colnames(ea),
   )
 
   expect_identical(result1, result2) # *
@@ -433,7 +433,7 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
       unnest(data) %>%
       inner_join(
         x %>% epix_as_of(x$versions_end),
-        by = setdiff(key(x$DT), c("version"))
+        by = setdiff(key_colnames(x), c("version"))
       ) %>%
       summarize(mean_abs_delta = mean(abs(binary - lag1)))
   }
@@ -453,12 +453,12 @@ test_that("epix_as_of and epix_slide with long enough window are compatible", {
   )
 
   # Test the same sort of thing when grouping by geo in an archive with multiple geos.
-  ea_multigeo <- ea
-  ea_multigeo$DT <- rbind(
-    ea_multigeo$DT,
-    copy(ea_multigeo$DT)[, geo_value := "ak"][, binary := -binary][]
-  )
-  setkeyv(ea_multigeo$DT, key(ea$DT))
+  ea_multigeo <- archive_tbl(ea) %>%
+    dplyr::bind_rows(
+      archive_tbl(ea) %>%
+        dplyr::mutate(geo_value = "x", binary = -binary)
+    ) %>%
+    as_epi_archive()
 
   expect_identical(
     ea_multigeo %>%
@@ -499,7 +499,7 @@ test_that("epix_slide with .all_versions option works as intended", {
   xx1 <- xx %>%
     group_by(.data$geo_value) %>%
     epix_slide(
-      .f = ~ sum(.x$DT$binary),
+      .f = ~ sum(archive_col(.x, "binary")),
       .before = 2,
       .new_col_name = "sum_binary",
       .all_versions = TRUE
@@ -522,7 +522,7 @@ test_that("epix_slide with .all_versions option works as intended", {
   xx3 <- xx %>%
     group_by(dplyr::across(dplyr::all_of("geo_value"))) %>%
     epix_slide(
-      .f = ~ sum(.x$DT$binary),
+      .f = ~ sum(archive_col(.x, "binary")),
       .before = 2,
       .new_col_name = "sum_binary",
       .all_versions = TRUE
@@ -564,7 +564,7 @@ test_that("epix_slide works with 0-row computation outputs", {
     ea %>%
       epix_slide_empty(),
     tibble::tibble(
-      version = ea$DT$version[integer(0)]
+      version = archive_col(ea, "version")[integer(0)]
     )
   )
   expect_identical(
@@ -572,8 +572,8 @@ test_that("epix_slide works with 0-row computation outputs", {
       group_by(geo_value) %>%
       epix_slide_empty(),
     tibble::tibble(
-      geo_value = ea$DT$geo_value[integer(0)],
-      version = ea$DT$version[integer(0)]
+      geo_value = archive_col(ea, "geo_value")[integer(0)],
+      version = archive_col(ea, "version")[integer(0)]
     ) %>%
       group_by(geo_value)
   )
@@ -583,7 +583,7 @@ test_that("epix_slide works with 0-row computation outputs", {
     ea %>%
       epix_slide_empty(.all_versions = TRUE),
     tibble::tibble(
-      version = ea$DT$version[integer(0)]
+      version = archive_col(ea, "version")[integer(0)]
     )
   )
   expect_identical(
@@ -591,8 +591,8 @@ test_that("epix_slide works with 0-row computation outputs", {
       group_by(geo_value) %>%
       epix_slide_empty(.all_versions = TRUE),
     tibble::tibble(
-      geo_value = ea$DT$geo_value[integer(0)],
-      version = ea$DT$version[integer(0)]
+      geo_value = archive_col(ea, "geo_value")[integer(0)],
+      version = archive_col(ea, "version")[integer(0)]
     ) %>%
       group_by(geo_value)
   )
@@ -741,8 +741,7 @@ test_that("epix_slide computation via dots outputs the same result using col nam
 
 test_that("`epix_slide` doesn't decay date output", {
   expect_true(
-    xx$DT %>%
-      as_tibble() %>%
+    archive_tbl(xx) %>%
       as_epi_archive() %>%
       epix_slide(.before = 5, ~ attr(.x, "metadata")$as_of) %>%
       `[[`("slide_value") %>%

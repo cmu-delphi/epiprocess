@@ -17,8 +17,8 @@ test_that("as_epi_df and as_epi_archive handle auto-detection and pivoting", {
   # as_epi_archive: auto-detects and pivots
   raw_arch <- dplyr::mutate(raw, version = test_date + 6)
   expect_snapshot(arch <- as_epi_archive(raw_arch))
-  expect_setequal(names(arch$DT), c("geo_value", "time_value", "cases", "deaths", "version"))
-  expect_equal(nrow(arch$DT), 5)
+  expect_setequal(archive_colnames(arch), c("geo_value", "time_value", "cases", "deaths", "version"))
+  expect_equal(archive_nrow(arch), 5)
 
   # Drops extra columns during pivot
   raw_extra <- dplyr::mutate(raw, direction = 1)
@@ -31,8 +31,8 @@ test_that("as_epi_df and as_epi_archive handle auto-detection and pivoting", {
     signal = c("a", "b", "a"), value = c(1, 11, 2)
   )
   expect_snapshot(arch_locf <- as_epi_archive(tib))
-  expect_equal(arch_locf$DT$a, c(1, 2))
-  expect_equal(arch_locf$DT$b, c(11, 11))
+  expect_equal(archive_col(arch_locf, "a"), c(1, 2))
+  expect_equal(archive_col(arch_locf, "b"), c(11, 11))
 
   expect_snapshot(invisible(as_epi_df(raw[1:5, ])))
 })
@@ -95,7 +95,7 @@ test_that("Multi-candidate behavior and silence", {
   # Archive silence
   raw_arch <- dplyr::mutate(raw_no_pivot, version = test_date + 1)
   expect_silent(arch <- as_epi_archive(raw_arch))
-  expect_true(all(c("signal", "signal_name") %in% names(arch$DT)))
+  expect_true(all(c("signal", "signal_name") %in% archive_colnames(arch)))
 })
 
 test_that("Error handling and non-scalar validations", {
