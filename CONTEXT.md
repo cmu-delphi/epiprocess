@@ -62,7 +62,8 @@ The abstraction is **dplyr verbs + domain primitives**. Dplyr handles most archi
 - `archive_data(x)` — backend-native dplyr handle. DT: `dtplyr::lazy_dt(x$DT)`. Duck: `x$duck`.
 - `archive_set_data(x, data)` — replace storage with a tabular result. DT materializes and re-keys; duck stores a lazy reference. Does not validate; call validation separately when needed.
 - `archive_tbl(x)` — eager tibble. **Load-bearing** wherever code needs a real data frame: compactification, `vec_split()`, validation, slide chunking, snapshot comparisons, and tidyeval contexts requiring `.env$`. The public `tibble::as_tibble()` method for `epi_archive` uses this to materialize full archive history backend-neutrally.
-- `archive_col(x, col)` — bare vector. On lazy backends this forces materialization of that column. Hot aggregate sites may eventually want a push-down helper like `archive_summarize(x, expr)`.
+- `archive_col(x, col)` — bare vector. On lazy backends this forces materialization of that column; prefer narrower helpers for aggregate-only call sites.
+- `archive_col_range(x, col)` — length-2 `range()`-style summary. Duck pushes this down as a single aggregate query and preserves R `range()` missing-value semantics for the supported no-`na.rm` contract.
 - `archive_colmask(x)` — 0-row tibble with the archive schema; useful for tidyselect/data-mask operations that only need column names.
 - `archive_colnames(x)`, `archive_nrow(x)`, `archive_ncol(x)` — schema/size helpers.
 - `archive_filter_rows(x, rows)` — backend-preserving row filter.
@@ -146,4 +147,4 @@ The duck-switched suite uses `TESTTHAT_PARALLEL=false` because the current helpe
 
 ## Known follow-ups
 
-- Consider push-down helpers for hot materialization sites, especially repeated `archive_col()` aggregations on lazy backends.
+None currently tracked.

@@ -386,12 +386,15 @@ validate_epi_archive <- function(x) {
     cli_abort("Column `version` must not contain missing values.")
   }
 
-  if (archive_nrow(x) > 0L && x$versions_end < max(archive_col(x, "version"))) {
-    cli_abort(
-      "`x$versions_end` was {x$versions_end}, but the archive contained
-        updates for a later version or versions, up through {max(archive_col(x, 'version'))}",
-      class = "epiprocess__versions_end_earlier_than_updates"
-    )
+  if (archive_nrow(x) > 0L) {
+    max_update_version <- archive_col_range(x, "version")[[2L]]
+    if (x$versions_end < max_update_version) {
+      cli_abort(
+        "`x$versions_end` was {x$versions_end}, but the archive contained
+        updates for a later version or versions, up through {max_update_version}",
+        class = "epiprocess__versions_end_earlier_than_updates"
+      )
+    }
   }
   if (!is.na(x$clobberable_versions_start) && x$clobberable_versions_start > x$versions_end) {
     cli_abort(
@@ -664,33 +667,39 @@ print_epi_archive <- function(x, ..., class = TRUE, methods = TRUE, preview) {
     ))
   }
 
+  n_rows <- archive_nrow(x)
+  n_cols <- archive_ncol(x)
+  has_rows <- n_rows != 0L
+  time_value_range <- if (has_rows) archive_col_range(x, "time_value")
+  version_range <- if (has_rows) archive_col_range(x, "version")
+
   cat_line(format_message(
     c(
       if (class) "An `epi_archive` object, with:",
       "i" = if (length(x$other_keys) > 0) {
         "Other keys: {x$other_keys}"
       },
-      "i" = if (archive_nrow(x) != 0L) {
+      "i" = if (has_rows) {
         # \u00a0 is non-breaking space cli won't crush, to align with version range
-        line <- 'Time range:{strrep("\u00a0", 3)} {min(archive_col(x, "time_value"))} -- {max(archive_col(x, "time_value"))}'
+        line <- 'Time range:{strrep("\u00a0", 3)} {time_value_range[[1L]]} -- {time_value_range[[2L]]}'
         if (time_type(x) %in% c("day", "week")) {
           line <- paste0(line, " (times are {time_type(x)}s)")
         }
         line
       },
-      "i" = if (archive_nrow(x) != 0L) {
-        max_update_version <- max(archive_col(x, "version"))
+      "i" = if (has_rows) {
+        max_update_version <- version_range[[2L]]
         if (vec_equal(max_update_version, x$versions_end)) {
-          "Version range: {min(archive_col(x, 'version'))} -- {max_update_version}"
+          "Version range: {version_range[[1L]]} -- {max_update_version}"
         } else {
-          "Version range: {min(archive_col(x, 'version'))} -- {x$versions_end},
+          "Version range: {version_range[[1L]]} -- {x$versions_end},
            but no row updates recorded after {max_update_version}"
         }
       },
       "i" = if (!is.na(x$clobberable_versions_start)) {
         "Clobberable versions start: {x$clobberable_versions_start}"
       },
-      "i" = "A preview of the table ({archive_nrow(x)} rows x {archive_ncol(x)} columns):"
+      "i" = "A preview of the table ({n_rows} rows x {n_cols} columns):"
     )
   ))
   print(preview)

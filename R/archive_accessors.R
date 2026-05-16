@@ -52,6 +52,20 @@ archive_col.epi_archive_dt <- function(x, col) {
   x$DT[[col]]
 }
 
+#' Get the range of a single column from the archive's data
+#'
+#' @param x an `epi_archive`
+#' @param col a string column name
+#' @return a length-2 vector, as in `range()`
+#' @keywords internal
+#' @noRd
+archive_col_range <- function(x, col) UseMethod("archive_col_range")
+
+#' @export
+archive_col_range.epi_archive_dt <- function(x, col) {
+  range(x$DT[[col]])
+}
+
 #' Get column names of the archive's data
 #'
 #' @param x an `epi_archive`
