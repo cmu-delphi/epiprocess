@@ -160,7 +160,7 @@ archive_filter_rows.epi_archive_duck <- function(x, condition) {
   # Eager mask path: materializes, applies the boolean vector, re-uploads.
   # Call sites that pre-compute a logical vector via `archive_col(...)` fit
   # poorly with the lazy backend; predicate-style call sites should prefer
-  # `archive_data(x) %>% filter(...)` directly.
+  # `archive_filter(x, ...)`.
   tbl <- archive_tbl(x)
   duckplyr::as_duckdb_tibble(tbl[condition, , drop = FALSE])
 }

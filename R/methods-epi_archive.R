@@ -131,7 +131,7 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
     result <- epix_truncate_versions_after(x, version)
     if (!min_time_value_inf) {
       # See below for why we need this branch.
-      result <- archive_set_data(result, archive_filter_rows(result, archive_col(result, "time_value") >= .min_time_value))
+      result <- archive_filter(result, time_value >= .min_time_value)
     }
     return(result)
   }
@@ -437,8 +437,8 @@ epix_merge <- function(x, y,
     },
     "truncate" = {
       new_versions_end <- min(c(x$versions_end, y$versions_end))
-      x_synced <- archive_set_data(x, archive_filter_rows(x, archive_col(x, "version") <= new_versions_end))
-      y_synced <- archive_set_data(y, archive_filter_rows(y, archive_col(y, "version") <= new_versions_end))
+      x_synced <- archive_filter(x, version <= new_versions_end)
+      y_synced <- archive_filter(y, version <= new_versions_end)
     }
   )
 
@@ -826,7 +826,7 @@ epix_truncate_versions_after.epi_archive <- function(x, max_version) {
   if (max_version > x$versions_end) {
     cli_abort("`max_version` must be at most `epi_archive$versions_end`.")
   }
-  x <- archive_set_data(x, archive_filter_rows(x, archive_col(x, "version") <= max_version))
+  x <- archive_filter(x, version <= max_version)
   # (^ this filter operation seems to always copy the DT, even if it
   # keeps every entry; we don't guarantee this behavior in
   # documentation, though, so we could change to alias in this case)
