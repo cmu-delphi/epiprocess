@@ -135,6 +135,18 @@ archive_deep_copy.epi_archive_dt <- function(x) {
   x
 }
 
+#' Filter archive data with dplyr predicates
+#'
+#' @param x an `epi_archive`
+#' @param ... predicates passed to `dplyr::filter()`
+#' @return a modified `epi_archive` preserving backend
+#' @keywords internal
+#' @noRd
+archive_filter <- function(x, ...) {
+  predicates <- rlang::enquos(...)
+  archive_set_data(x, dplyr::filter(archive_data(x), !!!predicates))
+}
+
 #' Filter rows of the archive's data by a logical vector
 #'
 #' @param x an `epi_archive`
