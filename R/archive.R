@@ -365,7 +365,7 @@ validate_epi_archive <- function(x) {
     ))
   }
 
-  if (archive_any_duplicated_key(x) != 0L) {
+  if (archive_any_duplicated_key(x)) {
     cli_abort("The archive data must have one row per unique combination of the key variables.
             If you have additional key variables other than `geo_value`, `time_value`, and
             `version`, such as an age group column, please specify them in `other_keys`.
