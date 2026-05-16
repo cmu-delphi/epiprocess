@@ -48,8 +48,7 @@ library(purrr)
 library(ggplot2)
 
 # This fetches the raw data backing the archive_cases_dv_subset object.
-dv <- archive_cases_dv_subset$DT %>%
-  as_tibble()
+dv <- tibble::as_tibble(archive_cases_dv_subset)
 ```
 
 The data can also be fetched from the Delphi Epidata API with the following query:
@@ -119,7 +118,7 @@ vertical lines.
 
 ```{r}
 edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end)
-max_version <- max(dv_archive$DT$version)
+max_version <- max(tibble::as_tibble(dv_archive)$version)
 versions <- seq(as.Date("2020-06-01"), max_version - 1, by = "1 month")
 monthly_snapshots <- map(versions, function(v) {
   epix_as_of(dv_archive, v) %>% mutate(version = v)

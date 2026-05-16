@@ -179,7 +179,7 @@ library(data.table)
 library(dplyr)
 library(purrr)
 library(ggplot2)
-dv <- archive_cases_dv_subset$DT %>%
+dv <- tibble::as_tibble(archive_cases_dv_subset) %>%
   select(-case_rate_7d_av) %>%
   tidyr::drop_na() %>%
   as_epi_archive()

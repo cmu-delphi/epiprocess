@@ -179,6 +179,7 @@ archive_set_data.epi_archive_dt <- function(x, data) {
 #' @param by character vector of join columns; the last is the LOCF axis
 #' @return a dplyr-compatible handle representing the joined result
 #' @keywords internal
+#' @noRd
 archive_locf_join <- function(left, right, by) UseMethod("archive_locf_join")
 
 #' @export

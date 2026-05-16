@@ -1,3 +1,17 @@
+#' Convert an archive to a tibble
+#'
+#' Materializes the full version history of an `epi_archive` as a tibble. This is
+#' useful when you need to inspect archive rows directly, independent of the
+#' archive's storage backend. For a single as-of snapshot, prefer [epix_as_of()].
+#'
+#' @param x an `epi_archive`
+#' @param ... forwarded to [`tibble::as_tibble`]
+#' @return A tibble containing the archive's full version history.
+#' @export
+as_tibble.epi_archive <- function(x, ...) {
+  tibble::as_tibble(archive_tbl(x), ...)
+}
+
 #' Generate a snapshot from an `epi_archive` object
 #'
 #' Generates a snapshot in `epi_df` format from an `epi_archive` object, as of a
@@ -25,12 +39,13 @@
 #' @return An `epi_df` object.
 #'
 #' @examples
+#' archive_cases_dv_subset_tbl <- tibble::as_tibble(archive_cases_dv_subset)
 #' epix_as_of(
 #'   archive_cases_dv_subset,
-#'   version = max(archive_cases_dv_subset$DT$version)
+#'   version = max(archive_cases_dv_subset_tbl$version)
 #' )
 #'
-#' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
+#' range(archive_cases_dv_subset_tbl$version) # 2020-06-02 -- 2021-12-01
 #'
 #' epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
 #'
@@ -47,15 +62,15 @@
 #' # which case you will get warnings about potential reproducibility issues:
 #'
 #' archive_cases_dv_subset2 <- as_epi_archive(
-#'   archive_cases_dv_subset$DT,
+#'   archive_cases_dv_subset_tbl,
 #'   # Suppose last version with an update could potentially be rewritten
 #'   # (a.k.a. "hotfixed", "clobbered", etc.):
-#'   clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
+#'   clobberable_versions_start = max(archive_cases_dv_subset_tbl$version),
 #'   # Suppose today is the following day, and there are no updates out yet:
-#'   versions_end = max(archive_cases_dv_subset$DT$version) + 1L
+#'   versions_end = max(archive_cases_dv_subset_tbl$version) + 1L
 #' )
 #'
-#' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
+#' epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset_tbl$version))
 #'
 #' @importFrom data.table between key
 #' @importFrom checkmate assert_scalar assert_logical assert_class
@@ -326,7 +341,7 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
 #' merged <- epix_merge(s1, s2, sync = "locf")
-#' merged[["DT"]]
+#' tibble::as_tibble(merged)
 #'
 #' # Example 2
 #' # The s1 signal at August 1st gets revised from 12 to 13 on August 3rd
@@ -345,7 +360,7 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
 #' merged <- epix_merge(s1, s2, sync = "locf")
-#' merged[["DT"]]
+#' tibble::as_tibble(merged)
 #'
 #'
 #' # Example 3:
@@ -365,7 +380,7 @@ epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf"
 #' s1 <- s1 %>% as_epi_archive()
 #' s2 <- s2 %>% as_epi_archive()
 #' merged <- epix_merge(s1, s2, sync = "locf")
-#' merged[["DT"]]
+#' tibble::as_tibble(merged)
 #' @importFrom dplyr full_join select
 #' @export
 epix_merge <- function(x, y,
@@ -706,19 +721,20 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   group_by(geo_value) %>%
 #'   epix_slide(
 #'     function(x, gk, rtv) {
+#'       x_tbl <- tibble::as_tibble(x)
 #'       tibble(
-#'         versions_start = if (nrow(x$DT) == 0L) {
+#'         versions_start = if (nrow(x_tbl) == 0L) {
 #'           "NA (0 rows)"
 #'         } else {
-#'           toString(min(x$DT$version))
+#'           toString(min(x_tbl$version))
 #'         },
 #'         versions_end = x$versions_end,
-#'         time_range = if (nrow(x$DT) == 0L) {
+#'         time_range = if (nrow(x_tbl) == 0L) {
 #'           "0 `time_value`s"
 #'         } else {
-#'           sprintf("%s -- %s", min(x$DT$time_value), max(x$DT$time_value))
+#'           sprintf("%s -- %s", min(x_tbl$time_value), max(x_tbl$time_value))
 #'         },
-#'         n = nrow(x$DT),
+#'         n = nrow(x_tbl),
 #'         class1 = class(x)[[1L]]
 #'       )
 #'     },
@@ -903,9 +919,9 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
 #' inside the `.f` in `epix_slide()`. If they don't cover your use case, then
 #' you can set `.format_aware = TRUE` to enable usage of these columns, but be
 #' careful to:
-#' * Factor in that `.data$DT` may have been converted into a compact format
-#'   based on diffing consecutive versions, and the last version of each
-#'   observation in `.data$DT` will always be carried forward to future
+#' * Factor in that the archive rows may have been converted into a compact
+#'   format based on diffing consecutive versions, and the last version of each
+#'   observation in the archive will always be carried forward to future
 #'   `version`s`; see details of [`as_epi_archive`].
 #' * Set `clobberable_versions_start` and `versions_end` of the result
 #'   appropriately after the `filter` call. They will be initialized with the
