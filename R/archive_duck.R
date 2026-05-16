@@ -107,6 +107,23 @@ archive_col.epi_archive_duck <- function(x, col) {
 }
 
 #' @export
+archive_col_range.epi_archive_duck <- function(x, col) {
+  summary <- x$duck %>%
+    dplyr::summarise(
+      .min = min(.data[[col]], na.rm = TRUE),
+      .max = max(.data[[col]], na.rm = TRUE),
+      .missing = sum(is.na(.data[[col]]))
+    ) %>%
+    dplyr::collect()
+
+  result <- c(summary$.min, summary$.max)
+  if (summary$.missing > 0L) {
+    result <- result[rep(NA_integer_, 2L)]
+  }
+  result
+}
+
+#' @export
 archive_colnames.epi_archive_duck <- function(x) {
   colnames(x$duck)
 }

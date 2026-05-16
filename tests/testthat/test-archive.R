@@ -70,6 +70,30 @@ test_that("as_tibble() materializes archive rows backend-neutrally", {
   }
 })
 
+test_that("archive_col_range returns ranges across backends", {
+  ea <- as_epi_archive(dumb_ex, compactify = FALSE)
+  expect_identical(archive_col_range(ea, "version"), range(archive_col(ea, "version")))
+  expect_identical(archive_col_range(ea, "value"), range(archive_col(ea, "value")))
+
+  with_missing <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-01") + 0:1,
+    value = c(1, NA)
+  ) %>%
+    as_epi_archive(compactify = FALSE)
+  expect_identical(archive_col_range(with_missing, "value"), c(NA_real_, NA_real_))
+
+  if (rlang::is_installed("duckplyr")) {
+    duck_ea <- as_duckdb_archive(ea)
+    expect_identical(archive_col_range(duck_ea, "version"), range(archive_col(ea, "version")))
+    expect_identical(archive_col_range(duck_ea, "value"), range(archive_col(ea, "value")))
+
+    duck_with_missing <- as_duckdb_archive(with_missing)
+    expect_identical(archive_col_range(duck_with_missing, "value"), c(NA_real_, NA_real_))
+  }
+})
+
 test_that("archive_any_duplicated_key returns logicals across backends", {
   duplicate_data <- tibble::tibble(
     geo_value = "ca",
