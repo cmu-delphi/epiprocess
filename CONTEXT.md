@@ -106,6 +106,7 @@ All non-test `R/` code paths go through accessors. Printing now dispatches by ba
 
 ### Tests
 - `tests/testthat/test-epi_archive-refactor-readiness.R` parameterized over both backends. Duck tests skip when duckplyr isn't installed. Includes backend-preservation assertions for `filter`, `epix_merge`, `epix_truncate_versions_after`, and grouped `epix_slide(.all_versions = TRUE)`, plus coverage for `epix_fill_through_version`.
+- `tests/testthat/helper-archive-backend.R` is a POC for broader backend switching. `EPIPROCESS_TEST_ARCHIVE_BACKEND=duck` shadows unqualified `as_epi_archive()` calls in tests so they construct duck archives; default `dt` leaves the exported constructor alone. Use `test_dir()`/`test_check()` rather than bare `test_file()` so helpers are loaded.
 - Full local test suite passing after the latest accessor/duck updates.
 
 ### Algorithms not yet exercised on the duck backend
