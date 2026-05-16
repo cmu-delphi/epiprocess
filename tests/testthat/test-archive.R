@@ -58,6 +58,49 @@ test_that("as_epi_archive default compactification (no longer messages/warns)", 
   expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
+test_that("as_duckdb_epi_archive_from_duck wraps existing duckplyr data", {
+  skip_if_not_installed("duckplyr")
+
+  duck_data <- duckplyr::duckdb_tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2020-01-01", "2020-01-01")),
+    version = as.Date(c("2020-01-01", "2020-01-02")),
+    value = c(1, 2)
+  )
+  archive <- as_duckdb_epi_archive_from_duck(duck_data)
+
+  expect_true(withVisible(as_duckdb_epi_archive_from_duck(duck_data))$visible)
+  expect_s3_class(archive, "epi_archive_duck")
+  expect_s3_class(archive_data(archive), "duckplyr_df")
+  expect_equal(archive_tbl(archive), tibble::as_tibble(dplyr::collect(duck_data)))
+  expect_identical(archive$versions_end, as.Date("2020-01-02"))
+})
+
+test_that("as_duckdb_epi_archive_from_duck can wrap trusted data without validation", {
+  skip_if_not_installed("duckplyr")
+
+  duck_data <- duckplyr::duckdb_tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2020-01-01", "2020-01-01")),
+    version = as.Date(c("2020-01-01", "2020-01-01")),
+    value = c(1, 2)
+  )
+  archive <- as_duckdb_epi_archive_from_duck(
+    duck_data,
+    geo_type = "state",
+    time_type = "day",
+    versions_end = as.Date("2020-01-01"),
+    validate = FALSE
+  )
+
+  expect_s3_class(archive, "epi_archive_duck")
+  expect_equal(archive_nrow(archive), 2L)
+  expect_error(
+    validate_epi_archive(archive),
+    class = "epiprocess__epi_archive_requires_unique_key"
+  )
+})
+
 test_that("as_tibble() materializes archive rows backend-neutrally", {
   ea <- dumb_ex %>% as_epi_archive(compactify = FALSE)
 
