@@ -79,6 +79,7 @@ test_that("epix_fill_through_version return with expected visibility", {
 })
 
 test_that("epix_fill_through_version returns same key & doesn't mutate old DT or its key", {
+  skip_if_duck_backend("data.table key preservation is DT-backend-specific")
   ea <- as_epi_archive(
     tibble::tibble(geo_value = "ak", time_value = test_date + 1, version = test_date + 1, value = 10L)
   )
