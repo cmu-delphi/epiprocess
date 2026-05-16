@@ -1,4 +1,5 @@
 test_that("Grouping, regrouping, and ungrouping archives works as intended", {
+  skip_if_duck_backend("duckdb does not preserve factor/ordered columns used by .drop tests")
   # From an example:
   suppressPackageStartupMessages(library(dplyr))
   toy_archive <-
