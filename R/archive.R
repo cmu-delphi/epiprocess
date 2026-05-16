@@ -655,18 +655,8 @@ as_epi_archive <- function(
   archive_set_data(result, compactified)
 }
 
-#' Print information about an `epi_archive` object
-#'
-#' @param x An `epi_archive` object.
-#' @param ... Should be empty, there to satisfy the S3 generic.
-#' @param class Boolean; whether to print the class label header
-#' @param methods Boolean; whether to print all available methods of
-#'   the archive
-#'
-#' @importFrom cli cat_line format_message
-#' @importFrom rlang check_dots_empty
-#' @export
-print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
+# Shared implementation for backend-specific archive print methods.
+print_epi_archive <- function(x, ..., class = TRUE, methods = TRUE, preview) {
   if (rlang::dots_n(...) > 0) {
     cli_abort(c(
       "Error in print.epi_archive()",
@@ -703,9 +693,35 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
       "i" = "A preview of the table ({archive_nrow(x)} rows x {archive_ncol(x)} columns):"
     )
   ))
-  print(x$DT[])
+  print(preview)
 
   return(invisible(x))
+}
+
+#' @export
+print.epi_archive_dt <- function(x, ..., class = TRUE, methods = TRUE) {
+  print_epi_archive(x, ..., class = class, methods = methods, preview = x$DT[])
+}
+
+#' @export
+print.epi_archive_duck <- function(x, ..., class = TRUE, methods = TRUE) {
+  print_epi_archive(x, ..., class = class, methods = methods, preview = archive_tbl(x))
+}
+
+#' Print information about an `epi_archive` object
+#'
+#' @param x An `epi_archive` object.
+#' @param ... Should be empty, there to satisfy the S3 generic.
+#' @param class Boolean; whether to print the class label header
+#' @param methods Boolean; whether to print all available methods of
+#'   the archive
+#'
+#' @importFrom cli cat_line format_message
+#' @importFrom rlang check_dots_empty
+#' @export
+print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
+  preview <- if (!is.null(x$DT)) x$DT[] else archive_tbl(x)
+  print_epi_archive(x, ..., class = class, methods = methods, preview = preview)
 }
 
 

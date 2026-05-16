@@ -84,7 +84,7 @@ All accessors are S3 generics dispatching on the backend subclass tag
 - `archive_tbl(x)` — eager tibble. **Load-bearing**: used wherever downstream code needs a real data frame (compactify, `vec_split`, `vctrs::vec_split`, `validate_signal_format`, slide chunking, tidyeval requiring `.env$`). Not retiring.
 - `archive_colmask(x)` — 0-row tibble with the archive's columns. For tidyselect data masks that only need schema (`eval_select`, `eval_pure_select_names_from_dots`).
 - `archive_colnames`, `archive_nrow`, `archive_ncol`, `archive_any_duplicated_key`, `archive_deep_copy`, `archive_filter_rows`, `archive_col_is_factor`, `archive_columns_as_list` — all duck-implemented.
-- `archive_locf_join(left, right, by)` — domain primitive (plain function, not a generic). DT impl uses roll-join; coerces inputs via `as.data.table` so duck handles get materialized. Should grow backend dispatch (DuckDB ASOF JOIN) when profiling demands it.
+- `archive_locf_join(left, right, by)` — domain primitive with backend dispatch. DT/default impl uses data.table roll-join; duck impl uses dplyr rolling join syntax, which duckplyr lowers to DuckDB ASOF JOIN.
 
 ### Backend-preserving construction
 `as_epi_archive_like(template, x, ...)` (in `archive_duck.R`) is an S3 generic that picks the right factory based on `template`'s subclass tag. Used by `filter.epi_archive` and `epix_merge` so the output archive's backend matches the input's.
@@ -102,17 +102,14 @@ All accessors are S3 generics dispatching on the backend subclass tag
 - `epix_as_of` — `archive_data %>% filter %>% arrange(desc(version)) %>% distinct(across(nonversion_keys), .keep_all=TRUE) %>% arrange(nonversion_keys) %>% collect`. Replaces the data.table-only `unique(by=, fromLast=TRUE)`. Caveat: `slice_max(order_by=)` is not dtplyr-portable (translation emits unqualified `desc()`), hence the arrange+distinct form.
 
 ### Read-side sweep
-All non-test `R/` code paths go through accessors. Only remaining `$DT` ref is `print(x$DT[])` in `print.epi_archive` — intentionally backend-specific.
+All non-test `R/` code paths go through accessors. Printing now dispatches by backend: DT prints `$DT[]`; duck prints an eager `archive_tbl()` preview.
 
 ### Tests
-- `tests/testthat/test-epi_archive-refactor-readiness.R` parameterized over both backends (37 tests × 2 = 74). Duck tests skip when duckplyr isn't installed. Includes two backend-preservation tests asserting `filter` and `epix_merge` output `class` matches input.
-- Total: 1615 tests passing.
+- `tests/testthat/test-epi_archive-refactor-readiness.R` parameterized over both backends. Duck tests skip when duckplyr isn't installed. Includes backend-preservation assertions for `filter`, `epix_merge`, `epix_truncate_versions_after`, and grouped `epix_slide(.all_versions = TRUE)`, plus coverage for `epix_fill_through_version`.
+- Full local test suite passing after the latest accessor/duck updates.
 
 ### Algorithms not yet exercised on the duck backend
-The parameterized refactor-readiness suite covers `key_colnames`, `clone`, `epix_as_of`, `epix_merge`, `filter.epi_archive`. Likely-works-but-unverified on duck:
-- `epix_slide.grouped_epi_archive`
-- `epix_truncate_versions_after`
-- `epix_fill_through_version`
+The parameterized refactor-readiness suite covers `key_colnames`, `clone`, `epix_as_of`, `epix_merge`, `filter.epi_archive`, `epix_slide.grouped_epi_archive` (`.all_versions = TRUE`), `epix_truncate_versions_after`, and `epix_fill_through_version`. Likely-works-but-unverified on duck:
 - `revision_analysis`
 - `epix_pivot_wider`
 
@@ -120,5 +117,6 @@ Natural follow-up: extend the parameterized suite to cover these.
 
 ### Lower-priority cleanups (deferred)
 - **Roxygen on internal accessors** — `archive_accessors.R` has full `@param`/`@return` blocks on 1-line wrappers. File-level comment already explains purpose.
+- **`archive_any_duplicated_key()` contract mismatch** — DT returns the index of the first duplicated key (`anyDuplicated` semantics); duck currently returns a positive duplicate-group count. Existing validation only needs zero/nonzero, but the accessor docs and implementations should be reconciled before broader use.
 - **Tests using `$DT`** (~89 refs in `tests/testthat/`) — to be migrated when the parameterized suite is broadened.
 - **Roxygen examples that use `$DT`** (~12 refs) — public field, intentionally left.

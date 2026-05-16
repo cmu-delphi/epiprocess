@@ -175,11 +175,14 @@ archive_set_data.epi_archive_dt <- function(x, data) {
 #' `join_by(..., closest(... >= ...))` (1.1.0+), but coverage across backends
 #' is uneven, so each backend implements this directly.
 #'
-#' @param left,right tabular inputs (anything `as.data.table` accepts)
+#' @param left,right tabular inputs
 #' @param by character vector of join columns; the last is the LOCF axis
-#' @return a `dtplyr::lazy_dt` representing the joined result
+#' @return a dplyr-compatible handle representing the joined result
 #' @keywords internal
-archive_locf_join <- function(left, right, by) {
+archive_locf_join <- function(left, right, by) UseMethod("archive_locf_join")
+
+#' @export
+archive_locf_join.default <- function(left, right, by) {
   left_dt <- as.data.table(left)
   right_dt <- as.data.table(right)
   right_nonby <- setdiff(names(right_dt), by)

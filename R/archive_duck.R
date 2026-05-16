@@ -151,6 +151,36 @@ archive_filter_rows.epi_archive_duck <- function(x, condition) {
 }
 
 #' @export
+archive_locf_join.duckplyr_df <- function(left, right, by) {
+  if (!inherits(right, "duckplyr_df")) {
+    right <- duckplyr::as_duckdb_tibble(tibble::as_tibble(right))
+  }
+
+  right_nonby <- setdiff(colnames(right), by)
+  if (length(right_nonby) == 0L) {
+    return(left)
+  }
+
+  locf_axis <- by[[length(by)]]
+  exact_by <- by[-length(by)]
+  join_exprs <- c(
+    rlang::syms(exact_by),
+    list(rlang::expr(closest(!!rlang::sym(locf_axis) >= !!rlang::sym(locf_axis))))
+  )
+
+  # duckplyr lowers rolling dplyr joins to DuckDB ASOF joins. Keep this here
+  # rather than in archive code so DT and DuckDB can use their native engines.
+  joined <- dplyr::left_join(left, right, by = dplyr::join_by(!!!join_exprs))
+
+  locf_axis_x <- paste0(locf_axis, ".x")
+  if (locf_axis_x %in% colnames(joined)) {
+    joined <- dplyr::rename(joined, !!locf_axis := !!rlang::sym(locf_axis_x))
+  }
+
+  dplyr::select(joined, dplyr::all_of(c(colnames(left), right_nonby)))
+}
+
+#' @export
 archive_columns_as_list.epi_archive_duck <- function(x) {
   as.list(dplyr::collect(x$duck))
 }
