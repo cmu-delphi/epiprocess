@@ -23,3 +23,6 @@ man-roxygen
 ^pkgdown-watch.R$
 ^.editorconfig$
 ^benchmarks$
+^CONTEXT.md$
+^Justfile$
+^DUCK.md$

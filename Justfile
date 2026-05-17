@@ -16,3 +16,15 @@ test-duck:
 
 # Run both archive backend test passes.
 test-backends: test-dt test-duck
+
+namespace:
+    Rscript -e 'roxygen2::roxygenise(roclets = "namespace")'
+
+document:
+    Rscript -e 'devtools::document()'
+
+lint:
+    Rscript -e "devtools::load_all(); lintr::lint_package()"
+
+format:
+    air format R
