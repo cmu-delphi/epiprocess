@@ -149,4 +149,10 @@ The duck-switched suite uses `TESTTHAT_PARALLEL=false` because the current helpe
 
 ## Known follow-ups
 
-None currently tracked.
+- autoplot() with duck backend:
+  1. Fix archive_col usage in epix_as_of validation (small change, big win —
+  eliminates ~3 full column pulls per snapshot).
+  2. Cache archive_col_range results, or store version/time-value class on the
+  archive object at construction time so validation is metadata-only.
+  3. Rewrite the autoplot snapshot loop to a single query (bigger refactor, but
+  turns linear-in-versions DuckDB overhead into constant).

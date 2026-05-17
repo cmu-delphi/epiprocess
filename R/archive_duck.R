@@ -290,6 +290,7 @@ archive_filter_rows.epi_archive_duck <- function(x, condition) {
   duckplyr::as_duckdb_tibble(tbl[condition, , drop = FALSE])
 }
 
+#' @importFrom rlang :=
 #' @export
 archive_locf_join.duckplyr_df <- function(left, right, by) {
   if (!inherits(right, "duckplyr_df")) {
@@ -305,7 +306,7 @@ archive_locf_join.duckplyr_df <- function(left, right, by) {
   exact_by <- by[-length(by)]
   join_exprs <- c(
     rlang::syms(exact_by),
-    list(rlang::expr(closest(!!rlang::sym(locf_axis) >= !!rlang::sym(locf_axis))))
+    list(rlang::expr(closest(!!rlang::sym(locf_axis) >= !!rlang::sym(locf_axis))))   # nolint: object_usage_linter, closest is a dplyr::join_by DSL marker
   )
 
   # duckplyr lowers rolling dplyr joins to DuckDB ASOF joins. Keep this here

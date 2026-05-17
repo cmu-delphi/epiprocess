@@ -438,7 +438,7 @@ validate_epi_archive <- function(x) {
 #'   judgment call here by the current `epi_archive` format.
 #'
 #' @importFrom data.table is.data.table key
-#' @importFrom dplyr arrange filter
+#' @importFrom dplyr arrange filter pick
 #' @importFrom vctrs vec_duplicate_any
 #'
 #' @keywords internal
@@ -463,7 +463,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0, init_nas_are_l
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
-#' @importFrom dplyr filter if_all everything
+#' @importFrom dplyr filter if_all everything pick
 removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_locf = FALSE) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
@@ -668,9 +668,9 @@ print_epi_archive <- function(x, ..., class = TRUE, methods = TRUE, preview) {
   }
 
   n_rows <- archive_nrow(x)
-  n_cols <- archive_ncol(x)
+  n_cols <- archive_ncol(x) # nolint: object_usage_linter, used in glue string below
   has_rows <- n_rows != 0L
-  time_value_range <- if (has_rows) archive_col_range(x, "time_value")
+  time_value_range <- if (has_rows) archive_col_range(x, "time_value") # nolint: object_usage_linter, used in glue string below
   version_range <- if (has_rows) archive_col_range(x, "version")
 
   cat_line(format_message(
@@ -959,6 +959,7 @@ process_signal_archive <- function(
 }
 #' Pivot an archive from long to wide
 #'
+#' @importFrom rlang :=
 #' @keywords internal
 epix_pivot_wider <- function(x, names_from, values_from) {
   assert_class(x, "epi_archive")

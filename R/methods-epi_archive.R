@@ -466,8 +466,12 @@ epix_merge <- function(x, y,
 
   # Attach each side's non-by (value) columns via LOCF on the trailing key.
   result <- result_keys %>%
-    archive_locf_join(archive_data(x_synced) %>% select(all_of(c(by, x_nonby))), by) %>%
-    archive_locf_join(archive_data(y_synced) %>% select(all_of(c(by, y_nonby))), by)
+    archive_locf_join(
+      archive_data(x_synced) %>% select(all_of(c(by, x_nonby))), by
+    ) %>%
+    archive_locf_join(
+      archive_data(y_synced) %>% select(all_of(c(by, y_nonby))), by
+    )
 
   as_epi_archive_like(
     x, as.data.table(result),

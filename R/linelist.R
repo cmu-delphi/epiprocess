@@ -54,7 +54,7 @@
 #'   version_deleted = delete_date
 #' )
 #'
-#' @importFrom rlang enquo as_label eval_tidy .data
+#' @importFrom rlang enquo as_label eval_tidy .data :=
 #' @importFrom dplyr transmute select bind_rows group_by summarise arrange mutate ungroup
 #' @importFrom tidyselect eval_select
 #' @importFrom utils head
