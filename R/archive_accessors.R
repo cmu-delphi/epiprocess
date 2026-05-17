@@ -66,6 +66,59 @@ archive_col_range.epi_archive_dt <- function(x, col) {
   range(x$DT[[col]])
 }
 
+#' Get the R class vector of a single column without materializing it
+#'
+#' Schema-only probe. Lazy backends pull a single row (or rely on metadata)
+#' rather than collecting the column. Used at call sites that only need to
+#' compare classes (e.g. validating that a user-supplied `version` matches
+#' the archive's `version` column class).
+#'
+#' @param x an `epi_archive`
+#' @param col a string column name
+#' @return a character vector, as returned by `class()`
+#' @keywords internal
+#' @noRd
+archive_col_class <- function(x, col) UseMethod("archive_col_class")
+
+#' @export
+archive_col_class.epi_archive_dt <- function(x, col) {
+  class(x$DT[[col]])
+}
+
+#' Test whether a column contains any `NA` values
+#'
+#' Aggregate-only probe. Lazy backends push this down as a single boolean
+#' query instead of collecting the column.
+#'
+#' @param x an `epi_archive`
+#' @param col a string column name
+#' @return a length-1 logical
+#' @keywords internal
+#' @noRd
+archive_col_anyNA <- function(x, col) UseMethod("archive_col_anyNA")
+
+#' @export
+archive_col_anyNA.epi_archive_dt <- function(x, col) {
+  anyNA(x$DT[[col]])
+}
+
+#' Get the distinct values of a single column
+#'
+#' Lazy backends push this down as `SELECT DISTINCT`. The return order is
+#' unspecified; callers that need a specific order should sort.
+#'
+#' @param x an `epi_archive`
+#' @param col a string column name
+#' @return a vector of the column's distinct values
+#' @keywords internal
+#' @noRd
+archive_col_distinct <- function(x, col) UseMethod("archive_col_distinct")
+
+#' @export
+archive_col_distinct.epi_archive_dt <- function(x, col) {
+  unique(x$DT[[col]])
+}
+
 #' Get column names of the archive's data
 #'
 #' @param x an `epi_archive`

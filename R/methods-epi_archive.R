@@ -202,7 +202,7 @@ epix_as_of_current <- function(x) {
 #' @export
 set_versions_end <- function(x, versions_end) {
   assert_class(x, "epi_archive")
-  validate_version_bound(versions_end, list(version = archive_col(x, "version")), na_ok = FALSE)
+  validate_version_bound(versions_end, archive_col_class(x, "version"), na_ok = FALSE)
   x$versions_end <- versions_end
   x
 }
@@ -251,7 +251,7 @@ set_versions_end <- function(x, versions_end) {
 #' epix_fill_through_version(ea_orig, test_date + 8, "locf")
 epix_fill_through_version <- function(x, fill_versions_end, how = c("na", "locf")) {
   assert_class(x, "epi_archive")
-  validate_version_bound(fill_versions_end, list(version = archive_col(x, "version")), na_ok = FALSE)
+  validate_version_bound(fill_versions_end, archive_col_class(x, "version"), na_ok = FALSE)
   how <- arg_match(how)
   if (x$versions_end >= fill_versions_end) {
     return(x)
@@ -830,7 +830,7 @@ epix_truncate_versions_after <- function(x, max_version) {
 #' @rdname epix_truncate_versions_after
 #' @export
 epix_truncate_versions_after.epi_archive <- function(x, max_version) {
-  if (!identical(class(max_version), class(archive_col(x, "version")))) {
+  if (!identical(class(max_version), archive_col_class(x, "version"))) {
     cli_abort("`max_version` must have the same `class` as the archive's `version` column.")
   }
   assert_scalar(max_version, na.ok = FALSE)

@@ -127,9 +127,9 @@ as_duckdb_epi_archive.duckplyr_df <- function(
   )
 
   if (validate) {
-    version_proxy <- list(version = dplyr::pull(x, "version"))
-    validate_version_bound(clobberable_versions_start, version_proxy, na_ok = TRUE)
-    validate_version_bound(versions_end, version_proxy, na_ok = FALSE)
+    version_class <- archive_col_class(archive, "version")
+    validate_version_bound(clobberable_versions_start, version_class, na_ok = TRUE)
+    validate_version_bound(versions_end, version_class, na_ok = FALSE)
     validate_epi_archive(archive)
   }
   archive
@@ -220,6 +220,32 @@ archive_col.epi_archive_duck <- function(x, col) {
 #' @export
 archive_col_range.epi_archive_duck <- function(x, col) {
   duck_col_range(x$duck, col)
+}
+
+#' @export
+archive_col_class.epi_archive_duck <- function(x, col) {
+  # Single-row probe; falls back to a 0-row schema-only collect if the
+  # archive is empty. We deliberately avoid relying on duckplyr's internal
+  # type metadata so the answer matches the R class of values actually
+  # returned by `archive_col()`.
+  probe <- dplyr::collect(utils::head(x$duck, 1L))
+  class(probe[[col]])
+}
+
+#' @export
+archive_col_anyNA.epi_archive_duck <- function(x, col) {
+  summary <- x$duck %>%
+    dplyr::summarise(.missing = sum(is.na(.data[[col]]))) %>%
+    dplyr::collect()
+  summary$.missing > 0L
+}
+
+#' @export
+archive_col_distinct.epi_archive_duck <- function(x, col) {
+  x$duck %>%
+    dplyr::distinct(.data[[col]]) %>%
+    dplyr::collect() %>%
+    dplyr::pull(!!col)
 }
 
 #' Range helper for duckplyr data before it has archive metadata

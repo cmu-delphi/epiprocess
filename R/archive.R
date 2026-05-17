@@ -13,18 +13,21 @@
 #' similar arguments. Some additional context-specific checks may be needed.
 #' Side effects: raises an error if version bound appears invalid.
 #'
+#' Takes the version column's `class()` vector directly so callers on lazy
+#' backends can probe schema without materializing the column. Use
+#' [`archive_col_class()`] when the source is an `epi_archive`.
+#'
 #' @param version_bound the version bound to validate
-#' @param x a data frame containing a version column with which to check
-#'   compatibility
+#' @param version_col_class character vector — the `class()` of the version
+#'   column being validated against
 #' @param na_ok Boolean; is `NA` an acceptable "bound"? (If so, `NA` will
 #'   have a special context-dependent meaning.)
 #' @param version_bound_arg optional string; what to call the version bound in
 #'   error messages
 #'
 #' @keywords internal
-validate_version_bound <- function(version_bound, x, na_ok = FALSE,
-                                   version_bound_arg = rlang::caller_arg(version_bound),
-                                   x_arg = rlang::caller_arg(x)) {
+validate_version_bound <- function(version_bound, version_col_class, na_ok = FALSE,
+                                   version_bound_arg = rlang::caller_arg(version_bound)) {
   if (is.null(version_bound)) {
     cli_abort(
       "{version_bound_arg} cannot be NULL",
@@ -45,10 +48,10 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
       )
     }
   } else {
-    if (!identical(class(version_bound), class(x[["version"]]))) {
+    if (!identical(class(version_bound), version_col_class)) {
       cli_abort(
-        "{version_bound_arg} must have the same `class` vector as x$version,
-        which has a `class` of {format_chr_deparse(class(x$version))}",
+        "{version_bound_arg} must have the same `class` vector as the version
+        column, which has a `class` of {format_chr_deparse(version_col_class)}",
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
@@ -304,8 +307,8 @@ new_epi_archive <- function(
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
     cli_abort("`other_keys` cannot contain \"geo_value\", \"time_value\", or \"version\".")
   }
-  validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
-  validate_version_bound(versions_end, x, na_ok = FALSE)
+  validate_version_bound(clobberable_versions_start, class(x[["version"]]), na_ok = TRUE)
+  validate_version_bound(versions_end, class(x[["version"]]), na_ok = FALSE)
 
   key_vars <- c("geo_value", other_keys, "time_value", "version")
   if (!all(key_vars %in% names(x))) {
@@ -375,14 +378,14 @@ validate_epi_archive <- function(x) {
     )
   }
 
-  if (!identical(class(archive_col(x, "time_value")), class(archive_col(x, "version")))) {
+  if (!identical(archive_col_class(x, "time_value"), archive_col_class(x, "version"))) {
     cli_abort(
       "`time_value` and `version` columns must have the same class.",
       class = "epiprocess__time_value_version_mismatch"
     )
   }
 
-  if (anyMissing(archive_col(x, "version"))) {
+  if (archive_col_anyNA(x, "version")) {
     cli_abort("Column `version` must not contain missing values.")
   }
 
