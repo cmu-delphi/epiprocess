@@ -2,24 +2,63 @@
 % Please edit documentation in R/archive_duck.R
 \name{as_duckdb_epi_archive}
 \alias{as_duckdb_epi_archive}
+\alias{as_duckdb_epi_archive.duckplyr_df}
 \title{Construct a duckdb-backed \code{epi_archive}}
 \usage{
 as_duckdb_epi_archive(x, ...)
+
+\method{as_duckdb_epi_archive}{duckplyr_df}(
+  x,
+  ...,
+  geo_type = NULL,
+  time_type = NULL,
+  other_keys = character(),
+  clobberable_versions_start = NA,
+  versions_end = NULL,
+  validate = TRUE
+)
 }
 \arguments{
-\item{x}{A data.frame, data.table, or tibble, with columns \code{geo_value},
-\code{time_value}, \code{version}, and then any additional number of columns.}
+\item{x}{A tibble / data.frame / data.table / \code{epi_df}, an existing
+\code{epi_archive}, a \code{duckplyr_df}, or a dplyr lazy table that
+\code{\link[duckplyr:as_duckdb_tibble]{duckplyr::as_duckdb_tibble()}} can convert.}
 
-\item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
-example \code{version = release_date}}
+\item{...}{For the default method, passed to \code{\link{as_epi_archive}}. For the
+\code{tbl_lazy} method, passed to \code{\link[duckplyr:as_duckdb_tibble]{duckplyr::as_duckdb_tibble()}} and then
+to the \code{duckplyr_df} method. For the wrap-as-is methods on already-duck
+inputs, must be empty.}
+
+\item{geo_type, time_type}{Optional scalar metadata for wrap-as-is methods.
+If \code{NULL}, guessed from \code{geo_value} and \code{time_value}, respectively.}
+
+\item{other_keys}{Character vector of additional key columns.}
+
+\item{clobberable_versions_start, versions_end}{Version-bound metadata.
+\code{versions_end = NULL} defaults to the maximum observed \code{version}.}
+
+\item{validate}{If \code{TRUE}, validate archive invariants before returning.}
 }
 \value{
 an \code{epi_archive} with subclass \code{epi_archive_duck}
 }
 \description{
-Mirrors \code{\link{as_epi_archive}} but stores the underlying data in an in-memory
-duckdb table via duckplyr. The validation, compactification, and signal
-processing pipeline is reused; only the storage representation differs.
+S3 generic with one entry point for every input type that can become a
+duck-backed archive. Two pipelines sit behind the dispatch:
+}
+\details{
+\enumerate{
+\item \strong{Eager construction} (default method): runs raw tabular data through
+the regular \code{\link{as_epi_archive}} pipeline (rename, signal-format
+conversion, compactification, validation), then uploads the result to
+DuckDB. Handles tibbles, data.frames, data.tables, and \code{epi_df}s.
+\item \strong{Wrap as-is} (\code{epi_archive}, \code{duckplyr_df}, \code{tbl_lazy} methods):
+assumes canonical archive columns (\code{geo_value}, \code{time_value},
+\code{version}, plus \code{other_keys} and wide signal columns) and skips
+compactification. Used when the input is already a trusted archive or
+DuckDB/dplyr relation; avoids materializing the whole table through R.
+}
+
+Passing an existing \code{epi_archive_duck} is a no-op.
 }
 \seealso{
 \code{\link{as_epi_archive}} for the in-memory data.table backend.

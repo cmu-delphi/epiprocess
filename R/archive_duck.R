@@ -9,48 +9,70 @@
 
 #' Construct a duckdb-backed `epi_archive`
 #'
-#' Mirrors [`as_epi_archive`] but stores the underlying data in an in-memory
-#' duckdb table via duckplyr. The validation, compactification, and signal
-#' processing pipeline is reused; only the storage representation differs.
+#' S3 generic with one entry point for every input type that can become a
+#' duck-backed archive. Two pipelines sit behind the dispatch:
 #'
-#' @inheritParams as_epi_archive
+#' 1. **Eager construction** (default method): runs raw tabular data through
+#'    the regular [`as_epi_archive`] pipeline (rename, signal-format
+#'    conversion, compactification, validation), then uploads the result to
+#'    DuckDB. Handles tibbles, data.frames, data.tables, and `epi_df`s.
+#' 2. **Wrap as-is** (`epi_archive`, `duckplyr_df`, `tbl_lazy` methods):
+#'    assumes canonical archive columns (`geo_value`, `time_value`,
+#'    `version`, plus `other_keys` and wide signal columns) and skips
+#'    compactification. Used when the input is already a trusted archive or
+#'    DuckDB/dplyr relation; avoids materializing the whole table through R.
+#'
+#' Passing an existing `epi_archive_duck` is a no-op.
+#'
+#' @param x A tibble / data.frame / data.table / `epi_df`, an existing
+#'   `epi_archive`, a `duckplyr_df`, or a dplyr lazy table that
+#'   [`duckplyr::as_duckdb_tibble()`] can convert.
+#' @param ... For the default method, passed to [`as_epi_archive`]. For the
+#'   `tbl_lazy` method, passed to [`duckplyr::as_duckdb_tibble()`] and then
+#'   to the `duckplyr_df` method. For the wrap-as-is methods on already-duck
+#'   inputs, must be empty.
 #' @return an `epi_archive` with subclass `epi_archive_duck`
 #'
 #' @seealso [`as_epi_archive`] for the in-memory data.table backend.
 #' @export
 as_duckdb_epi_archive <- function(x, ...) {
   rlang::check_installed("duckplyr", reason = "for the duckdb-backed epi_archive backend.")
-  archive <- as_epi_archive(x, ...)
-  as_duckdb_archive(archive)
+  UseMethod("as_duckdb_epi_archive")
 }
 
-#' Construct a duckdb-backed `epi_archive` from a duckplyr table
-#'
-#' Wraps an existing duckplyr data frame, or an object that
-#' [`duckplyr::as_duckdb_tibble()`] can convert, without first collecting the
-#' full table through R. The input must already use canonical archive column
-#' names (`geo_value`, `time_value`, and `version`) and wide signal columns;
-#' unlike [`as_duckdb_epi_archive()`], this constructor does not perform signal
-#' format conversion or compactification.
-#'
-#' If `geo_type`, `time_type`, or `versions_end` are omitted, they are inferred
-#' from the corresponding columns. Those inference steps may read only the
-#' needed columns or aggregates; pass them explicitly and set `validate = FALSE`
-#' to avoid even those checks when wrapping a trusted DuckDB relation.
-#'
-#' @param x A duckplyr data frame, or a dplyr lazy table/data frame that
-#'   [`duckplyr::as_duckdb_tibble()`] can convert.
-#' @param ... Passed to [`duckplyr::as_duckdb_tibble()`] when `x` is not already
-#'   a duckplyr data frame.
-#' @param geo_type,time_type Optional scalar metadata. If `NULL`, guessed from
-#'   `geo_value` and `time_value`, respectively.
+#' @export
+as_duckdb_epi_archive.default <- function(x, ...) {
+  as_duckdb_epi_archive(as_epi_archive(x, ...))
+}
+
+#' @export
+as_duckdb_epi_archive.epi_archive_duck <- function(x, ...) {
+  rlang::check_dots_empty()
+  x
+}
+
+#' @export
+as_duckdb_epi_archive.epi_archive <- function(x, ...) {
+  rlang::check_dots_empty()
+  new_duckdb_archive(
+    duck = duckplyr::as_duckdb_tibble(archive_tbl(x)),
+    geo_type = x$geo_type,
+    time_type = x$time_type,
+    other_keys = x$other_keys,
+    clobberable_versions_start = x$clobberable_versions_start,
+    versions_end = x$versions_end
+  )
+}
+
+#' @param geo_type,time_type Optional scalar metadata for wrap-as-is methods.
+#'   If `NULL`, guessed from `geo_value` and `time_value`, respectively.
 #' @param other_keys Character vector of additional key columns.
 #' @param clobberable_versions_start,versions_end Version-bound metadata.
 #'   `versions_end = NULL` defaults to the maximum observed `version`.
 #' @param validate If `TRUE`, validate archive invariants before returning.
-#' @return an `epi_archive` with subclass `epi_archive_duck`
+#' @rdname as_duckdb_epi_archive
 #' @export
-as_duckdb_epi_archive_from_duck <- function(
+as_duckdb_epi_archive.duckplyr_df <- function(
   x,
   ...,
   geo_type = NULL,
@@ -60,22 +82,15 @@ as_duckdb_epi_archive_from_duck <- function(
   versions_end = NULL,
   validate = TRUE
 ) {
-  rlang::check_installed("duckplyr", reason = "for the duckdb-backed epi_archive backend.")
+  rlang::check_dots_empty()
   assert_character(other_keys, any.missing = FALSE)
   assert_logical(validate, len = 1L, any.missing = FALSE)
 
-  if (inherits(x, "duckplyr_df")) {
-    rlang::check_dots_empty()
-    duck <- x
-  } else {
-    duck <- duckplyr::as_duckdb_tibble(x, ...)
-  }
-
   key_vars <- c("geo_value", other_keys, "time_value", "version")
-  if (!all(key_vars %in% colnames(duck))) {
+  if (!all(key_vars %in% colnames(x))) {
     cli_abort(c(
-      "`x` is missing required archive columns: {format_varnames(setdiff(key_vars, colnames(duck)))}.",
-      "i" = "Rename columns before calling `as_duckdb_epi_archive_from_duck()`."
+      "`x` is missing required archive columns: {format_varnames(setdiff(key_vars, colnames(x)))}.",
+      "i" = "Rename columns before calling `as_duckdb_epi_archive()`."
     ))
   }
   if (any(c("geo_value", "time_value", "version") %in% other_keys)) {
@@ -83,27 +98,27 @@ as_duckdb_epi_archive_from_duck <- function(
   }
 
   if (is.null(geo_type)) {
-    geo_type <- guess_geo_type(dplyr::pull(duck, "geo_value"))
+    geo_type <- guess_geo_type(dplyr::pull(x, "geo_value"))
   } else {
     assert_string(geo_type)
   }
   if (is.null(time_type)) {
-    time_type <- guess_time_type(dplyr::pull(duck, "time_value"))
+    time_type <- guess_time_type(dplyr::pull(x, "time_value"))
   } else {
     assert_string(time_type)
   }
   if (is.null(versions_end)) {
-    if (identical(nrow(duck), 0L)) {
+    if (identical(nrow(x), 0L)) {
       cli_abort(
         "`versions_end` must be specified when `x` has no rows.",
         class = "epiprocess__max_version_cannot_be_used"
       )
     }
-    versions_end <- duck_col_range(duck, "version")[[2L]]
+    versions_end <- duck_col_range(x, "version")[[2L]]
   }
 
   archive <- new_duckdb_archive(
-    duck = duck,
+    duck = x,
     geo_type = geo_type,
     time_type = time_type,
     other_keys = other_keys,
@@ -112,12 +127,17 @@ as_duckdb_epi_archive_from_duck <- function(
   )
 
   if (validate) {
-    version_proxy <- list(version = dplyr::pull(duck, "version"))
+    version_proxy <- list(version = dplyr::pull(x, "version"))
     validate_version_bound(clobberable_versions_start, version_proxy, na_ok = TRUE)
     validate_version_bound(versions_end, version_proxy, na_ok = FALSE)
     validate_epi_archive(archive)
   }
   archive
+}
+
+#' @export
+as_duckdb_epi_archive.tbl_lazy <- function(x, ...) {
+  as_duckdb_epi_archive(duckplyr::as_duckdb_tibble(x), ...)
 }
 
 #' Construct a duck-backed archive object from already-normalized pieces
@@ -142,32 +162,6 @@ new_duckdb_archive <- function(
       versions_end = versions_end
     ),
     class = c("epi_archive_duck", "epi_archive")
-  )
-}
-
-#' Convert an existing `epi_archive` to the duckdb backend
-#'
-#' Materializes the source archive's data once, hands it to duckplyr, and
-#' returns a new archive tagged `epi_archive_duck`. The source archive is
-#' left untouched.
-#'
-#' @param x an `epi_archive`
-#' @return an `epi_archive` with subclass `epi_archive_duck`
-#' @keywords internal
-#' @noRd
-as_duckdb_archive <- function(x) {
-  rlang::check_installed("duckplyr", reason = "for the duckdb-backed epi_archive backend.")
-  assert_class(x, "epi_archive")
-  if (inherits(x, "epi_archive_duck")) {
-    return(x)
-  }
-  new_duckdb_archive(
-    duck = duckplyr::as_duckdb_tibble(archive_tbl(x)),
-    geo_type = x$geo_type,
-    time_type = x$time_type,
-    other_keys = x$other_keys,
-    clobberable_versions_start = x$clobberable_versions_start,
-    versions_end = x$versions_end
   )
 }
 

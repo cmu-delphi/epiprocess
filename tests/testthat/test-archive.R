@@ -58,7 +58,7 @@ test_that("as_epi_archive default compactification (no longer messages/warns)", 
   expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
-test_that("as_duckdb_epi_archive_from_duck wraps existing duckplyr data", {
+test_that("as_duckdb_epi_archive wraps existing duckplyr data", {
   skip_if_not_installed("duckplyr")
 
   duck_data <- duckplyr::duckdb_tibble(
@@ -67,16 +67,16 @@ test_that("as_duckdb_epi_archive_from_duck wraps existing duckplyr data", {
     version = as.Date(c("2020-01-01", "2020-01-02")),
     value = c(1, 2)
   )
-  archive <- as_duckdb_epi_archive_from_duck(duck_data)
+  archive <- as_duckdb_epi_archive(duck_data)
 
-  expect_true(withVisible(as_duckdb_epi_archive_from_duck(duck_data))$visible)
+  expect_true(withVisible(as_duckdb_epi_archive(duck_data))$visible)
   expect_s3_class(archive, "epi_archive_duck")
   expect_s3_class(archive_data(archive), "duckplyr_df")
   expect_equal(archive_tbl(archive), tibble::as_tibble(dplyr::collect(duck_data)))
   expect_identical(archive$versions_end, as.Date("2020-01-02"))
 })
 
-test_that("as_duckdb_epi_archive_from_duck can wrap trusted data without validation", {
+test_that("as_duckdb_epi_archive can wrap trusted duckplyr data without validation", {
   skip_if_not_installed("duckplyr")
 
   duck_data <- duckplyr::duckdb_tibble(
@@ -85,7 +85,7 @@ test_that("as_duckdb_epi_archive_from_duck can wrap trusted data without validat
     version = as.Date(c("2020-01-01", "2020-01-01")),
     value = c(1, 2)
   )
-  archive <- as_duckdb_epi_archive_from_duck(
+  archive <- as_duckdb_epi_archive(
     duck_data,
     geo_type = "state",
     time_type = "day",
@@ -108,7 +108,7 @@ test_that("as_tibble() materializes archive rows backend-neutrally", {
   expect_equal(tibble::as_tibble(ea), archive_tbl(ea))
 
   if (rlang::is_installed("duckplyr")) {
-    duck_ea <- as_duckdb_archive(as_epi_archive(dumb_ex, compactify = FALSE))
+    duck_ea <- as_duckdb_epi_archive(as_epi_archive(dumb_ex, compactify = FALSE))
     expect_equal(tibble::as_tibble(duck_ea), archive_tbl(duck_ea))
   }
 })
@@ -128,11 +128,11 @@ test_that("archive_col_range returns ranges across backends", {
   expect_identical(archive_col_range(with_missing, "value"), c(NA_real_, NA_real_))
 
   if (rlang::is_installed("duckplyr")) {
-    duck_ea <- as_duckdb_archive(ea)
+    duck_ea <- as_duckdb_epi_archive(ea)
     expect_identical(archive_col_range(duck_ea, "version"), range(archive_col(ea, "version")))
     expect_identical(archive_col_range(duck_ea, "value"), range(archive_col(ea, "value")))
 
-    duck_with_missing <- as_duckdb_archive(with_missing)
+    duck_with_missing <- as_duckdb_epi_archive(with_missing)
     expect_identical(archive_col_range(duck_with_missing, "value"), c(NA_real_, NA_real_))
   }
 })
@@ -167,8 +167,8 @@ test_that("archive_any_duplicated_key returns logicals across backends", {
   expect_identical(archive_any_duplicated_key(unique_dt), FALSE)
 
   if (rlang::is_installed("duckplyr")) {
-    expect_identical(archive_any_duplicated_key(as_duckdb_archive(duplicate_dt)), TRUE)
-    expect_identical(archive_any_duplicated_key(as_duckdb_archive(unique_dt)), FALSE)
+    expect_identical(archive_any_duplicated_key(as_duckdb_epi_archive(duplicate_dt)), TRUE)
+    expect_identical(archive_any_duplicated_key(as_duckdb_epi_archive(unique_dt)), FALSE)
   }
 })
 
