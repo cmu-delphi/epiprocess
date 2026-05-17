@@ -164,7 +164,7 @@ later.
 The variables \code{geo_value}, \code{time_value}, \code{version} serve as key variables for
 the data table (in addition to any other keys specified in the metadata).
 There can only be a single row per unique combination of key variables. The
-keys for an \code{epi_archive} can be viewed with \code{key(epi_archive$DT)}.
+keys for an \code{epi_archive} can be viewed with \code{key_colnames(epi_archive)}.
 \subsection{Compactification}{
 
 By default, an \code{epi_archive} will compactify the data table to remove
