@@ -260,10 +260,7 @@ revision_analysis <- function(epi_arch,
       rel_spread = spread / max_value, # nolint: object_usage_linter
       min_lag = n_steps_to_time_delta(min_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
       max_lag = n_steps_to_time_delta(max_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
-      lag_near_latest = n_steps_to_time_delta(lag_to, time_type, require_integer = FALSE), # nolint: object_usage_linter
-      min_lag = to_integerish_time_delta(min_lag), # nolint: object_usage_linter
-      max_lag = to_integerish_time_delta(max_lag), # nolint: object_usage_linter
-      lag_near_latest = to_integerish_time_delta(lag_near_latest) # nolint: object_usage_linter
+      lag_near_latest = n_steps_to_time_delta(lag_to, time_type, require_integer = FALSE) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -275,8 +272,8 @@ revision_analysis <- function(epi_arch,
     revision_behavior <- structure(list( # nolint: object_usage_linter
       revision_behavior = revision_behavior,
       initial_reporting = initial_reporting,
-      max_nonbulk_initial_lag = to_integerish_time_delta( # nolint: object_usage_linter
-        n_steps_to_time_delta(max_nonbulk_initial_lag, time_type, require_integer = FALSE)
+      max_nonbulk_initial_lag = n_steps_to_time_delta( # nolint: object_usage_linter
+        max_nonbulk_initial_lag, time_type, require_integer = FALSE
       ),
       bulk_reporting_versions = bulk_reporting_versions,
       nonbulk_expanding_versions = nonbulk_expanding_versions,

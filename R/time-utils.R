@@ -208,26 +208,14 @@ n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fa
   if (require_integer && !is_bare_integerish(n_steps)) {
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
   }
-  n_steps * unit_time_delta(time_type, format)
-}
-
-
-#' Adjust time_type to days if there are non-integer differences
-#'
-#' @keywords internal
-to_integerish_time_delta <- function(time_delta) {
-  if (!inherits(time_delta, "difftime") || units(time_delta) != "weeks") {
-    return(time_delta)
+  res <- n_steps * unit_time_delta(time_type, format)
+  if (inherits(res, "difftime") && units(res) == "weeks") {
+    non_special <- n_steps[!is.infinite(n_steps) & !is.na(n_steps)]
+    if (any(abs(non_special - round(non_special)) > 1e-9)) {
+      units(res) <- "days"
+    }
   }
-
-  steps <- as.numeric(time_delta)
-  non_special <- steps[!is.infinite(steps) & !is.na(steps)]
-
-  if (any(abs(non_special - round(non_special)) > 1e-9)) {
-    units(time_delta) <- "days"
-  }
-
-  time_delta
+  res
 }
 
 #' Standardize time_deltas to a multiple of [`unit_time_delta()`]
