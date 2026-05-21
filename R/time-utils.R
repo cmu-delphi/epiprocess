@@ -181,7 +181,7 @@ time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE)
                  of steps between time values of time type {format_chr_with_quotes(time_type)}")
     }
     n_steps
-  } else if (is_bare_integerish(time_delta)) { # (allows infinite values)
+  } else if (is_bare_integerish(time_delta) || !require_integer) { # (allows infinite values)
     switch(time_type,
       day = ,
       week = ,
