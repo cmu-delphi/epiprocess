@@ -215,14 +215,15 @@ test_that("revision_summary works for weekly time series with daily versions", {
     rs <- revision_analysis(dummy_ex_weekly_daily_versions, min_waiting_period = 0)
   })
 
-  # Ensure the lags are fractional weeks:
-  # min_lag for 2020-01-01 starts at 2020-01-01, so 0 weeks
-  # max_lag for 2020-01-01 ends at 2020-01-03, so 2/7 = 0.2857143 weeks
-  # min_lag for 2020-01-08 starts at 2020-01-08, so 0 weeks
-  # max_lag for 2020-01-08 ends at 2020-01-09, so 1/7 = 0.1428571 weeks
+  # Ensure the lags are converted to integer days:
+  # min_lag for 2020-01-01 starts at 2020-01-01, so 0 days
+  # max_lag for 2020-01-01 ends at 2020-01-03, so 2 days
+  # min_lag for 2020-01-08 starts at 2020-01-08, so 0 days
+  # max_lag for 2020-01-08 ends at 2020-01-09, so 1 day
 
   rb <- rs$revision_behavior
+  expect_equal(units(rb$max_lag), "days")
   expect_equal(as.numeric(rb$min_lag), c(0, 0))
-  expect_equal(as.numeric(rb$max_lag), c(2/7, 1/7))
+  expect_equal(as.numeric(rb$max_lag), c(2, 1))
 })
 

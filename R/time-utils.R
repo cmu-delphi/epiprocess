@@ -211,6 +211,25 @@ n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fa
   n_steps * unit_time_delta(time_type, format)
 }
 
+
+#' Adjust time_type to a dayl if there are non-integer differences
+#'
+#' @keywords internal
+to_integerish_time_delta <- function(time_delta) {
+  if (!inherits(time_delta, "difftime") || units(time_delta) != "weeks") {
+    return(time_delta)
+  }
+
+  steps <- as.numeric(time_delta)
+  non_special <- steps[!is.infinite(steps) & !is.na(steps)]
+  
+  if (any(abs(non_special - round(non_special)) > 1e-9)) {
+    units(time_delta) <- "days"
+  }
+  
+  time_delta
+}
+
 #' Standardize time_deltas to a multiple of [`unit_time_delta()`]
 #'
 #' @keywords internal
