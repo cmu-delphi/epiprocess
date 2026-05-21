@@ -422,7 +422,9 @@ revision_summary <- revision_analysis
 #' @param prop optional length-1 double; proportion
 #' @keywords internal
 lag_within_x_latest <- function(lags, values, prop = .2) {
-  if (length(values) == 0L) return(NA_real_)
+  if (length(values) == 0L) {
+    return(NA_real_)
+  }
   latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
@@ -437,9 +439,9 @@ lag_within_x_latest <- function(lags, values, prop = .2) {
 #'   breaking the run
 #' @keywords internal
 get_last_run <- function(bool_vec, values_from) {
-    runs <- rle(bool_vec)
-    values_from[[length(bool_vec) - tail(runs$lengths, n = 1) + 1]]
-  }
+  runs <- rle(bool_vec)
+  values_from[[length(bool_vec) - tail(runs$lengths, n = 1) + 1]]
+}
 
 #' use when the default behavior returns a warning on empty vectors, which we do
 #' not want, and there is no super clean way of preventing this

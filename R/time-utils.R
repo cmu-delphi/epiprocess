@@ -222,11 +222,11 @@ to_integerish_time_delta <- function(time_delta) {
 
   steps <- as.numeric(time_delta)
   non_special <- steps[!is.infinite(steps) & !is.na(steps)]
-  
+
   if (any(abs(non_special - round(non_special)) > 1e-9)) {
     units(time_delta) <- "days"
   }
-  
+
   time_delta
 }
 

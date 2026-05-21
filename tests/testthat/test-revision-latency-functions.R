@@ -226,4 +226,3 @@ test_that("revision_summary works for weekly time series with daily versions", {
   expect_equal(as.numeric(rb$min_lag), c(0, 0))
   expect_equal(as.numeric(rb$max_lag), c(2, 1))
 })
-
