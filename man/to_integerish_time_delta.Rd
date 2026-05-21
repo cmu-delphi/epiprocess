@@ -2,11 +2,11 @@
 % Please edit documentation in R/time-utils.R
 \name{to_integerish_time_delta}
 \alias{to_integerish_time_delta}
-\title{Adjust time_type to a dayl if there are non-integer differences}
+\title{Adjust time_type to days if there are non-integer differences}
 \usage{
 to_integerish_time_delta(time_delta)
 }
 \description{
-Adjust time_type to a dayl if there are non-integer differences
+Adjust time_type to days if there are non-integer differences
 }
 \keyword{internal}

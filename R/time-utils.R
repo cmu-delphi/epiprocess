@@ -181,7 +181,7 @@ time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE)
                  of steps between time values of time type {format_chr_with_quotes(time_type)}")
     }
     n_steps
-  } else if (is_bare_integerish(time_delta) || !require_integer) { # (allows infinite values)
+  } else if (is_bare_integerish(time_delta) || !require_integer) {
     switch(time_type,
       day = ,
       week = ,
@@ -212,7 +212,7 @@ n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fa
 }
 
 
-#' Adjust time_type to a dayl if there are non-integer differences
+#' Adjust time_type to days if there are non-integer differences
 #'
 #' @keywords internal
 to_integerish_time_delta <- function(time_delta) {

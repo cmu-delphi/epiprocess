@@ -253,7 +253,7 @@ revision_analysis <- function(epi_arch,
     setDF() %>%
     as_tibble()
   n_epikeytimes <- nrow(revision_behavior)
-  revision_behavior <- revision_behavior %>%
+  revision_behavior <- revision_behavior %>% # nolint: object_usage_linter
     filter(.data$min_lag <= .env$max_nonbulk_initial_lag) %>%
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
@@ -261,9 +261,9 @@ revision_analysis <- function(epi_arch,
       min_lag = n_steps_to_time_delta(min_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
       max_lag = n_steps_to_time_delta(max_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
       lag_near_latest = n_steps_to_time_delta(lag_to, time_type, require_integer = FALSE), # nolint: object_usage_linter
-      min_lag = to_integerish_time_delta(min_lag),
-      max_lag = to_integerish_time_delta(max_lag),
-      lag_near_latest = to_integerish_time_delta(lag_near_latest)
+      min_lag = to_integerish_time_delta(min_lag), # nolint: object_usage_linter
+      max_lag = to_integerish_time_delta(max_lag), # nolint: object_usage_linter
+      lag_near_latest = to_integerish_time_delta(lag_near_latest) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -272,10 +272,12 @@ revision_analysis <- function(epi_arch,
     )
   n_nonbulk_epikeytimes <- nrow(revision_behavior)
   if (!return_only_tibble) {
-    revision_behavior <- structure(list(
+    revision_behavior <- structure(list( # nolint: object_usage_linter
       revision_behavior = revision_behavior,
       initial_reporting = initial_reporting,
-      max_nonbulk_initial_lag = to_integerish_time_delta(n_steps_to_time_delta(max_nonbulk_initial_lag, time_type, require_integer = FALSE)),
+      max_nonbulk_initial_lag = to_integerish_time_delta( # nolint: object_usage_linter
+        n_steps_to_time_delta(max_nonbulk_initial_lag, time_type, require_integer = FALSE)
+      ),
       bulk_reporting_versions = bulk_reporting_versions,
       nonbulk_expanding_versions = nonbulk_expanding_versions,
       revision_only_versions = revision_only_versions,
@@ -407,7 +409,7 @@ print.revision_analysis <- function(x,
   if (inherits(rev_beh[["max_lag"]], "difftime")) {
     max_lag_time_type <- gsub("s$", "", units(rev_beh[["max_lag"]]))
   }
-  max_lag_units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[max_lag_time_type]]))
+  max_lag_units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[max_lag_time_type]])) # nolint: object_usage_linter
   cli::cli_h3("{toTitleCase(max_lag_units_plural)} until at the latest lag:")
   time_delta_summary(rev_beh[["max_lag"]], x$time_type) %>% print()
 }

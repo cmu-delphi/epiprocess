@@ -203,9 +203,9 @@ test_that("revision_summary works for weekly time series with daily versions", {
   dummy_ex_weekly_daily_versions <- tibble::tribble(
     ~geo_value, ~time_value, ~version, ~value,
     "ak", as.Date("2020-01-01"), as.Date("2020-01-01"), 1,
-    "ak", as.Date("2020-01-01"), as.Date("2020-01-03"), 5, # Thursday
+    "ak", as.Date("2020-01-01"), as.Date("2020-01-03"), 5, # Friday
     "ak", as.Date("2020-01-08"), as.Date("2020-01-08"), 6,
-    "ak", as.Date("2020-01-08"), as.Date("2020-01-09"), 7 # Friday
+    "ak", as.Date("2020-01-08"), as.Date("2020-01-09"), 7 # Thursday
   ) %>%
     as_epi_archive(versions_end = as.Date("2020-01-15"), compactify = FALSE)
 
