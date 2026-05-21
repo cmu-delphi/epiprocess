@@ -204,8 +204,8 @@ time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE)
 #'   Default is `"friendly"`.
 #'
 #' @keywords internal
-n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast")) {
-  if (!is_bare_integerish(n_steps)) {
+n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast"), require_integer = TRUE) {
+  if (require_integer && !is_bare_integerish(n_steps)) {
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
   }
   n_steps * unit_time_delta(time_type, format)

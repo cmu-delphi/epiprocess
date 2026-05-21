@@ -189,7 +189,7 @@ revision_analysis <- function(epi_arch,
       apply_compactify(ukey_names, compactify_abs_tol, init_nas_are_locf = compactify_drop_initial_nas)
   }
   revision_behavior <- revision_behavior %>%
-    mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type))
+    mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type, require_integer = FALSE))
 
   total_na <- revision_behavior %>%
     filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
@@ -258,9 +258,9 @@ revision_analysis <- function(epi_arch,
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
       rel_spread = spread / max_value, # nolint: object_usage_linter
-      min_lag = n_steps_to_time_delta(min_lag, time_type), # nolint: object_usage_linter
-      max_lag = n_steps_to_time_delta(max_lag, time_type), # nolint: object_usage_linter
-      lag_near_latest = n_steps_to_time_delta(lag_to, time_type) # nolint: object_usage_linter
+      min_lag = n_steps_to_time_delta(min_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
+      max_lag = n_steps_to_time_delta(max_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
+      lag_near_latest = n_steps_to_time_delta(lag_to, time_type, require_integer = FALSE) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -362,8 +362,8 @@ print.revision_analysis <- function(x,
   cli_inform("No revisions:")
   cli_li(num_percent(total_num_unrevised, total_num, ""))
   total_quickly_revised <- sum( # nolint: object_usage_linter
-    time_delta_to_n_steps(rev_beh$max_lag, x$time_type) <=
-      time_delta_to_n_steps(quick_revision, x$time_type)
+    time_delta_to_n_steps(rev_beh$max_lag, x$time_type, require_integer = FALSE) <=
+      time_delta_to_n_steps(quick_revision, x$time_type, require_integer = FALSE)
   )
   cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, x$time_type)}
                 of the `time_value`):")
@@ -410,6 +410,7 @@ revision_summary <- revision_analysis
 #' @param prop optional length-1 double; proportion
 #' @keywords internal
 lag_within_x_latest <- function(lags, values, prop = .2) {
+  if (length(values) == 0L) return(NA_real_)
   latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
@@ -457,7 +458,7 @@ num_percent <- function(a, b, b_description) {
 #' @keywords internal
 time_delta_summary <- function(time_delta, time_type) {
   if (length(time_delta) > 0) {
-    n_steps <- time_delta_to_n_steps(time_delta, time_type)
+    n_steps <- time_delta_to_n_steps(time_delta, time_type, require_integer = FALSE)
     res <- data.frame(
       min = min(n_steps),
       median = median(n_steps),
