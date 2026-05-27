@@ -81,7 +81,7 @@ test_that("Multi-candidate behavior and silence", {
   raw_pivot <- dplyr::tibble(
     geo_value = "ca", time_value = test_date + 1:5,
     signal = c(1, 1, 2, 2, 2), value = 1:5,
-    variable = 1
+    signal_name = 1
   )
   expect_silent(as_epi_df(raw_pivot))
   # Explicit selection resolves ambiguity and pivots
@@ -111,7 +111,7 @@ test_that("Error handling and non-scalar validations", {
   )
 
   # Multiple candidates in non-auto mode
-  raw_multi <- dplyr::mutate(raw_error, signal = "s", variable = "v")
+  raw_multi <- dplyr::mutate(raw_error, signal = "s", signal_name = "v")
   expect_error(
     as_epi_df(raw_multi, signal_format = "long"),
     class = "epiprocess__multiple_signal_candidates"

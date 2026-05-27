@@ -777,7 +777,7 @@ id_column_names <- function() {
 #' @keywords internal
 signal_column_names <- function() {
   c(
-    "signal", "signal_name", "indicator_name", "variable", "indicator", "metric"
+    "signal", "signal_name", "indicator_name", "indicator"
   )
 }
 
