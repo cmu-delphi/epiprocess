@@ -923,7 +923,6 @@ process_signal_archive <- function(
   }
 
   # Wide
-  cli::cli_inform("Pivoting long to wide based on {.var {res$signal_var}} column.")
   archive$other_keys <- unique(c(archive$other_keys, res$signal_var))
   archive <- epix_pivot_wider(
     archive,

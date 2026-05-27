@@ -3,28 +3,36 @@
     Code
       df <- as_epi_df(raw)
     Message
-      Pivoting long to wide based on `signal` column.
+      Pivoting to wide format based on `signal` column.
+      > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
+      > To skip signal processing, pass `signal_format = "none"`.
 
 ---
 
     Code
       arch <- as_epi_archive(raw_arch)
     Message
-      Pivoting long to wide based on `signal` column.
+      Pivoting to wide format based on `signal` column.
+      > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
+      > To skip signal processing, pass `signal_format = "none"`.
 
 ---
 
     Code
       edf <- as_epi_df(raw_extra)
     Message
-      Pivoting long to wide based on `signal` column.
+      Pivoting to wide format based on `signal` column.
+      > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
+      > To skip signal processing, pass `signal_format = "none"`.
 
 ---
 
     Code
       arch_locf <- as_epi_archive(tib)
     Message
-      Pivoting long to wide based on `signal` column.
+      Pivoting to wide format based on `signal` column.
+      > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
+      > To skip signal processing, pass `signal_format = "none"`.
 
 ---
 
@@ -54,13 +62,9 @@
 
     Code
       df_wide <- as_epi_df(raw, signal_format = "wide", signal_var = "custom_signal")
-    Message
-      Pivoting long to wide based on `custom_signal` column.
 
 ---
 
     Code
       df_wide_guess <- as_epi_df(raw_guess, signal_format = "wide")
-    Message
-      Pivoting long to wide based on `signal` column.
 

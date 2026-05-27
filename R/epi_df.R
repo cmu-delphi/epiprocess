@@ -390,7 +390,6 @@ process_signal_column <- function(
   }
 
   # Wide
-  cli::cli_inform("Pivoting long to wide based on {.var {res$signal_var}} column.")
   x <- x %>%
     tidyr::pivot_wider(
       id_cols = tidyselect::all_of(c("geo_value", other_keys, "time_value")),
