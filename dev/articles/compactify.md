@@ -24,6 +24,7 @@ doesn’t use them to illustrate LOCF. Notice how the head of the first
 dataset differs from the second from the third value included.
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 
@@ -60,6 +61,7 @@ the column `case_rate_7d_av` has many more LOCF-redundant values than
 performance.
 
 ``` r
+
 dt2 <- select(dt, -percent_cli)
 
 locf_included_2 <- as_epi_archive(dt2, compactify = FALSE)
@@ -72,6 +74,7 @@ The proportion of data that is LOCF-redundant can vary widely between
 data sets, so we won’t always be this lucky.
 
 ``` r
+
 nrow(locf_included_2$DT)
 #> [1] 129638
 nrow(locf_omitted_2$DT)
@@ -83,6 +86,7 @@ As we would expect, performing 1000 iterations of
 faster when the LOCF values are omitted.
 
 ``` r
+
 # Performance of filtering
 iterate_filter <- function(my_ea) {
   for (i in 1:1000) {
@@ -106,6 +110,7 @@ speeds <- speed_test(iterate_filter, "filter_1000x")
 We would also like to measure the speed of `epi_archive` methods.
 
 ``` r
+
 # Performance of as_of iterated 200 times
 iterate_as_of <- function(my_ea) {
   for (i in 1:1000) {
@@ -126,6 +131,7 @@ speeds <- rbind(speeds, speed_test(slide_median, "slide_median"))
 Here is a detailed performance comparison:
 
 ``` r
+
 speeds_tidy <- tidyr::gather(speeds, key = "is_locf", value = "time_in_s", locf, no_locf)
 
 library(ggplot2)

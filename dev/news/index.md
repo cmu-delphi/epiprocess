@@ -4,6 +4,11 @@
 
 ### New features
 
+- [`as_epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_df.md)
+  and
+  [`as_epi_archive()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_archive.md)
+  now recognize `reference_time` and `report_time` columns, mapping them
+  to `time_value` and `version` / `as_of` respectively.
 - [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.md)
   now detects bulk reporting adding new time values, and excludes bulk
   reporting for some statistics.

@@ -32,6 +32,7 @@ package](https://cmu-delphi.github.io/epidatasets/), which is loaded
 along with `epiprocess`, and can be accessed with:
 
 ``` r
+
 library(epiprocess)
 library(data.table)
 library(dplyr)
@@ -47,6 +48,7 @@ The data can also be fetched from the Delphi Epidata API with the
 following query:
 
 ``` r
+
 library(epidatr)
 
 dv <- pub_covidcast(
@@ -83,6 +85,7 @@ playing the role of `version`. We can now use
 to bring it into `epi_archive` format.
 
 ``` r
+
 dv_archive <- dv %>%
   select(geo_value, time_value, version, percent_cli) %>%
   as_epi_archive()
@@ -120,6 +123,7 @@ represents the most up-to-date values of the signal variables as of a
 given version.
 
 ``` r
+
 edf <- epix_as_of(dv_archive, as.Date("2021-06-01"))
 print(edf)
 #> An `epi_df` object, 1,460 x 3 with metadata:
@@ -156,6 +160,7 @@ apart, as colored lines (`snapshots` below). We will also mark the
 version dates with dotted vertical lines.
 
 ``` r
+
 edf_latest <- epix_as_of(dv_archive, dv_archive$versions_end)
 max_version <- max(dv_archive$DT$version)
 versions <- seq(as.Date("2020-06-01"), max_version - 1, by = "1 month")
@@ -204,6 +209,7 @@ which computes simple summary statistics for each key (by default,
 also returns an overall summary. Here is an a sample of the output:
 
 ``` r
+
 revision_details <- revision_summary(dv_archive)
 revision_details
 #> 
@@ -255,6 +261,7 @@ we can inspect the returned `revision_details` tibble. Here we collect a
 number of statistics for each state:
 
 ``` r
+
 revision_details$revision_behavior %>%
   group_by(geo_value) %>%
   summarize(
@@ -295,6 +302,7 @@ API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/),
 on the rate scale (counts per 100,000 people in the population).
 
 ``` r
+
 library(epidatr)
 
 y <- pub_covidcast(

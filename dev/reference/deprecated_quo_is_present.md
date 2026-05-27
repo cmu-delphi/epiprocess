@@ -28,6 +28,7 @@ an expr that looked like `deprecated()` or
 ## Examples
 
 ``` r
+
 fn <- function(x = deprecated()) {
   deprecated_quo_is_present(rlang::enquo(x))
 }

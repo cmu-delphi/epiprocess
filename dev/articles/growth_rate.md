@@ -10,6 +10,7 @@ in the current vignette, applied to state-level daily reported COVID-19
 cases from GA and PA, smoothed using a 7-day trailing average.
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 library(tidyr)
@@ -20,6 +21,7 @@ package](https://cmu-delphi.github.io/epidatasets/), which is loaded
 along with `epiprocess`, and can be accessed with:
 
 ``` r
+
 x <- cases_deaths_subset %>%
   select(geo_value, time_value, cases = cases_7d_av) %>%
   filter(geo_value %in% c("pa", "ga") & time_value >= "2020-06-01") %>%
@@ -30,6 +32,7 @@ The data can also be fetched from the Delphi Epidata API with the
 following query:
 
 ``` r
+
 library(epidatr)
 
 d <- as.Date("2024-03-20")
@@ -52,9 +55,9 @@ The data has 1,158 rows and 3 columns.
 
 ## Growth rate basics
 
-The growth rate of a function $f$ defined over a continuously-valued
-parameter $t$ is defined as $f\prime(t)/f(t)$, where $f\prime(t)$ is the
-derivative of $f$ at $t$. To estimate the growth rate of a signal in
+The growth rate of a function $`f`$ defined over a continuously-valued
+parameter $`t`$ is defined as $`f'(t)/f(t)`$, where $`f'(t)`$ is the
+derivative of $`f`$ at $`t`$. To estimate the growth rate of a signal in
 discrete-time (which can be thought of as evaluations or discretizations
 of an underlying function in continuous-time), we can estimate the
 derivative and divide by the signal value itself (or possibly a smoothed
@@ -67,10 +70,10 @@ corresponding sequence `y` of signal values, and allows us to choose
 from the following methods for estimating the growth rate at a given
 reference point `x0`, by setting the `method` argument:
 
-- “rel_change”: uses $\left( \bar{B}/\bar{A} - 1 \right)/h$, where
-  $\bar{B}$ is the average of `y` over the second half of a sliding
-  window of bandwidth `h` centered at the reference point `x0`, and
-  $\bar{A}$ the average over the first half. This can be seen as using a
+- “rel_change”: uses $`(\bar B/\bar A - 1) / h`$, where $`\bar B`$ is
+  the average of `y` over the second half of a sliding window of
+  bandwidth `h` centered at the reference point `x0`, and $`\bar A`$ the
+  average over the first half. This can be seen as using a
   first-difference approximation to the derivative.
 - “linear_reg”: uses the slope from a linear regression of `y` on `x`
   over a sliding window centered at the reference point `x0`, divided by
@@ -102,6 +105,7 @@ to append a new column to our `epi_df` object with the computed growth
 rates.
 
 ``` r
+
 x <- x %>%
   group_by(geo_value) %>%
   mutate(cases_gr1 = growth_rate(cases))
@@ -133,6 +137,7 @@ change is above 1% (in red) and below -1% (in blue), faceting by geo
 value.
 
 ``` r
+
 library(ggplot2)
 
 upper <- 0.01
@@ -161,6 +166,7 @@ As a more direct visualization, we plot the estimated growth rates
 themselves, overlaying the curves for the two states on one plot.
 
 ``` r
+
 ggplot(x, aes(x = time_value, y = cases_gr1)) +
   geom_line(aes(col = geo_value)) +
   geom_hline(yintercept = upper, linetype = 2, col = 2) +
@@ -190,6 +196,7 @@ behave similarly overall, but thankfully avoids some of the troublesome
 spikes:
 
 ``` r
+
 x <- x %>%
   group_by(geo_value) %>%
   mutate(cases_gr2 = growth_rate(cases, method = "linear_reg"))
@@ -233,6 +240,7 @@ Note: The `trendfilter` package is not automatically installed with
 `pak::pkg_install("glmgen/trendfilter")`.
 
 ``` r
+
 x <- x %>%
   group_by(geo_value) %>%
   mutate(
@@ -283,17 +291,17 @@ gives the full details.
 
 ## Log scale estimation
 
-In general, and alternative view for the growth rate of a function $f$
-is given by defining $g(t) = \log\left( f(t) \right)$, and then
-observing that $g\prime(t) = f\prime(t)/f(t)$. Therefore, any method
-that estimates the derivative can be simply applied to the log of the
-signal of interest, and in this light, each method above (“rel_change”,
-“linear_reg”, “smooth_spline”, and “trend_filter”) has a log scale
-analog, which can be used by setting the argument `log_scale = TRUE` in
-the call to
+In general, and alternative view for the growth rate of a function $`f`$
+is given by defining $`g(t) = \log(f(t))`$, and then observing that
+$`g'(t) = f'(t)/f(t)`$. Therefore, any method that estimates the
+derivative can be simply applied to the log of the signal of interest,
+and in this light, each method above (“rel_change”, “linear_reg”,
+“smooth_spline”, and “trend_filter”) has a log scale analog, which can
+be used by setting the argument `log_scale = TRUE` in the call to
 [`growth_rate()`](https://cmu-delphi.github.io/epiprocess/dev/reference/growth_rate.md).
 
 ``` r
+
 x <- x %>%
   group_by(geo_value) %>%
   mutate(
@@ -326,6 +334,7 @@ x %>%
 
 ``` r
 
+
 x %>%
   select(geo_value, time_value, cases_gr7, cases_gr8) %>%
   pivot_longer(
@@ -352,21 +361,22 @@ counterparts (shown in earlier figures), we see that the former curves
 appear less volatile and match the linear regression estimates much more
 closely. In particular, when `rel_change` has upward spikes,
 `rel_change_log` has less pronounced spikes. Why does this occur? The
-estimate of $g\prime(t)$ here can be expressed as
-${\mathbb{E}}\left\lbrack \log(B) - \log(A) \right\rbrack/h = {\mathbb{E}}\left\lbrack \log(1 + hR) \right\rbrack/h$,
-where $R = \left( (B - A)/h \right)/A$, and the expectation refers to
-averaging over the $h$ observations in each window. Consider the
-following two relevant inequalities, both due to concavity of the
-logarithm function:
+estimate of $`g'(t)`$ here can be expressed as $`\mathbb
+E[\log(B)-\log(A)]/h = \mathbb E[\log(1+hR)]/h`$, where
+$`R = ((B-A)/h) / A`$, and the expectation refers to averaging over the
+$`h`$ observations in each window. Consider the following two relevant
+inequalities, both due to concavity of the logarithm function:
 
-$${\mathbb{E}}\left\lbrack \log(1 + hR) \right\rbrack/h \leq \log\left( 1 + h{\mathbb{E}}\lbrack R\rbrack \right)/h \leq {\mathbb{E}}\lbrack R\rbrack.$$
+``` math
+\mathbb E[\log(1+hR)]/h \leq \log(1+h\mathbb E[R])/h \leq \mathbb E[R].
+```
 
 The first inequality is Jensen’s; the second inequality is because the
 tangent line of a concave function lies above it. Finally, we observe
-that
-${\mathbb{E}}\lbrack R\rbrack \approx \left( \left( \bar{B} - \bar{A} \right)/h \right)/\bar{A}$,
-which the `rel_change` estimate. This explains why the `rel_change_log`
-curve often lies below the `rel_change` curve.
+that $`\mathbb
+E[R] \approx ((\bar B-\bar A)/h) / \bar A`$, which the `rel_change`
+estimate. This explains why the `rel_change_log` curve often lies below
+the `rel_change` curve.
 
 ## Attribution
 

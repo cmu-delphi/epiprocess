@@ -105,6 +105,7 @@ method for `grouped_epi_archive`s).
 ## Examples
 
 ``` r
+
 grouped_archive <- archive_cases_dv_subset %>% group_by(geo_value)
 
 # `print` for metadata and method listing:

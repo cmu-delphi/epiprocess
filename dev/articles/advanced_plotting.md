@@ -5,6 +5,7 @@ provides advanced visualization capabilities for both `epi_df` and
 `epi_archive` objects.
 
 ``` r
+
 library(epidatr)
 library(epiprocess)
 library(dplyr)
@@ -22,6 +23,7 @@ performant. You can control this behavior with the `.max_keys` argument
 (e.g., set it to `Inf` to display all keys).
 
 ``` r
+
 # Fetching HHS admissions for all states
 df <- pub_covidcast(
   source = "hhs",
@@ -32,8 +34,6 @@ df <- pub_covidcast(
   time_values = epirange(20220901, 20230101)
 ) %>%
   as_epi_df()
-#> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
 #>   instead, pass `signal_format = "wide"` instead.
@@ -60,6 +60,7 @@ This is particularly useful for visualizing values across many locations
 simultaneously.
 
 ``` r
+
 # Static heatmap for a single variable
 plot_heatmap(df, value)
 ```
@@ -75,6 +76,7 @@ This returns a `plotly` widget, allowing you to hover over data points
 or isolate certain lines.
 
 ``` r
+
 # Interactive plot for a single variable
 autoplot(
   df, value,
@@ -88,6 +90,7 @@ autoplot(
 ```
 
 ``` r
+
 
 # Interactive plot with facets
 autoplot(
@@ -105,6 +108,7 @@ When you have many facets, they can take up a lot of space. Setting
 the facets into a single plot with a dropdown menu.
 
 ``` r
+
 # Dropdown for geographic locations
 autoplot(df, value,
   .interactive = TRUE,
@@ -117,6 +121,7 @@ You can also combine faceting and dropdowns for more complex data
 exploration. For example, dropdown by one key and facet by another:
 
 ``` r
+
 # Synthetic data with multiple keys
 df2 <- expand.grid(
   geo_value = c("ca", "ny", "tx"),
@@ -142,6 +147,7 @@ This allows you to visualize how data appeared at different points in
 time (versions).
 
 ``` r
+
 # Fetch HHS admissions with version history
 df_versions <- pub_covidcast(
   source = "hhs",
@@ -154,9 +160,6 @@ df_versions <- pub_covidcast(
 ) %>%
   rename(version = issue) %>%
   as_epi_archive()
-#> Waiting 4s for retry backoff ■■■■■■■■                        
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■                   
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
 #>   instead, pass `signal_format = "wide"` instead.
@@ -176,6 +179,7 @@ autoplot(df_versions, value)
 
 ``` r
 
+
 # Static epi_archive plot with filtering
 autoplot(
   df_versions, value,
@@ -189,6 +193,7 @@ Interactive plots for archives also support the dropdown feature, which
 can be useful for selecting a specific location or key.
 
 ``` r
+
 # Archive plot with dropdown for states
 autoplot(
   df_versions, value,

@@ -58,6 +58,7 @@ at Carnegie Mellon University.
 To install:
 
 ``` r
+
 # Stable version
 pak::pkg_install("cmu-delphi/epiprocess@main")
 
@@ -73,6 +74,7 @@ Once `epiprocess` and `epidatr` are installed, you can use the following
 code to get started:
 
 ``` r
+
 library(epiprocess)
 library(epidatr)
 library(dplyr)
@@ -84,6 +86,7 @@ California, Florida, New York, and Texas, from March 1, 2020 to January
 31, 2022
 
 ``` r
+
 df <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_cumulative_num",
@@ -113,6 +116,7 @@ Convert the data to an `epi_df` object and sort by `geo_value` and
 [dplyr](https://dplyr.tidyverse.org) verbs.
 
 ``` r
+
 edf <- df %>%
   as_epi_df(as_of = as.Date("2024-01-01")) %>%
   arrange_canonical() %>%
@@ -141,6 +145,7 @@ Compute the 7 day moving average of the confirmed daily cases for each
 `geo_value`
 
 ``` r
+
 edf <- edf %>%
   epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
 edf
@@ -164,6 +169,7 @@ edf
 Autoplot the confirmed daily cases for each `geo_value`
 
 ``` r
+
 edf %>%
   autoplot(smoothed_cases_daily)
 ```

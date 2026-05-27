@@ -78,6 +78,7 @@ possibly others), and then a column `cor`, which gives the correlation.
 ## Examples
 
 ``` r
+
 # linear association of case and death rates on any given day
 epi_cor(
   x = cases_deaths_subset,

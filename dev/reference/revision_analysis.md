@@ -211,6 +211,7 @@ contains jumps at year boundaries.
 ## Examples
 
 ``` r
+
 # Print revision summary:
 revision_analysis(archive_cases_dv_subset, percent_cli)
 #> 

@@ -30,6 +30,7 @@ object, which we prepared by downloading the data using
 [`epidatr::pub_covidcast()`](https://cmu-delphi.github.io/epidatr/reference/pub_covidcast.html).
 
 ``` r
+
 library(epidatr)
 library(epiprocess)
 library(dplyr)
@@ -45,6 +46,7 @@ The same data can be downloaded with
 [epidatr](https://cmu-delphi.github.io/epidatr/) as follows:
 
 ``` r
+
 covid_confirmed_cumulative_num <- pub_covidcast(
   source = "jhu-csse",
   signals = "confirmed_cumulative_num",
@@ -61,6 +63,7 @@ The tibble returned has the columns required for an `epi_df` object,
 [`as_epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_df.md).
 
 ``` r
+
 edf <- covid_confirmed_cumulative_num %>%
   select(geo_value, time_value, cases_cumulative = value) %>%
   as_epi_df() %>%
@@ -70,9 +73,9 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-27 10:04:14.020195
+#> * as_of     = 2026-05-27 00:54:21.588296
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1547 days
+#> * latency across all time series = 1577 days
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -95,6 +98,7 @@ the
 method (which is a convenience wrapper to `ggplot2`).
 
 ``` r
+
 edf %>%
   autoplot(cases_cumulative)
 ```
@@ -108,15 +112,16 @@ function. For a more in-depth guide to sliding, see
 [`vignette("epi_df")`](https://cmu-delphi.github.io/epiprocess/dev/articles/epi_df.md).
 
 ``` r
+
 edf %>%
   group_by(geo_value) %>%
   epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE)
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-27 10:04:14.020195
+#> * as_of     = 2026-05-27 00:54:21.588296
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1547 days
+#> * latency across all time series = 1577 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -136,15 +141,16 @@ each `geo_value`. For a more in-depth guide to growth rates, see
 [`vignette("growth_rate")`](https://cmu-delphi.github.io/epiprocess/dev/articles/growth_rate.md).
 
 ``` r
+
 edf %>%
   group_by(geo_value) %>%
   mutate(cases_growth = growth_rate(x = time_value, y = cases_cumulative, method = "rel_change", h = 7))
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-27 10:04:14.020195
+#> * as_of     = 2026-05-27 00:54:21.588296
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1547–1548 days
+#> * latency across all time series = 1577–1578 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -164,6 +170,7 @@ in-depth guide to outlier detection, see
 [`vignette("outliers")`](https://cmu-delphi.github.io/epiprocess/dev/articles/outliers.md).
 
 ``` r
+
 edf %>%
   group_by(geo_value) %>%
   mutate(outlier_info = detect_outlr(x = time_value, y = cases_daily)) %>%
@@ -171,9 +178,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-04-27 10:04:14.020195
+#> * as_of     = 2026-05-27 00:54:21.588296
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1547 days
+#> * latency across all time series = 1577 days
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
@@ -194,6 +201,7 @@ each `geo_value`. For a more in-depth guide to correlations, see
 [`vignette("correlation")`](https://cmu-delphi.github.io/epiprocess/dev/articles/correlation.md).
 
 ``` r
+
 df <- pub_covidcast(
   source = "jhu-csse",
   signals = "deaths_incidence_num",
@@ -205,9 +213,6 @@ df <- pub_covidcast(
   select(geo_value, time_value, deaths_daily = value) %>%
   as_epi_df() %>%
   arrange_canonical()
-#> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■                  
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 edf <- inner_join(edf, df, by = c("geo_value", "time_value"))
 edf %>%
   group_by(geo_value) %>%
@@ -226,6 +231,7 @@ Note that if an epi_df object loses its `geo_value` or `time_value`
 columns, it will decay to a regular tibble.
 
 ``` r
+
 edf %>% select(-time_value)
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -250,6 +256,7 @@ snapshots. We can perform similar signal processing tasks on
 interface is a bit different.
 
 ``` r
+
 library(epidatr)
 library(epiprocess)
 library(data.table)

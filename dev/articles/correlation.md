@@ -11,6 +11,7 @@ examine correlations between state-level COVID-19 case and death rates,
 smoothed using 7-day trailing averages.
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 ```
@@ -20,6 +21,7 @@ package](https://cmu-delphi.github.io/epidatasets/), which is loaded
 along with `epiprocess`, and can be accessed with:
 
 ``` r
+
 x <- covid_case_death_rates_extended %>%
   arrange(geo_value, time_value)
 ```
@@ -28,6 +30,7 @@ The data can also be fetched from the Delphi Epidata API with the
 following query:
 
 ``` r
+
 library(epidatr)
 
 d <- as.Date("2023-03-10")
@@ -76,6 +79,7 @@ correlations in an `epi_df`: grouping by time value, and by geo value.
 The former is obtained via `cor_by = time_value`.
 
 ``` r
+
 library(ggplot2)
 
 z1 <- epi_cor(x, case_rate, death_rate, cor_by = "time_value")
@@ -112,6 +116,7 @@ help to think of it this way: death rates on a certain day will be
 correlated with case rates at an offset of -10 days.)
 
 ``` r
+
 z2 <- epi_cor(x, case_rate, death_rate, cor_by = time_value, dt1 = -10)
 
 z <- rbind(
@@ -146,6 +151,7 @@ The second option we have is to group by geo value, obtained by setting
 10-day lagged case rates.
 
 ``` r
+
 z1 <- epi_cor(x, case_rate, death_rate, cor_by = geo_value)
 z2 <- epi_cor(x, case_rate, death_rate, cor_by = geo_value, dt1 = -10)
 
@@ -171,6 +177,7 @@ Next we perform a more systematic investigation of the correlations over
 a broad range of lag values.
 
 ``` r
+
 library(purrr)
 lags <- 0:35
 

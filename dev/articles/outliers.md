@@ -12,6 +12,7 @@ reported COVID-19 case counts from FL and NJ.
 The dataset has 730 rows and 3 columns.
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 library(tidyr)
@@ -20,6 +21,7 @@ x <- covid_incidence_outliers
 ```
 
 ``` r
+
 library(ggplot2)
 
 ggplot(x, aes(x = time_value, y = cases)) +
@@ -73,6 +75,7 @@ and
 respectively.
 
 ``` r
+
 detection_methods <- bind_rows(
   tibble(
     method = "rm",
@@ -119,6 +122,7 @@ to using a majority vote across the base methods to determine whether a
 value is an outlier.
 
 ``` r
+
 x <- x %>%
   group_by(geo_value) %>%
   mutate(
@@ -157,6 +161,7 @@ To visualize the results, we first define a convenience function for
 plotting.
 
 ``` r
+
 # Plot outlier detection bands and/or points identified as outliers
 plot_outlr <- function(x, signal, method_abbr, bands = TRUE, points = TRUE,
                        facet_vars = vars(.data$geo_value), nrow = NULL, ncol = NULL,
@@ -210,6 +215,7 @@ Now we produce plots for each state at a time, faceting by the detection
 method.
 
 ``` r
+
 method_abbr <- c(detection_methods$abbr, "combined")
 
 plot_outlr(x %>% filter(geo_value == "fl"), cases, method_abbr,
@@ -225,6 +231,7 @@ plot_outlr(x %>% filter(geo_value == "fl"), cases, method_abbr,
 ![](outliers_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
+
 
 plot_outlr(x %>% filter(geo_value == "nj"), cases, method_abbr,
   facet_vars = vars(method), scales = "free_y", ncol = 1
@@ -247,6 +254,7 @@ the median of replacement values from the base methods at each time
 point.
 
 ``` r
+
 y <- x %>%
   mutate(cases_corrected = combined_replacement) %>%
   select(geo_value, time_value, cases, cases_corrected)

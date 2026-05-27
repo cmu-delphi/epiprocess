@@ -66,6 +66,7 @@ currently support
 ## Examples
 
 ``` r
+
 # Filter to one location and a particular time range:
 archive_cases_dv_subset %>%
   filter(geo_value == "fl", time_value >= as.Date("2020-10-01"))

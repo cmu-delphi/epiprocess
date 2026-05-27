@@ -23,6 +23,7 @@ we will fetch daily reported COVID-19 cases from CA, FL, NY, and TX
 convert this to `epi_df` format.
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 ```
@@ -32,6 +33,7 @@ package](https://cmu-delphi.github.io/epidatasets/), which is loaded
 along with `epiprocess`, and can be accessed with:
 
 ``` r
+
 edf <- cases_deaths_subset %>%
   select(geo_value, time_value, cases) %>%
   arrange(geo_value, time_value)
@@ -41,6 +43,7 @@ The data can also be fetched from the Delphi Epidata API with the
 following query:
 
 ``` r
+
 library(epidatr)
 
 d <- as.Date("2024-03-20")
@@ -92,6 +95,7 @@ columns of `.x` by name, just as we would in a call to, say,
 For example:
 
 ``` r
+
 slide_output <- edf %>%
   epi_slide(cases_7sd = sd(cases, na.rm = TRUE), .window_size = 7)
 ```
@@ -100,6 +104,7 @@ As a simple sanity check, we visualize the 7-day trailing averages
 computed on top of the original counts:
 
 ``` r
+
 library(ggplot2)
 
 ggplot(slide_output, aes(x = time_value)) +
@@ -122,6 +127,7 @@ equivalent of the above computation would be the following, which is
 easy to get wrong:
 
 ``` r
+
 edf %>%
   complete(geo_value, time_value = seq.Date(min(time_value), max(time_value), by = "day")) %>%
   arrange_canonical() %>%
@@ -169,6 +175,7 @@ In this case, the passed function `.f` must have the form
 The same computation as above can be done with a function:
 
 ``` r
+
 edf %>%
   epi_slide(.f = function(x, g, t) sd(x$cases, na.rm = TRUE), .window_size = 7)
 #> An `epi_df` object, 4,026 x 4 with metadata:
@@ -197,6 +204,7 @@ references to the columns must be made with the prefix `.x$...`, for
 instance:
 
 ``` r
+
 edf %>%
   epi_slide(~ sd(.x$cases, na.rm = TRUE), .window_size = 7)
 #> An `epi_df` object, 4,026 x 4 with metadata:
@@ -233,6 +241,7 @@ cases as well as the the 7-day trailing standard deviation of daily
 cases:
 
 ``` r
+
 edf %>%
   epi_slide(
     ~ tibble(
@@ -275,6 +284,7 @@ cases, allowing means and sums to be taken over fewer than 7
 observations if there is missingness (`na.rm = TRUE`):
 
 ``` r
+
 edf %>%
   epi_slide_mean("cases", .window_size = 7, na.rm = TRUE)
 #> An `epi_df` object, 4,026 x 4 with metadata:
@@ -337,19 +347,18 @@ FluSurv as an example. We can get it from the [Delphi Epidata
 API](https://cmu-delphi.github.io/delphi-epidata/api/flusurv.html).
 
 ``` r
+
 library(epidatr)
 flu_data_api <- pub_flusurv(
   locations = "ca",
   epiweeks = epirange(201801, 202001)
 )
-#> Waiting 4s for retry backoff ■■■■■■■■■                       
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■               
-#> Waiting 4s for retry backoff ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  
 ```
 
 We’re interested in the age-specific rates:
 
 ``` r
+
 flu_data <- flu_data_api %>%
   select(location, epiweek, rate_age_0, rate_age_1, rate_age_2, rate_age_3, rate_age_4) %>%
   # Turn `rate_age_0`..`rate_age_4` columns into an `age_group` and `rate`
@@ -402,6 +411,7 @@ We can now convert this data to an `epi_df` object and set the
 `age_group` column as an additional group key:
 
 ``` r
+
 flu_data <- flu_data %>% as_epi_df(other_keys = "age_group")
 #> inferring geo_value column.
 flu_data
@@ -409,9 +419,9 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-04-27 10:03:42.782159
+#> * as_of     = 2026-05-27 00:53:54.150715
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 330 weeks
+#> * latency  = 334 weeks
 #> 
 #> # A tibble: 305 × 4
 #>   geo_value age_group time_value  rate
@@ -444,6 +454,7 @@ exactly. FluSurv-NET also directly reports an overall rate, so we can
 check our work.
 
 ``` r
+
 # Population estimates for FluSurv-NET-covered part of CA on 2017-07-01 and
 # 2018-07-01, extracted and aggregated from "vintage 2020" estimates (actually
 # released by Census in June 2021 and by NCHS in September 2021), which is the
@@ -473,6 +484,7 @@ population-weighted rate for each age group, that is, the portion of
 each `age_group`’s rate that it contributes to the overall rate.
 
 ``` r
+
 fractional_rate_by_age_group <-
   flu_data %>%
   inner_join(
@@ -495,6 +507,7 @@ We can then use `sum_groups_epi_df` to sum population-weighted rate
 across all age groups to get the overall rate.
 
 ``` r
+
 rate_overall_recalc_edf <-
   fractional_rate_by_age_group %>%
   sum_groups_epi_df("rate_contrib", group_cols = c("geo_value")) %>%
@@ -505,9 +518,9 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-04-27 10:03:42.782159
+#> * as_of     = 2026-05-27 00:53:54.150715
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 330 weeks
+#> * latency  = 334 weeks
 #> 
 #> # A tibble: 61 × 3
 #>   geo_value time_value rate_overall_recalc
@@ -525,6 +538,7 @@ Let’s compare our calculated rate to the overall rate reported by
 FluSurv-NET.
 
 ``` r
+
 rate_overall_recalc_edf <-
   rate_overall_recalc_edf %>%
   # compare to published overall rates:
@@ -559,6 +573,7 @@ First, let’s create a data set with some missing data. We will reuse the
 dataset `edf` from above, but modify it slightly.
 
 ``` r
+
 edf_missing <- edf %>%
   filter(geo_value %in% c("ca", "tx")) %>%
   group_by(geo_value) %>%
@@ -592,6 +607,7 @@ edf_missing %>%
 Now let’s fill in the missing data with explicit zeros:
 
 ``` r
+
 edf_missing <- edf_missing %>%
   group_by(geo_value) %>%
   complete(
@@ -641,6 +657,7 @@ package](https://cmu-delphi.github.io/epidatasets/), which is loaded
 along with `epiprocess`, and can be accessed with:
 
 ``` r
+
 library(epiprocess)
 library(dplyr)
 library(readr)
@@ -652,6 +669,7 @@ The data can also be fetched from the Delphi Epidata API with the
 following query:
 
 ``` r
+
 library(epidatr)
 
 d <- as.Date("2024-03-20")
@@ -705,6 +723,7 @@ for `epi_df` objects, which sets these variables according to these
 defaults.
 
 ``` r
+
 library(tsibble)
 
 xt <- as_tsibble(x)
@@ -738,6 +757,7 @@ each row), then
 throws an error:
 
 ``` r
+
 head(as_tsibble(x, key = "county_name"))
 #> Error in `validate_tsibble()`:
 #> ! A valid tsibble must have distinct rows identified by key and index.
@@ -748,6 +768,7 @@ As we can see, there are duplicate county names between Massachusetts
 and Vermont, which caused the error.
 
 ``` r
+
 head(duplicates(x, key = "county_name"))
 #> # A tibble: 6 × 5
 #>   geo_value time_value cases county_name     state_name   
@@ -763,6 +784,7 @@ head(duplicates(x, key = "county_name"))
 Keying by both county name and state name, however, does work:
 
 ``` r
+
 head(as_tsibble(x, key = c("county_name", "state_name")))
 #> # A tsibble: 6 x 5 [1D]
 #> # Key:       county_name, state_name [1]
@@ -787,6 +809,7 @@ downstream data processing tasks.
 Let’s first remove certain dates from our data set to create gaps:
 
 ``` r
+
 state_naming <- read_csv("https://github.com/cmu-delphi/covidcast/raw/c89e4d295550ba1540d64d2cc991badf63ad04e5/Python-packages/covidcast-py/covidcast/geo_mappings/state_census.csv", # nolint: line_length_linter
   col_types = c(NAME = col_character(), ABBR = col_character())
 ) %>%
@@ -810,6 +833,7 @@ in the `tsibble` package each provide useful summaries, in slightly
 different formats.
 
 ``` r
+
 head(has_gaps(xt))
 #> # A tibble: 6 × 2
 #>   geo_value                 .gaps
@@ -846,6 +870,7 @@ head(count_gaps(xt))
 We can also visualize the patterns of missingness:
 
 ``` r
+
 library(ggplot2)
 
 ggplot(
@@ -878,6 +903,7 @@ carried forward in time, could be accomplished by first filling with
 [`tidyr::fill()`](https://tidyr.tidyverse.org/reference/fill.html).)
 
 ``` r
+
 fill_gaps(xt, cases = 0) %>%
   head()
 #> # A tsibble: 6 x 3 [1D]
@@ -899,6 +925,7 @@ we can at zero-fill over the entire span of the observed (censored)
 data.
 
 ``` r
+
 xt_filled <- fill_gaps(xt, cases = 0, .full = TRUE)
 
 head(xt_filled)
@@ -929,6 +956,7 @@ on the zero-filled data brings these trailing averages (appropriately)
 downwards, as we can see inspecting Plymouth, MA around July 1, 2021.
 
 ``` r
+
 xt %>%
   as_epi_df(as_of = as.Date("2024-03-20")) %>%
   group_by(geo_value) %>%
