@@ -826,7 +826,8 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
         # Our processing was built expecting wide format, so convert:
         cli::cli_inform(c(
           "Pivoting to wide format based on {.var {signal_var}} column.",
-          ">" = "To keep long format ({.var {signal_var}} added to `other_keys`), pass {.code signal_format = \"long\"}.",
+          ">" = "To keep long format ({.var {signal_var}} added to `other_keys`),
+                 pass {.code signal_format = \"long\"}.",
           ">" = "To skip signal processing, pass {.code signal_format = \"none\"}."
         ), class = "epiprocess__auto_pivot_inform")
         signal_format <- "wide"
