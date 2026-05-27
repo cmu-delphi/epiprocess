@@ -293,17 +293,17 @@ as_epi_df.tbl_df <- function(
         "as_of" %in% names(attributes(x)$metadata)
     ) {
       as_of <- attributes(x)$metadata$as_of
-    } else if ("as_of" %in% names(x)) {
-      # Next check for as_of, issue, or version columns
-      as_of <- max(x$as_of)
-    } else if ("issue" %in% names(x)) {
-      as_of <- max(x$issue)
-    } else if ("version" %in% names(x)) {
-      as_of <- max(x$version)
     } else {
-      # If we got here then we failed
-      as_of <- Sys.time()
-    } # Use the current day-time
+      # Guessing as_of from version columns
+      candidates <- vctrs::vec_set_intersect(version_column_names(), names(x))
+
+      if (length(candidates) > 0) {
+        as_of <- max(x[[candidates[[1]]]])
+      } else {
+        # If we got here then we failed
+        as_of <- Sys.time()
+      }
+    }
   }
 
   assert_character(other_keys)
