@@ -678,7 +678,8 @@ time_column_names <- function() {
   substitutions <- c(
     "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
     "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
-    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value",
+    "reference_time", "reference_date", "ref_time", "ref_date", "event_date", "onset_date"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("time_value", length(substitutions))
@@ -695,7 +696,8 @@ geo_column_names <- function() {
   substitutions <- c(
     "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
     "county", "hrr", "msa", "state", "province", "nation", "states",
-    "provinces", "counties", "geo_Value"
+    "provinces", "counties", "geo_Value", "region", "regions", "country", "countries",
+    "state_code", "fips_code", "zip_code", "location_id", "location_code"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("geo_value", length(substitutions))
@@ -710,9 +712,12 @@ geo_column_names <- function() {
 #' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
-    "version", "issue", "release",
+    "version", "issue", "issues", "release",
     "version_recorded", "report_date", "recorded_date",
-    "issue_date", "release_date", "as_of", "revision"
+    "issue_date", "release_date", "as_of", "revision",
+    "report_time", "update_date", "update_time", "publish_date",
+    "publish_time", "published_date", "published_time",
+    "upload_date", "upload_time", "as_of_date", "as_of_time", "asof"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("version", length(substitutions))
