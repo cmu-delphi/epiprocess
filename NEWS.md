@@ -6,6 +6,7 @@ indicate development versions beyond 0.x.
 # epiprocess 0.12.0.9999
 
 ## New features
+- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
 - `revision_summary()` now detects bulk reporting adding new time
   values, and excludes bulk reporting for some statistics.
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.

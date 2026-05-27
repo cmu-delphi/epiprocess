@@ -222,3 +222,32 @@ test_that("is_locf works as expected", {
   is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
   expect_equal(is_locf(vec, .Machine$double.eps^0.5, FALSE), as.logical(is_repeated))
 })
+
+test_that("as_epi_archive guesses reference_time and report_time correctly", {
+  df <- data.frame(
+    geo_value = "ca",
+    reference_time = as.Date("2020-01-01") + 0:19,
+    report_time = as.Date("2020-01-02") + 0:19,
+    value = 1:20
+  )
+  expect_message(
+    expect_no_error(ea <- as_epi_archive(df, compactify = FALSE)),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+  expect_equal(ea$DT$time_value, df$reference_time)
+  expect_equal(ea$DT$version, df$report_time)
+
+  df2 <- data.frame(
+    country = "ca",
+    ref_time = as.Date("2020-01-01") + 0:19,
+    publish_date = as.Date("2020-01-02") + 0:19,
+    value = 1:20
+  )
+  expect_message(
+    expect_no_error(ea2 <- as_epi_archive(df2, compactify = FALSE)),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+  expect_equal(ea2$DT$geo_value, df2$country)
+  expect_equal(ea2$DT$time_value, df2$ref_time)
+  expect_equal(ea2$DT$version, df2$publish_date)
+})
