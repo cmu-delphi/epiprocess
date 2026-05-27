@@ -214,7 +214,7 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #'   column (see `signal_var`) and a `value` column are both present,
 #'   and the signal column contains more than one unique value. `"long"` format
 #'   treats the signal as a metadata key by adding it to `other_keys`. `"wide"`
-#'   format tries to pivot to wide.
+#'   format tries to pivot to wide. `"none"` skips all signal processing.
 #' @param signal_var The name of the column that contains the signal
 #'   identifiers. If `NULL`, the function will try to guess this column
 #'   (see `signal_column_names()` for a list of column names that will be
@@ -248,7 +248,7 @@ as_epi_df.tbl_df <- function(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long", "none"),
   signal_var = NULL,
   ...
 ) {
@@ -338,7 +338,7 @@ as_epi_df.grouped_df <- function(x, ...) {
 #' @method as_epi_df data.frame
 #' @export
 as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
-                                 signal_format = c("auto", "wide", "long"),
+                                 signal_format = c("auto", "wide", "long", "none"),
                                  signal_var = NULL, ...) {
   as_epi_df(
     x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
@@ -351,7 +351,7 @@ as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
 #' @method as_epi_df tbl_ts
 #' @export
 as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(),
-                             signal_format = c("auto", "wide", "long"),
+                             signal_format = c("auto", "wide", "long", "none"),
                              signal_var = NULL, ...) {
   tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) > 0) {

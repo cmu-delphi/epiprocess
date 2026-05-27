@@ -579,7 +579,7 @@ as_epi_archive <- function(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long", "none"),
   signal_var = NULL,
   ...,
   versions_end = .versions_end

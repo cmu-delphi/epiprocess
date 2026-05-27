@@ -784,6 +784,10 @@ signal_column_names <- function() {
 #' Validate signal format and signal_var
 #' @keywords internal
 validate_signal_format <- function(x, signal_format, signal_var, other_keys, value_var = "value") {
+  if (signal_format == "none") {
+    return(list(format = "none", signal_var = signal_var, other_keys = other_keys))
+  }
+
   # Validation of provided signal_var
   if (!is.null(signal_var)) {
     if (length(signal_var) > 1) {

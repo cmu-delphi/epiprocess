@@ -164,3 +164,33 @@ test_that("Error handling and non-scalar validations", {
     class = "epiprocess__wide_pivot_requires_value_col"
   )
 })
+
+test_that("signal_format = 'none' skips all signal processing", {
+  # A column named "signal" that is a data column, not a long-format identifier.
+  # Normally the single unique value would trigger a "Keeping in long format" message.
+  raw <- dplyr::tibble(
+    geo_value = "ak",
+    time_value = test_date + 1:5,
+    signal = "cases",
+    value = 1:5
+  )
+
+  # Without "none": messages about keeping in long format and adds to other_keys
+  expect_message(as_epi_df(raw), "long")
+
+  # With "none": silent, signal column untouched, not added to other_keys
+  expect_silent(df <- as_epi_df(raw, signal_format = "none"))
+  expect_setequal(names(df), c("geo_value", "time_value", "signal", "value"))
+  expect_false("signal" %in% attr(df, "metadata")$other_keys)
+
+  # Archive: same
+  raw_arch <- dplyr::mutate(raw, version = test_date + 6)
+  expect_silent(arch <- as_epi_archive(raw_arch, signal_format = "none"))
+  expect_setequal(names(arch$DT), c("geo_value", "time_value", "signal", "value", "version"))
+  expect_false("signal" %in% arch$other_keys)
+
+  # signal_var is also ignored when signal_format = "none"
+  expect_silent(df2 <- as_epi_df(raw, signal_format = "none", signal_var = "signal"))
+  expect_setequal(names(df2), c("geo_value", "time_value", "signal", "value"))
+  expect_false("signal" %in% attr(df2, "metadata")$other_keys)
+})
