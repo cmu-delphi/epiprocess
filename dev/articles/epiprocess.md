@@ -73,7 +73,7 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-05-27 00:54:21.588296
+#> * as_of     = 2026-05-27 22:25:07.703914
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency across all time series = 1577 days
 #> 
@@ -119,7 +119,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-05-27 00:54:21.588296
+#> * as_of     = 2026-05-27 22:25:07.703914
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency across all time series = 1577 days
 #> 
@@ -148,7 +148,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-05-27 00:54:21.588296
+#> * as_of     = 2026-05-27 22:25:07.703914
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency across all time series = 1577–1578 days
 #> 
@@ -178,7 +178,7 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-05-27 00:54:21.588296
+#> * as_of     = 2026-05-27 22:25:07.703914
 #> Latency (time between last available observation and epi_df's as_of, by time series):
 #> * latency across all time series = 1577 days
 #> 
