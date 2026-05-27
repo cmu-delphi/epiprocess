@@ -111,7 +111,7 @@ test_that("Error handling and non-scalar validations", {
   )
 
   # Multiple candidates in non-auto mode
-  raw_multi <- dplyr::mutate(raw_error, signal = "s", name = "n")
+  raw_multi <- dplyr::mutate(raw_error, signal = "s", variable = "v")
   expect_error(
     as_epi_df(raw_multi, signal_format = "long"),
     class = "epiprocess__multiple_signal_candidates"
