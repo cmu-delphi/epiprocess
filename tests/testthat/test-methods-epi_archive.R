@@ -25,13 +25,13 @@ test_that("Errors are thrown due to bad epix_as_of inputs", {
 
 test_that("Warning against max_version being clobberable", {
   # none by default
-  expect_warning(regexp = NA, ea %>% epix_as_of(max(ea$DT$version)))
-  expect_warning(regexp = NA, ea %>% epix_as_of(min(ea$DT$version)))
+  expect_warning(regexp = NA, ea %>% epix_as_of(max(archive_col(ea, "version"))))
+  expect_warning(regexp = NA, ea %>% epix_as_of(min(archive_col(ea, "version"))))
   # but with `clobberable_versions_start` non-`NA`, yes
   ea_with_clobberable <- ea
-  ea_with_clobberable$clobberable_versions_start <- max(ea_with_clobberable$DT$version)
-  expect_warning(ea_with_clobberable %>% epix_as_of(max(ea$DT$version)))
-  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(ea$DT$version)))
+  ea_with_clobberable$clobberable_versions_start <- max(archive_col(ea_with_clobberable, "version"))
+  expect_warning(ea_with_clobberable %>% epix_as_of(max(archive_col(ea, "version"))))
+  expect_warning(regexp = NA, ea_with_clobberable %>% epix_as_of(min(archive_col(ea, "version"))))
 })
 
 test_that("epix_as_of properly grabs the data and doesn't mutate key", {
@@ -40,7 +40,7 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
   ea2 <- ea2_data %>%
     as_epi_archive()
 
-  old_key <- data.table::key(ea2$DT)
+  old_key <- key_colnames(ea2)
 
   edf_as_of <- ea2 %>%
     epix_as_of(as.Date("2020-06-03"))
@@ -52,7 +52,7 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
   ), as_of = as.Date("2020-06-03"))
 
   expect_equal(edf_as_of, edf_expected, ignore_attr = c(".internal.selfref", "sorted"))
-  expect_equal(data.table::key(ea2$DT), old_key)
+  expect_equal(key_colnames(ea2), old_key)
 })
 
 test_that("Errors are thrown due to bad epix_truncate_versions_after inputs", {
@@ -72,7 +72,7 @@ test_that("epix_truncate_version_after properly grabs the data and doesn't mutat
   ea2 <- ea2_data %>%
     as_epi_archive()
 
-  old_key <- data.table::key(ea2$DT)
+  old_key <- key_colnames(ea2)
 
   ea_as_of <- ea2 %>%
     epix_truncate_versions_after(max_version = as.Date("2020-06-02"))
@@ -81,7 +81,7 @@ test_that("epix_truncate_version_after properly grabs the data and doesn't mutat
     as_epi_archive()
 
   expect_equal(ea_as_of, ea_expected, ignore_attr = c(".internal.selfref", "sorted"))
-  expect_equal(data.table::key(ea2$DT), old_key)
+  expect_equal(key_colnames(ea2), old_key)
 })
 
 test_that("epix_truncate_version_after doesn't filter if max_verion at latest version", {
@@ -144,16 +144,18 @@ test_that("epix_as_of_now works as expected", {
     attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
     as.Date("2020-06-08")
   )
-  time_value <- tsibble::yearmonth(as.Date("2020-06-01") - lubridate::month(1))
-  df <- dplyr::tribble(
-    ~geo_value, ~time_value, ~version, ~cases,
-    "ca", time_value, time_value, 1,
-    "ca", time_value + lubridate::month(1), time_value + lubridate::month(1), 2,
-  )
-  expect_equal(
-    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
-    tsibble::yearmonth("2020-06")
-  )
+  if (!using_duck_backend()) {
+    time_value <- tsibble::yearmonth(as.Date("2020-06-01") - lubridate::month(1))
+    df <- dplyr::tribble(
+      ~geo_value, ~time_value, ~version, ~cases,
+      "ca", time_value, time_value, 1,
+      "ca", time_value + lubridate::month(1), time_value + lubridate::month(1), 2,
+    )
+    expect_equal(
+      attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+      tsibble::yearmonth("2020-06")
+    )
+  }
   time_value <- 2020
   df <- dplyr::tribble(
     ~geo_value, ~time_value, ~version, ~cases,
@@ -174,23 +176,17 @@ test_that("filter.epi_archive works as expected", {
 
   expect_equal(
     ea2 %>% filter(geo_value == "tn"),
-    new_epi_archive(
-      ea2$DT[FALSE],
-      ea2$geo_type, ea2$time_type, ea2$other_keys,
-      ea2$clobberable_versions_start, ea2$versions_end
-    )
+    archive_tbl(ea2)[FALSE, ] %>%
+      as_epi_archive(versions_end = ea2$versions_end)
   )
 
   expect_equal(
     ea2 %>% filter(geo_value == "ca", time_value == as.Date("2020-06-02")),
-    new_epi_archive(
-      data.table::data.table(
-        geo_value = "ca", time_value = as.Date("2020-06-02"),
-        version = as.Date("2020-06-02") + 0:2, cases = 0:2
-      ),
-      ea2$geo_type, ea2$time_type, ea2$other_keys,
-      ea2$clobberable_versions_start, ea2$versions_end
-    )
+    tibble::tibble(
+      geo_value = "ca", time_value = as.Date("2020-06-02"),
+      version = as.Date("2020-06-02") + 0:2, cases = 0:2
+    ) %>%
+      as_epi_archive(versions_end = ea2$versions_end)
   )
 
   # Output geo_type and time_type behavior:
@@ -300,7 +296,8 @@ test_that("filter.epi_archive works as expected", {
       filter(version <= time_value + as.difftime(1, units = "days"),
         .format_aware = TRUE
       ) %>%
-      .$DT,
-    ea2$DT[version <= time_value + as.difftime(1, units = "days"), ]
+      archive_tbl(),
+    archive_tbl(ea2) %>%
+      dplyr::filter(version <= time_value + as.difftime(1, units = "days"))
   )
 })

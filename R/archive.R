@@ -160,7 +160,7 @@ next_after.POSIXct <- function(x) {
 #' The variables `geo_value`, `time_value`, `version` serve as key variables for
 #'   the data table (in addition to any other keys specified in the metadata).
 #'   There can only be a single row per unique combination of key variables. The
-#'   keys for an `epi_archive` can be viewed with `key(epi_archive$DT)`.
+#'   keys for an `epi_archive` can be viewed with `key_colnames(epi_archive)`.
 #'
 #' ## Compactification
 #'
@@ -307,7 +307,7 @@ new_epi_archive <- function(
   validate_version_bound(clobberable_versions_start, x, na_ok = TRUE)
   validate_version_bound(versions_end, x, na_ok = FALSE)
 
-  key_vars <- c("geo_value", "time_value", other_keys, "version")
+  key_vars <- c("geo_value", other_keys, "time_value", "version")
   if (!all(key_vars %in% names(x))) {
     # Give a more tailored error message than as.data.table would:
     cli_abort(c(
@@ -336,7 +336,7 @@ new_epi_archive <- function(
       clobberable_versions_start = clobberable_versions_start,
       versions_end = versions_end
     ),
-    class = "epi_archive"
+    class = c("epi_archive_dt", "epi_archive")
   )
 }
 
@@ -354,21 +354,20 @@ new_epi_archive <- function(
 validate_epi_archive <- function(x) {
   assert_class(x, "epi_archive")
 
-  ukey_vars1 <- c("geo_value", "time_value", x$other_keys, "version")
-  ukey_vars2 <- key(x$DT)
-  if (!identical(ukey_vars1, ukey_vars2)) {
-    cli_abort(c("`data.table::key(x$DT)` not as expected",
-      "*" = "Based on `x$other_keys` the key should be {format_chr_deparse(ukey_vars1)}",
-      "*" = "But `key(x$DT)` is {format_chr_deparse(ukey_vars2)}",
-      ">" = "Consider reconstructing the archive from `x$DT` specifying
+  ukey_vars_expected <- c("geo_value", x$other_keys, "time_value", "version")
+  ukey_vars_actual <- key_colnames(x)
+  if (!identical(ukey_vars_expected, ukey_vars_actual)) {
+    cli_abort(c("Key columns of archive not as expected",
+      "*" = "Based on `x$other_keys` the key columns should be {format_chr_deparse(ukey_vars_expected)}",
+      "*" = "But `key_colnames(x)` is {format_chr_deparse(ukey_vars_actual)}",
+      ">" = "Consider reconstructing the archive specifying
                        the appropriate `other_keys`."
     ))
   }
-  # Rely on data.table to ensure that these key columns exist.
 
-  if (anyDuplicated(x$DT, by = key(x$DT)) != 0L) {
-    cli_abort("`x$DT` must have one row per unique combination of the key variables. If you
-            have additional key variables other than `geo_value`, `time_value`, and
+  if (archive_any_duplicated_key(x)) {
+    cli_abort("The archive data must have one row per unique combination of the key variables.
+            If you have additional key variables other than `geo_value`, `time_value`, and
             `version`, such as an age group column, please specify them in `other_keys`.
             Otherwise, check for duplicate rows and/or conflicting values for the same
             measurement.",
@@ -376,23 +375,26 @@ validate_epi_archive <- function(x) {
     )
   }
 
-  if (!identical(class(x$DT$time_value), class(x$DT$version))) {
+  if (!identical(class(archive_col(x, "time_value")), class(archive_col(x, "version")))) {
     cli_abort(
-      "`x$DT$time_value` and `x$DT$version` must have the same class.",
+      "`time_value` and `version` columns must have the same class.",
       class = "epiprocess__time_value_version_mismatch"
     )
   }
 
-  if (anyMissing(x$DT$version)) {
+  if (anyMissing(archive_col(x, "version"))) {
     cli_abort("Column `version` must not contain missing values.")
   }
 
-  if (nrow(x$DT) > 0L && x$versions_end < max(x$DT$version)) {
-    cli_abort(
-      "`x$versions_end` was {x$versions_end}, but `x$DT` contained
-        updates for a later version or versions, up through {max(x$DT$version)}",
-      class = "epiprocess__versions_end_earlier_than_updates"
-    )
+  if (archive_nrow(x) > 0L) {
+    max_update_version <- archive_col_range(x, "version")[[2L]]
+    if (x$versions_end < max_update_version) {
+      cli_abort(
+        "`x$versions_end` was {x$versions_end}, but the archive contained
+        updates for a later version or versions, up through {max_update_version}",
+        class = "epiprocess__versions_end_earlier_than_updates"
+      )
+    }
   }
   if (!is.na(x$clobberable_versions_start) && x$clobberable_versions_start > x$versions_end) {
     cli_abort(
@@ -436,7 +438,7 @@ validate_epi_archive <- function(x) {
 #'   judgment call here by the current `epi_archive` format.
 #'
 #' @importFrom data.table is.data.table key
-#' @importFrom dplyr arrange filter
+#' @importFrom dplyr arrange filter pick
 #' @importFrom vctrs vec_duplicate_any
 #'
 #' @keywords internal
@@ -461,7 +463,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0, init_nas_are_l
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
-#' @importFrom dplyr filter if_all everything
+#' @importFrom dplyr filter if_all everything pick
 removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_locf = FALSE) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
@@ -620,8 +622,8 @@ as_epi_archive <- function(
     cli_abort('`compactify` must be `TRUE`, `FALSE`, or `"message"`')
   }
 
-  data_table <- result$DT
-  key_vars <- key(data_table)
+  data_table <- archive_tbl(result)
+  key_vars <- key_colnames(result)
 
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data frame
@@ -653,8 +655,66 @@ as_epi_archive <- function(
     rlang::inform(message_string, class = "epiprocess__compactify_default_removed_rows")
   }
 
-  result$DT <- compactified
-  result
+  archive_set_data(result, compactified)
+}
+
+# Shared implementation for backend-specific archive print methods.
+print_epi_archive <- function(x, ..., class = TRUE, methods = TRUE, preview) {
+  if (rlang::dots_n(...) > 0) {
+    cli_abort(c(
+      "Error in print.epi_archive()",
+      "i" = "Too many arguments passed to `print.epi_archive()`."
+    ))
+  }
+
+  n_rows <- archive_nrow(x)
+  n_cols <- archive_ncol(x) # nolint: object_usage_linter, used in glue string below
+  has_rows <- n_rows != 0L
+  time_value_range <- if (has_rows) archive_col_range(x, "time_value") # nolint: object_usage_linter, used in glue string below
+  version_range <- if (has_rows) archive_col_range(x, "version")
+
+  cat_line(format_message(
+    c(
+      if (class) "An `epi_archive` object, with:",
+      "i" = if (length(x$other_keys) > 0) {
+        "Other keys: {x$other_keys}"
+      },
+      "i" = if (has_rows) {
+        # \u00a0 is non-breaking space cli won't crush, to align with version range
+        line <- 'Time range:{strrep("\u00a0", 3)} {time_value_range[[1L]]} -- {time_value_range[[2L]]}'
+        if (time_type(x) %in% c("day", "week")) {
+          line <- paste0(line, " (times are {time_type(x)}s)")
+        }
+        line
+      },
+      "i" = if (has_rows) {
+        max_update_version <- version_range[[2L]]
+        if (vec_equal(max_update_version, x$versions_end)) {
+          "Version range: {version_range[[1L]]} -- {max_update_version}"
+        } else {
+          "Version range: {version_range[[1L]]} -- {x$versions_end},
+           but no row updates recorded after {max_update_version}"
+        }
+      },
+      "i" = if (!is.na(x$clobberable_versions_start)) {
+        "Clobberable versions start: {x$clobberable_versions_start}"
+      },
+      "i" = "A preview of the table ({n_rows} rows x {n_cols} columns):"
+    )
+  ))
+  print(preview)
+
+  return(invisible(x))
+}
+
+#' @export
+print.epi_archive_dt <- function(x, ..., class = TRUE, methods = TRUE) {
+  print_epi_archive(x, ..., class = class, methods = methods, preview = x$DT[])
+}
+
+#' @export
+print.epi_archive_duck <- function(x, ..., class = TRUE, methods = TRUE) {
+  print_epi_archive(x, ..., class = class, methods = methods, preview = archive_tbl(x))
 }
 
 #' Print information about an `epi_archive` object
@@ -669,45 +729,8 @@ as_epi_archive <- function(
 #' @importFrom rlang check_dots_empty
 #' @export
 print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
-  if (rlang::dots_n(...) > 0) {
-    cli_abort(c(
-      "Error in print.epi_archive()",
-      "i" = "Too many arguments passed to `print.epi_archive()`."
-    ))
-  }
-
-  cat_line(format_message(
-    c(
-      if (class) "An `epi_archive` object, with:",
-      "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
-        "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
-      },
-      "i" = if (nrow(x$DT) != 0L) {
-        # \u00a0 is non-breaking space cli won't crush, to align with version range
-        line <- 'Time range:{strrep("\u00a0", 3)} {min(x$DT$time_value)} -- {max(x$DT$time_value)}'
-        if (time_type(x) %in% c("day", "week")) {
-          line <- paste0(line, " (times are {time_type(x)}s)")
-        }
-        line
-      },
-      "i" = if (nrow(x$DT) != 0L) {
-        max_update_version <- max(x$DT$version)
-        if (vec_equal(max_update_version, x$versions_end)) {
-          "Version range: {min(x$DT$version)} -- {max_update_version}"
-        } else {
-          "Version range: {min(x$DT$version)} -- {x$versions_end},
-           but no row updates recorded after {max_update_version}"
-        }
-      },
-      "i" = if (!is.na(x$clobberable_versions_start)) {
-        "Clobberable versions start: {x$clobberable_versions_start}"
-      },
-      "i" = "A preview of the table ({nrow(x$DT)} rows x {ncol(x$DT)} columns):"
-    )
-  ))
-  print(x$DT[])
-
-  return(invisible(x))
+  preview <- if (!is.null(x$DT)) x$DT[] else archive_tbl(x)
+  print_epi_archive(x, ..., class = class, methods = methods, preview = preview)
 }
 
 
@@ -837,10 +860,10 @@ group_by.epi_archive <- function(.data, ..., .add = FALSE,
   detailed_mutate <- epix_detailed_restricted_mutate(.data, ...)
   assert_logical(.drop)
   if (!.drop) {
-    grouping_cols <- as.list(detailed_mutate[["archive"]][["DT"]])[detailed_mutate[["request_names"]]]
-    grouping_col_is_factor <- purrr::map_lgl(grouping_cols, is.factor)
-    # ^ Use `as.list` to try to avoid any possibility of a deep copy.
-    if (length(grouping_cols) != 0L && !any(grouping_col_is_factor)) {
+    grouping_col_is_factor <- archive_col_is_factor(
+      detailed_mutate[["archive"]], detailed_mutate[["request_names"]]
+    )
+    if (length(grouping_col_is_factor) != 0L && !any(grouping_col_is_factor)) {
       cli_warn(
         "`.drop=FALSE` but none of the grouping columns are factors;
         did you mean to convert one of the columns to a factor beforehand?",
@@ -879,8 +902,7 @@ clone <- function(x) {
 #' @rdname clone
 #' @export
 clone.epi_archive <- function(x) {
-  x$DT <- data.table::copy(x$DT)
-  x
+  archive_deep_copy(x)
 }
 
 #' Process signal column in epi archive
@@ -900,8 +922,13 @@ process_signal_archive <- function(
   other_keys,
   value_var = "value"
 ) {
+  # `validate_signal_format` needs `unique(x[[signal_var]])` on the auto-long
+  # path, so an eager frame is simplest. Only called at construction time,
+  # when the archive is still the DT intermediate built by `as_epi_archive`
+  # — never on a fully-lazy duck archive directly — so materialization is
+  # cheap in practice.
   res <- validate_signal_format(
-    archive$DT,
+    archive_tbl(archive),
     signal_format,
     signal_var,
     other_keys,
@@ -915,11 +942,9 @@ process_signal_archive <- function(
   if (res$format == "long") {
     cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
     archive$other_keys <- res$other_keys
-    data.table::setkeyv(
-      archive$DT,
-      c("geo_value", "time_value", archive$other_keys, "version")
-    )
-    return(archive)
+    # `other_keys` changed, so `key_colnames(archive)` changed; let the setter
+    # re-key the storage.
+    return(archive_set_data(archive, archive_data(archive)))
   }
 
   # Wide
@@ -934,6 +959,7 @@ process_signal_archive <- function(
 }
 #' Pivot an archive from long to wide
 #'
+#' @importFrom rlang :=
 #' @keywords internal
 epix_pivot_wider <- function(x, names_from, values_from) {
   assert_class(x, "epi_archive")
@@ -942,7 +968,7 @@ epix_pivot_wider <- function(x, names_from, values_from) {
 
   # Use vctrs::vec_split to split the data table by the names_from column.
   # This returns an object with 'key' and 'val'.
-  data <- tibble::as_tibble(as.data.frame(x$DT))
+  data <- archive_tbl(x)
   split_data <- vctrs::vec_split(data, data[[names_from]])
 
   archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {

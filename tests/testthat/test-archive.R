@@ -4,7 +4,7 @@ test_that("first input must be a data.frame", {
   )
 })
 
-archive_data <- archive_cases_dv_subset$DT
+archive_data <- archive_tbl(archive_cases_dv_subset)
 
 test_that("data.frame must contain geo_value, time_value and version columns", {
   expect_error(as_epi_archive(select(archive_data, -geo_value), compactify = FALSE),
@@ -58,6 +58,120 @@ test_that("as_epi_archive default compactification (no longer messages/warns)", 
   expect_snapshot(res <- dumb_ex %>% as_epi_archive())
 })
 
+test_that("as_duckdb_epi_archive_from_duck wraps existing duckplyr data", {
+  skip_if_not_installed("duckplyr")
+
+  duck_data <- duckplyr::duckdb_tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2020-01-01", "2020-01-01")),
+    version = as.Date(c("2020-01-01", "2020-01-02")),
+    value = c(1, 2)
+  )
+  archive <- as_duckdb_epi_archive_from_duck(duck_data)
+
+  expect_true(withVisible(as_duckdb_epi_archive_from_duck(duck_data))$visible)
+  expect_s3_class(archive, "epi_archive_duck")
+  expect_s3_class(archive_data(archive), "duckplyr_df")
+  expect_equal(archive_tbl(archive), tibble::as_tibble(dplyr::collect(duck_data)))
+  expect_identical(archive$versions_end, as.Date("2020-01-02"))
+})
+
+test_that("as_duckdb_epi_archive_from_duck can wrap trusted data without validation", {
+  skip_if_not_installed("duckplyr")
+
+  duck_data <- duckplyr::duckdb_tibble(
+    geo_value = c("ca", "ca"),
+    time_value = as.Date(c("2020-01-01", "2020-01-01")),
+    version = as.Date(c("2020-01-01", "2020-01-01")),
+    value = c(1, 2)
+  )
+  archive <- as_duckdb_epi_archive_from_duck(
+    duck_data,
+    geo_type = "state",
+    time_type = "day",
+    versions_end = as.Date("2020-01-01"),
+    validate = FALSE
+  )
+
+  expect_s3_class(archive, "epi_archive_duck")
+  expect_equal(archive_nrow(archive), 2L)
+  expect_error(
+    validate_epi_archive(archive),
+    class = "epiprocess__epi_archive_requires_unique_key"
+  )
+})
+
+test_that("as_tibble() materializes archive rows backend-neutrally", {
+  ea <- dumb_ex %>% as_epi_archive(compactify = FALSE)
+
+  expect_s3_class(tibble::as_tibble(ea), "tbl_df")
+  expect_equal(tibble::as_tibble(ea), archive_tbl(ea))
+
+  if (rlang::is_installed("duckplyr")) {
+    duck_ea <- as_duckdb_archive(as_epi_archive(dumb_ex, compactify = FALSE))
+    expect_equal(tibble::as_tibble(duck_ea), archive_tbl(duck_ea))
+  }
+})
+
+test_that("archive_col_range returns ranges across backends", {
+  ea <- as_epi_archive(dumb_ex, compactify = FALSE)
+  expect_identical(archive_col_range(ea, "version"), range(archive_col(ea, "version")))
+  expect_identical(archive_col_range(ea, "value"), range(archive_col(ea, "value")))
+
+  with_missing <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-01") + 0:1,
+    value = c(1, NA)
+  ) %>%
+    as_epi_archive(compactify = FALSE)
+  expect_identical(archive_col_range(with_missing, "value"), c(NA_real_, NA_real_))
+
+  if (rlang::is_installed("duckplyr")) {
+    duck_ea <- as_duckdb_archive(ea)
+    expect_identical(archive_col_range(duck_ea, "version"), range(archive_col(ea, "version")))
+    expect_identical(archive_col_range(duck_ea, "value"), range(archive_col(ea, "value")))
+
+    duck_with_missing <- as_duckdb_archive(with_missing)
+    expect_identical(archive_col_range(duck_with_missing, "value"), c(NA_real_, NA_real_))
+  }
+})
+
+test_that("archive_any_duplicated_key returns logicals across backends", {
+  duplicate_data <- tibble::tibble(
+    geo_value = "ca",
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-02"),
+    value = 1:2
+  )
+  unique_data <- duplicate_data[1, ]
+
+  duplicate_dt <- new_epi_archive(
+    duplicate_data,
+    geo_type = "custom",
+    time_type = "day",
+    other_keys = character(),
+    clobberable_versions_start = NA,
+    versions_end = as.Date("2020-01-03")
+  )
+  unique_dt <- new_epi_archive(
+    unique_data,
+    geo_type = "custom",
+    time_type = "day",
+    other_keys = character(),
+    clobberable_versions_start = NA,
+    versions_end = as.Date("2020-01-03")
+  )
+
+  expect_identical(archive_any_duplicated_key(duplicate_dt), TRUE)
+  expect_identical(archive_any_duplicated_key(unique_dt), FALSE)
+
+  if (rlang::is_installed("duckplyr")) {
+    expect_identical(archive_any_duplicated_key(as_duckdb_archive(duplicate_dt)), TRUE)
+    expect_identical(archive_any_duplicated_key(as_duckdb_archive(unique_dt)), FALSE)
+  }
+})
+
 test_that("other_keys can only contain names of the data.frame columns", {
   expect_error(as_epi_archive(archive_data, other_keys = "xyz", compactify = FALSE),
     regexp = "missing the following expected columns: xyz"
@@ -89,19 +203,19 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   )
 
   ea1 <- as_epi_archive(df, compactify = FALSE)
-  expect_equal(key(ea1$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea1), c("geo_value", "time_value", "version"))
 
   ea2 <- as_epi_archive(df, other_keys = "value", compactify = FALSE)
-  expect_equal(key(ea2$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key_colnames(ea2), c("geo_value", "value", "time_value", "version"))
 
   # Tibble
   tib <- tibble::tibble(df, code = "x")
 
   ea3 <- as_epi_archive(tib, compactify = FALSE)
-  expect_equal(key(ea3$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea3), c("geo_value", "time_value", "version"))
 
   ea4 <- as_epi_archive(tib, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea4$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key_colnames(ea4), c("geo_value", "code", "time_value", "version"))
 
   # Keyed data.table
   kdt <- data.table::data.table(
@@ -115,11 +229,11 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea5 <- as_epi_archive(kdt, compactify = FALSE)
   # Key from data.table isn't absorbed when as_epi_archive is used
-  expect_equal(key(ea5$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea5), c("geo_value", "time_value", "version"))
 
   ea6 <- as_epi_archive(kdt, other_keys = "value", compactify = FALSE)
   # Mismatched keys, but the one from as_epi_archive overrides
-  expect_equal(key(ea6$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key_colnames(ea6), c("geo_value", "value", "time_value", "version"))
 
   # Unkeyed data.table
   udt <- data.table::data.table(
@@ -131,10 +245,10 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   )
 
   ea7 <- as_epi_archive(udt, compactify = FALSE)
-  expect_equal(key(ea7$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea7), c("geo_value", "time_value", "version"))
 
   ea8 <- as_epi_archive(udt, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea8$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key_colnames(ea8), c("geo_value", "code", "time_value", "version"))
 
   # epi_df
   edf1 <- cases_deaths_subset %>%
@@ -142,10 +256,10 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
     mutate(version = max(time_value), code = "USA")
 
   ea9 <- as_epi_archive(edf1, compactify = FALSE)
-  expect_equal(key(ea9$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea9), c("geo_value", "time_value", "version"))
 
   ea10 <- as_epi_archive(edf1, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea10$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key_colnames(ea10), c("geo_value", "code", "time_value", "version"))
 
   # Keyed epi_df
   edf2 <- data.frame(
@@ -161,10 +275,10 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
     as_epi_df(other_keys = "misc")
 
   ea11 <- as_epi_archive(edf2, compactify = FALSE)
-  expect_equal(key(ea11$DT), c("geo_value", "time_value", "version"))
+  expect_equal(key_colnames(ea11), c("geo_value", "time_value", "version"))
 
   ea12 <- as_epi_archive(edf2, other_keys = "misc", compactify = FALSE)
-  expect_equal(key(ea12$DT), c("geo_value", "time_value", "misc", "version"))
+  expect_equal(key_colnames(ea12), c("geo_value", "misc", "time_value", "version"))
 })
 
 test_that("`epi_archive` rejects nonunique keys", {
@@ -176,7 +290,7 @@ test_that("`epi_archive` rejects nonunique keys", {
     "us", "pediatric", "2000-01-01", "2000-01-02", 5
   ) %>%
     mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
+      age_group = if (using_duck_backend()) age_group else ordered(age_group, c("pediatric", "adult")),
       time_value = as.Date(time_value),
       version = as.Date(version)
     )
@@ -196,7 +310,7 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
     "us", "adult", as.Date("2000-01-01"), as.Date("2000-01-02"), 121,
   ) %>%
     mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
+      age_group = if (using_duck_backend()) age_group else ordered(age_group, c("pediatric", "adult")),
     )
   expect_no_error(as_epi_archive(tbl1))
   tbl2 <- tibble::tribble(
@@ -204,7 +318,7 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
     "us", "adult", as.Date("2000-01-01"), 2022, 121,
   ) %>%
     mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
+      age_group = if (using_duck_backend()) age_group else ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl2), class = "epiprocess__time_value_version_mismatch")
   tbl3 <- tibble::tribble(
@@ -212,7 +326,7 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
     "us", "adult", as.Date("2000-01-01"), as.POSIXct("2000-01-01"), 121,
   ) %>%
     mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
+      age_group = if (using_duck_backend()) age_group else ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
 })

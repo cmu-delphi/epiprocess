@@ -60,7 +60,7 @@ new_grouped_epi_archive <- function(x, vars, drop) {
   }
   assert_class(x, "epi_archive")
   assert_character(vars)
-  if (!test_subset(vars, names(x$DT))) {
+  if (!test_subset(vars, archive_colnames(x))) {
     cli_abort(
       "All grouping variables `vars` must be present in the data.",
     )
@@ -98,14 +98,7 @@ print.grouped_epi_archive <- function(x, ..., class = TRUE) {
   writeLines(wrap_varnames(x$private$vars, initial = "* Groups: "))
   # If none of the grouping vars is a factor, then $drop doesn't seem
   # relevant, so try to be less verbose and don't message about it.
-  #
-  # Below map-then-extract may look weird, but the more natural
-  # extract-then-map appears to trigger copies of the extracted columns
-  # since we are working with a `data.table` (unless we go through
-  # `as.list`, but its current column-aliasing behavior is probably not
-  # something to rely too much on), while map functions currently appear
-  # to avoid column copies.
-  if (any(purrr::map_lgl(x$private$ungrouped$DT, is.factor)[x$private$vars])) {
+  if (any(archive_col_is_factor(x$private$ungrouped, x$private$vars))) {
     cat(strwrap(initial = "* ", prefix = "  ", sprintf(
       "%s groups formed by factor levels that don't appear in the data",
       if (x$private$drop) "Drops" else "Does not drop"
@@ -190,7 +183,7 @@ ungroup.grouped_epi_archive <- function(x, ...) {
     # an ungrouped class, as with `grouped_df`s.
     x$private$ungrouped
   } else {
-    exclude_vars <- eval_pure_select_names_from_dots(..., .data = x$private$ungrouped$DT)
+    exclude_vars <- eval_pure_select_names_from_dots(..., .data = archive_colmask(x$private$ungrouped))
     # (requiring a pure selection here is a little stricter than dplyr
     # implementations, but passing a renaming selection into `ungroup`
     # seems pretty weird.)
@@ -207,8 +200,7 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #' @importFrom data.table key address rbindlist setDF copy
 #' @importFrom tibble as_tibble new_tibble validate_tibble
 #' @importFrom dplyr group_by groups
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-#'  env missing_arg
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms env missing_arg
 #'
 #' @export
 epix_slide.grouped_epi_archive <- function(
@@ -459,37 +451,17 @@ epix_slide.grouped_epi_archive <- function(
       group_map_fn <- comp_one_grp
     } else {
       as_of_archive <- as_of_raw
-      # We essentially want to `group_modify` the archive, but
-      # haven't implemented this method yet. Next best would be
-      # `group_modify` on its `$DT`, but that has different
-      # behavior based on whether or not `dtplyr` < 1.3.0 is loaded.
-      # Instead, go through an ordinary data frame, trying to avoid
-      # copies.
-      if (address(as_of_archive$DT) == address(.x$private$ungrouped$DT)) {
-        # `as_of` aliased its the full `$DT`; copy before mutating:
-        #
-        # Note: this step is probably unneeded; we're fine with
-        # aliasing of the DT or its columns: vanilla operations aren't
-        # going to mutate them in-place if they are aliases, and we're
-        # not performing mutation.
-        as_of_archive$DT <- data.table::copy(as_of_archive$DT)
-      }
-      dt_key <- data.table::key(as_of_archive$DT)
-      as_of_df <- as_of_archive$DT
-      data.table::setDF(as_of_df)
-
-      # Convert each subgroup chunk to an archive before running the calculation.
+      # We essentially want to `group_modify` the archive, but haven't
+      # implemented this method yet. Next best: group the underlying tibble,
+      # then for each chunk reconstruct an archive (carrying the parent's
+      # metadata) before handing to the computation. `archive_set_data`
+      # re-keys the chunk per backend invariants.
+      as_of_df <- archive_tbl(as_of_archive)
       group_map_fn <- function(.data_group, .group_key,
                                .slide_comp, ...,
                                .version,
                                .new_col_name) {
-        # .data_group is coming from as_of_df as a tibble, but we
-        # want to feed `comp_one_grp` an `epi_archive` backed by a
-        # DT; convert and wrap:
-        data.table::setattr(.data_group, "sorted", dt_key)
-        data.table::setDT(.data_group, key = dt_key)
-        .data_group_archive <- as_of_archive
-        .data_group_archive$DT <- .data_group
+        .data_group_archive <- archive_set_data(as_of_archive, .data_group)
         comp_one_grp(.data_group_archive, .group_key,
           .slide_comp = .slide_comp, ...,
           .version = .version,

@@ -44,12 +44,13 @@ given version. See the \href{https://cmu-delphi.github.io/epiprocess/articles/ar
 examples.
 }
 \examples{
+archive_cases_dv_subset_tbl <- tibble::as_tibble(archive_cases_dv_subset)
 epix_as_of(
   archive_cases_dv_subset,
-  version = max(archive_cases_dv_subset$DT$version)
+  version = max(archive_cases_dv_subset_tbl$version)
 )
 
-range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
+range(archive_cases_dv_subset_tbl$version) # 2020-06-02 -- 2021-12-01
 
 epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
 
@@ -66,14 +67,14 @@ epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
 # which case you will get warnings about potential reproducibility issues:
 
 archive_cases_dv_subset2 <- as_epi_archive(
-  archive_cases_dv_subset$DT,
+  archive_cases_dv_subset_tbl,
   # Suppose last version with an update could potentially be rewritten
   # (a.k.a. "hotfixed", "clobbered", etc.):
-  clobberable_versions_start = max(archive_cases_dv_subset$DT$version),
+  clobberable_versions_start = max(archive_cases_dv_subset_tbl$version),
   # Suppose today is the following day, and there are no updates out yet:
-  versions_end = max(archive_cases_dv_subset$DT$version) + 1L
+  versions_end = max(archive_cases_dv_subset_tbl$version) + 1L
 )
 
-epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset$DT$version))
+epix_as_of(archive_cases_dv_subset2, max(archive_cases_dv_subset_tbl$version))
 
 }

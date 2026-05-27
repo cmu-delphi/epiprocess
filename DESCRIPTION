@@ -46,6 +46,7 @@ Imports:
     cli,
     data.table,
     dplyr (>= 1.1.0),
+    dtplyr,
     ggplot2,
     glue,
     lifecycle,
@@ -69,6 +70,7 @@ Imports:
 Suggests:
     devtools,
     distributional,
+    duckplyr,
     epidatr,
     epipredict,
     hardhat,
@@ -96,9 +98,10 @@ Copyright: file inst/COPYRIGHTS
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Collate:
     'archive.R'
+    'archive_accessors.R'
+    'archive_duck.R'
     'autoplot.R'
     'correlation.R'
     'epi_df.R'
@@ -120,3 +123,4 @@ Collate:
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
+Config/roxygen2/version: 8.0.0
