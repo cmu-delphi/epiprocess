@@ -209,6 +209,9 @@ revision_analysis <- function(epi_arch,
     # for all first-time data introduced in each version dump.
     .[, .SD[1], by = c(epikeytime_names)] %>%
     .[, list(
+      # We suppress warnings because calling `min` or `max` on empty inputs (e.g.,
+      # during data.table prototype evaluation on a 0-row table) warns about no
+      # non-missing arguments and returns Inf / -Inf.
       min_initial_lag = suppressWarnings(min(lag)),
       max_initial_lag = suppressWarnings(max(lag))
     ),
@@ -394,12 +397,14 @@ print.revision_analysis <- function(x,
 
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
-  rev_time_type <- x$time_type
+  lag_near_latest_time_type <- x$time_type
   if (inherits(rev_beh[["lag_near_latest"]], "difftime")) {
-    rev_time_type <- gsub("s$", "", units(rev_beh[["lag_near_latest"]]))
+    lag_near_latest_time_type <- gsub("s$", "", units(rev_beh[["lag_near_latest"]]))
   }
-  units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[rev_time_type]])) # nolint: object_usage_linter
-  cli::cli_h3("{toTitleCase(units_plural)} until within {.val {x$within_latest*100}}% of the latest value:")
+  lag_near_latest_units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[lag_near_latest_time_type]])) # nolint: object_usage_linter
+  cli::cli_h3(
+    "{toTitleCase(lag_near_latest_units_plural)} until within {.val {x$within_latest*100}}% of the latest value:"
+  )
   time_delta_summary(rev_beh[["lag_near_latest"]], x$time_type) %>% print()
 
   max_lag_time_type <- x$time_type
