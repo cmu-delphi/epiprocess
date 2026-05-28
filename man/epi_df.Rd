@@ -22,7 +22,7 @@ as_epi_df(x, ...)
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long", "none"),
   signal_var = NULL,
   ...
 )
@@ -33,7 +33,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long", "none"),
   signal_var = NULL,
   ...
 )
@@ -42,7 +42,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "wide", "long", "none"),
   signal_var = NULL,
   ...
 )
@@ -89,7 +89,7 @@ to wide if necessary. This happens only if a unique signal identifier
 column (see \code{signal_var}) and a \code{value} column are both present,
 and the signal column contains more than one unique value. \code{"long"} format
 treats the signal as a metadata key by adding it to \code{other_keys}. \code{"wide"}
-format tries to pivot to wide.}
+format tries to pivot to wide. \code{"none"} skips all signal processing.}
 
 \item{signal_var}{The name of the column that contains the signal
 identifiers. If \code{NULL}, the function will try to guess this column
