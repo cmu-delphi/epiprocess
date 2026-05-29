@@ -242,6 +242,8 @@ revision_analysis <- function(epi_arch,
     {
       with_missing <- .[, list(
         n_revisions = .N - 1L,
+        # We suppress warnings because calling `min` or `max` on empty inputs
+        # warns about no non-missing arguments.
         min_lag = suppressWarnings(min(lag)), # nolint: object_usage_linter
         max_lag = suppressWarnings(max(lag)), # nolint: object_usage_linter
         lag_to = lag_within_x_latest(lag, .VAL, prop = ..within_latest) # nolint: object_usage_linter
@@ -426,6 +428,7 @@ revision_summary <- revision_analysis
 #' @param prop optional length-1 double; proportion
 #' @keywords internal
 lag_within_x_latest <- function(lags, values, prop = .2) {
+  # Guard against empty inputs to prevent out-of-bounds indexing errors like `values[[0]]`.
   if (length(values) == 0L) {
     return(NA_real_)
   }

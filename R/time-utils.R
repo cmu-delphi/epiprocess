@@ -213,6 +213,12 @@ n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fa
     non_special <- n_steps[!is.infinite(n_steps) & !is.na(n_steps)]
     if (any(abs(non_special - round(non_special)) > 1e-9)) {
       units(res) <- "days"
+      # avoid precision issues when rounding
+      res_num <- as.numeric(res)
+      rounded <- round(res_num)
+      close_to_int <- !is.na(res_num) & !is.infinite(res_num) & (abs(res_num - rounded) < 1e-9)
+      res_num[close_to_int] <- rounded[close_to_int]
+      res <- as.difftime(res_num, units = "days")
     }
   }
   res
