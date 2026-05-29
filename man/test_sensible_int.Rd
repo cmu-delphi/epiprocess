@@ -20,7 +20,7 @@ test_sensible_int(
 Boolean
 }
 \description{
-Like \code{\link[checkmate:test_int]{checkmate::test_int}} but disallowing some non-sensible classes that
+Like \code{\link[checkmate:checkInt]{checkmate::test_int}} but disallowing some non-sensible classes that
 \code{test_int} accepts, such as \code{difftime}s. We rely on \code{\link{is.numeric}} to
 determine class appropriateness; note that \code{is.numeric} is NOT simply
 checking for the class to be "numeric" (or else we'd fail on integer class).

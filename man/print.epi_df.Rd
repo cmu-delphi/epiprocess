@@ -31,9 +31,9 @@ to underlying base or \code{{dplyr}} methods in the rest.}
 
 \item{.data}{an \code{epi_df}}
 
-\item{.f}{function or formula; see \code{\link[dplyr:group_modify]{dplyr::group_modify}}}
+\item{.f}{function or formula; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
-\item{.keep}{Boolean; see \code{\link[dplyr:group_modify]{dplyr::group_modify}}}
+\item{.keep}{Boolean; see \code{\link[dplyr:group_map]{dplyr::group_modify}}}
 
 \item{data}{an \code{epi_df}}
 }

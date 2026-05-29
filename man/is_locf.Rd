@@ -11,7 +11,7 @@ LOCF meaning last observation carried forward (to later
 versions). Lags the vector by 1, then compares with itself. If \code{is_key} is
 \code{TRUE}, only values that are exactly the same between the lagged and
 original are considered LOCF. If \code{is_key} is \code{FALSE} and \code{vec} is a vector
-of numbers (\code{\link[base:is.numeric]{base::is.numeric}}), then approximate equality will be used,
+of numbers (\code{\link[base:numeric]{base::is.numeric}}), then approximate equality will be used,
 checking whether the absolute difference between each pair of entries is
 \verb{<= abs_tol}; if \code{vec} is something else, then exact equality is used
 instead.

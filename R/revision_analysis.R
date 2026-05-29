@@ -291,7 +291,8 @@ revision_analysis <- function(epi_arch,
       revision_behavior = revision_behavior,
       initial_reporting = initial_reporting,
       max_nonbulk_initial_lag = n_steps_to_time_delta( # nolint: object_usage_linter
-        max_nonbulk_initial_lag, time_type, require_integer = FALSE
+        max_nonbulk_initial_lag, time_type,
+        require_integer = FALSE
       ),
       bulk_reporting_versions = bulk_reporting_versions,
       nonbulk_expanding_versions = nonbulk_expanding_versions,

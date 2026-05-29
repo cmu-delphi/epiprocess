@@ -202,10 +202,10 @@ test_that("revision_summary bulk reporting summary works as expected", {
 test_that("revision_summary works for weekly time series with daily versions", {
   dummy_ex_weekly_daily_versions <- tibble::tribble(
     ~geo_value, ~time_value, ~version, ~value,
-    "ak", as.Date("2020-01-05"), as.Date("2020-01-15"), 1,  # Wednesday
-    "ak", as.Date("2020-01-05"), as.Date("2020-01-17"), 5,  # Friday
-    "ak", as.Date("2020-01-12"), as.Date("2020-01-22"), 6,  # Wednesday
-    "ak", as.Date("2020-01-12"), as.Date("2020-01-23"), 7   # Thursday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-15"), 1, # Wednesday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-17"), 5, # Friday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-22"), 6, # Wednesday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-23"), 7 # Thursday
   ) %>%
     as_epi_archive(versions_end = as.Date("2020-01-30"), compactify = FALSE)
 

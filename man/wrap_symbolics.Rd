@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{wrap_symbolics}
 \alias{wrap_symbolics}
-\title{Line wrap list holding \link[rlang:is_symbolic]{symbolic}, with prefix&indent}
+\title{Line wrap list holding \link[rlang:is_expression]{symbolic}, with prefix&indent}
 \usage{
 wrap_symbolics(
   symbolics,
@@ -13,7 +13,7 @@ wrap_symbolics(
 )
 }
 \arguments{
-\item{symbolics}{List of \link[rlang:is_symbolic]{symbolic} objects: the variable
+\item{symbolics}{List of \link[rlang:is_expression]{symbolic} objects: the variable
 names (potentially empty)}
 
 \item{initial}{Optional; single string: a prefix for the initial line in the

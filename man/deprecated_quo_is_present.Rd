@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{deprecated_quo_is_present}
 \alias{deprecated_quo_is_present}
-\title{\code{\link[lifecycle:is_present]{lifecycle::is_present}} for enquosed deprecated NSE arg}
+\title{\code{\link[lifecycle:deprecated]{lifecycle::is_present}} for enquosed deprecated NSE arg}
 \usage{
 deprecated_quo_is_present(quo)
 }
@@ -14,7 +14,7 @@ bool; was \code{quo} "present", or did it look like a missing quosure or
 have an expr that looked like \code{deprecated()} or \code{lifecycle::deprecated()}?
 }
 \description{
-\code{\link[lifecycle:is_present]{lifecycle::is_present}} is designed for use with args that undergo standard
+\code{\link[lifecycle:deprecated]{lifecycle::is_present}} is designed for use with args that undergo standard
 evaluation, rather than non-standard evaluation (NSE). This function is
 designed to fulfill a similar purpose, but for args we have
 \link[rlang:enquo]{enquosed} in preparation for NSE.
