@@ -209,7 +209,7 @@ n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fa
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
   }
   res <- n_steps * unit_time_delta(time_type, format)
-  if (inherits(res, "difftime") && units(res) == "weeks") {
+  if (!require_integer && inherits(res, "difftime") && units(res) == "weeks") {
     non_special <- n_steps[!is.infinite(n_steps) & !is.na(n_steps)]
     if (any(abs(non_special - round(non_special)) > 1e-9)) {
       units(res) <- "days"
