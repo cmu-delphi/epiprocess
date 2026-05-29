@@ -9,6 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 source("_common.R")
+has_key <- Sys.getenv("DELPHI_EPIDATA_KEY") != ""
 ```
 
 The `{epiprocess}` package provides advanced visualization capabilities 
@@ -31,7 +32,7 @@ and performant.
 You can control this behavior with the `.max_keys` argument (e.g., set it to `Inf`
  to display all keys).
 
-```{r, eval=TRUE}
+```{r, eval=has_key}
 # Fetching HHS admissions for all states
 df <- pub_covidcast(
   source = "hhs",
@@ -55,7 +56,7 @@ You can visualize `epi_df` objects as heatmaps using `plot_heatmap()`.
 This is particularly useful for visualizing values across many locations 
 simultaneously.
 
-```{r, eval=TRUE}
+```{r, eval=has_key}
 # Static heatmap for a single variable
 plot_heatmap(df, value)
 ```
@@ -66,7 +67,7 @@ For interactive exploration of data, you can set `.interactive = TRUE` in
 `autoplot()`.
 This returns a `plotly` widget, allowing you to hover over data points or 
 isolate certain lines.
-```{r, eval=TRUE, fig.height=2}
+```{r, eval=has_key, fig.height=2}
 # Interactive plot for a single variable
 autoplot(
   df, value,
@@ -88,7 +89,7 @@ When you have many facets, they can take up a lot of space.
 Setting `.facet_to_dropdown = TRUE` along with `.interactive = TRUE` 
 collapses the facets into a single plot with a dropdown menu.
 
-```{r, eval=TRUE, fig.height=2}
+```{r, eval=has_key, fig.height=2}
 # Dropdown for geographic locations
 autoplot(df, value,
   .interactive = TRUE,
@@ -123,7 +124,7 @@ autoplot(df2, cases,
 `epi_archive` objects can also be visualized with `autoplot()`.
 This allows you to visualize how data appeared at different points in time (versions).
 
-```{r, eval=TRUE}
+```{r, eval=has_key}
 # Fetch HHS admissions with version history
 df_versions <- pub_covidcast(
   source = "hhs",
@@ -150,7 +151,7 @@ autoplot(
 Interactive plots for archives also support the dropdown feature, which can 
 be useful for selecting a specific location or key.
 
-```{r, eval=TRUE, fig.height=2}
+```{r, eval=has_key, fig.height=2}
 # Archive plot with dropdown for states
 autoplot(
   df_versions, value,

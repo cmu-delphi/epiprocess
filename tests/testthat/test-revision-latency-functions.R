@@ -198,3 +198,27 @@ test_that("revision_summary bulk reporting summary works as expected", {
       revision_summary()
   )
 })
+
+test_that("revision_summary works for weekly time series with daily versions", {
+  dummy_ex_weekly_daily_versions <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-15"), 1, # Wednesday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-17"), 5, # Friday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-22"), 6, # Wednesday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-23"), 7 # Thursday
+  ) %>%
+    as_epi_archive(versions_end = as.Date("2020-01-30"), compactify = FALSE)
+
+  expect_equal(dummy_ex_weekly_daily_versions$time_type, "week")
+
+  expect_no_error({
+    rs <- revision_analysis(dummy_ex_weekly_daily_versions, min_waiting_period = 0)
+  })
+
+  # Ensure the lags are converted to integer days relative to the end of each week
+
+  rb <- rs$revision_behavior
+  expect_equal(units(rb$max_lag), "days")
+  expect_equal(as.numeric(rb$min_lag), c(4, 4))
+  expect_equal(as.numeric(rb$max_lag), c(6, 5))
+})

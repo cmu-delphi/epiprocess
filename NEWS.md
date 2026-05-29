@@ -27,6 +27,9 @@ indicate development versions beyond 0.x.
   more timely and/or more widely available signal.  This behavior is
   customizable with the `compactify`, `compactify_drop_initial_nas`,
   and `drop_nas` parameters.  It also runs more quickly.
+- `revision_summary()` printed lag summaries now display fractional-week
+  lags (e.g., when `time_type = "week"` but versions fall mid-week) in
+  days rather than fractional weeks, for easier interpretation.
 
 ## Bug fixes
 
@@ -37,6 +40,8 @@ indicate development versions beyond 0.x.
   `min_waiting_period`.  Summary statistics about number of NAs and
   overall observations have also been updated to follow
   `min_waiting_period` and compactification steps.
+- `revision_summary()` now computes lag relative to the end of each
+  week.
 
 # epiprocess 0.12
 

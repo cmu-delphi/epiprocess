@@ -169,13 +169,13 @@
       -- Across epi_key + versions that add new time values: 
       Freshest new time value's lag/latency:
     Output
-            min  median      mean     max
-        0 weeks 1 weeks 1.2 weeks 3 weeks
+           min median     mean     max
+        0 days 4 days 6.2 days 18 days
     Message
       Farthest-back new time value's lag/latency:
     Output
-            min  median      mean     max
-        0 weeks 1 weeks 1.3 weeks 4 weeks
+           min median     mean     max
+        0 days 4 days 7.3 days 25 days
     Message
       
       -- Across epi_key + time_value + versions: 
@@ -183,7 +183,7 @@
       * 1 out of 16 (6.25%)
       
       -- Bulk reporting of older epikey + time values: none detected 
-      Initial lags above 5 weeks would have been counted as bulk reporting.
+      Initial lags above 4 weeks would have been counted as bulk reporting.
       
       -- Remaining information is for non-bulk-reported epikey + time values
          with semi-stable versions past the waiting period available. 
@@ -202,16 +202,16 @@
       Spread of more than 5.1 in actual value (when revised):
       * 3 out of 4 (75%)
       
-      -- Weeks until within 20% of the latest value: 
+      -- Days until within 20% of the latest value: 
     Output
-            min  median      mean      max
-        0 weeks 3 weeks 6.9 weeks 19 weeks
+           min  median      mean      max
+        0 days 18 days 45.4 days 130 days
     Message
       
-      -- Weeks until at the latest lag: 
+      -- Days until at the latest lag: 
     Output
-            min  median    mean      max
-        0 weeks 3 weeks 7 weeks 19 weeks
+           min  median      mean      max
+        0 days 18 days 46.4 days 130 days
 
 ---
 
@@ -221,13 +221,13 @@
       # A tibble: 7 x 11
         time_value geo_value n_revisions min_lag max_lag  lag_near_latest spread
         <date>     <chr>           <int> <drtn>  <drtn>   <drtn>           <dbl>
-      1 2020-01-01 ak                  6 2 weeks 19 weeks 19 weeks           101
-      2 2020-01-08 ak                  1 4 weeks  5 weeks  4 weeks             9
-      3 2020-01-15 ak                  0 3 weeks  3 weeks  3 weeks             0
-      4 2020-01-01 al                  1 0 weeks 19 weeks 19 weeks            99
-      5 2020-01-08 al                  0 0 weeks  0 weeks  0 weeks             0
-      6 2020-01-15 al                  1 1 weeks  2 weeks  2 weeks             3
-      7 2020-01-22 al                  0 1 weeks  1 weeks  1 weeks             0
+      1 2020-01-01 ak                  6 11 days 130 days 130 days           101
+      2 2020-01-08 ak                  1 25 days  32 days  25 days             9
+      3 2020-01-15 ak                  0 18 days  18 days  18 days             0
+      4 2020-01-01 al                  1  0 days 130 days 130 days            99
+      5 2020-01-08 al                  0  0 days   0 days   0 days             0
+      6 2020-01-15 al                  1  4 days  11 days  11 days             3
+      7 2020-01-22 al                  0  4 days   4 days   4 days             0
         rel_spread min_value max_value median_value
              <dbl>     <dbl>     <dbl>        <dbl>
       1      0.990         1       102          5.5

@@ -181,7 +181,7 @@ time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE)
                  of steps between time values of time type {format_chr_with_quotes(time_type)}")
     }
     n_steps
-  } else if (is_bare_integerish(time_delta)) { # (allows infinite values)
+  } else if (is_bare_integerish(time_delta) || !require_integer) {
     switch(time_type,
       day = ,
       week = ,
@@ -204,11 +204,24 @@ time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE)
 #'   Default is `"friendly"`.
 #'
 #' @keywords internal
-n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast")) {
-  if (!is_bare_integerish(n_steps)) {
+n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast"), require_integer = TRUE) {
+  if (require_integer && !is_bare_integerish(n_steps)) {
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
   }
-  n_steps * unit_time_delta(time_type, format)
+  res <- n_steps * unit_time_delta(time_type, format)
+  if (!require_integer && inherits(res, "difftime") && units(res) == "weeks") {
+    non_special <- n_steps[!is.infinite(n_steps) & !is.na(n_steps)]
+    if (any(abs(non_special - round(non_special)) > 1e-9)) {
+      units(res) <- "days"
+      # avoid precision issues when rounding
+      res_num <- as.numeric(res)
+      rounded <- round(res_num)
+      close_to_int <- !is.na(res_num) & !is.infinite(res_num) & (abs(res_num - rounded) < 1e-9)
+      res_num[close_to_int] <- rounded[close_to_int]
+      res <- as.difftime(res_num, units = "days")
+    }
+  }
+  res
 }
 
 #' Standardize time_deltas to a multiple of [`unit_time_delta()`]
@@ -270,8 +283,8 @@ time_type_unit_pluralizer <- c(
 #' - time deltas for yearmonths and integers don't have units attached at all
 #'
 #' @keywords internal
-format_time_delta <- function(x, time_type) {
-  n_steps <- time_delta_to_n_steps(x, time_type) # nolint: object_usage_linter
+format_time_delta <- function(x, time_type, require_integer = FALSE) {
+  n_steps <- time_delta_to_n_steps(x, time_type, require_integer) # nolint: object_usage_linter
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
   pluralize(paste0("{n_steps} ", time_type_unit_pluralizer[[time_type]]))

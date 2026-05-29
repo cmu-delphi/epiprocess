@@ -110,6 +110,7 @@
 #' @importFrom cli cli_inform cli_abort cli_li
 #' @importFrom rlang list2 syms dots_n
 #' @importFrom vctrs vec_cast
+#' @importFrom stats quantile
 #' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
 #'   everything ungroup summarize if_else %>%
 revision_analysis <- function(epi_arch,
@@ -188,8 +189,21 @@ revision_analysis <- function(epi_arch,
     revision_behavior <- revision_behavior %>%
       apply_compactify(ukey_names, compactify_abs_tol, init_nas_are_locf = compactify_drop_initial_nas)
   }
-  revision_behavior <- revision_behavior %>%
-    mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type))
+  if (time_type == "week") {
+    lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
+    starting_lt_wday <- lubridate_starting_iso_wday %% 7
+    ending_lt_wday <- (starting_lt_wday + 6) %% 7
+    revision_behavior <- revision_behavior %>%
+      mutate(lag = pmax(0, time_minus_time_in_n_steps(
+        version,
+        time_value + (ending_lt_wday - as.POSIXlt(time_value)$wday) %% 7,
+        time_type,
+        require_integer = FALSE
+      )))
+  } else {
+    revision_behavior <- revision_behavior %>%
+      mutate(lag = pmax(0, time_minus_time_in_n_steps(version, time_value, time_type, require_integer = FALSE)))
+  }
 
   total_na <- revision_behavior %>%
     filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
@@ -209,8 +223,11 @@ revision_analysis <- function(epi_arch,
     # for all first-time data introduced in each version dump.
     .[, .SD[1], by = c(epikeytime_names)] %>%
     .[, list(
-      min_initial_lag = min(lag),
-      max_initial_lag = max(lag)
+      # We suppress warnings because calling `min` or `max` on empty inputs (e.g.,
+      # during data.table prototype evaluation on a 0-row table) warns about no
+      # non-missing arguments and returns Inf / -Inf.
+      min_initial_lag = suppressWarnings(min(lag)),
+      max_initial_lag = suppressWarnings(max(lag))
     ),
     by = c(epikey_names, "version")
     ] %>%
@@ -239,28 +256,30 @@ revision_analysis <- function(epi_arch,
     {
       with_missing <- .[, list(
         n_revisions = .N - 1L,
-        min_lag = min(lag), # nolint: object_usage_linter
-        max_lag = max(lag), # nolint: object_usage_linter
+        # We suppress warnings because calling `min` or `max` on empty inputs
+        # warns about no non-missing arguments.
+        min_lag = suppressWarnings(min(lag)), # nolint: object_usage_linter
+        max_lag = suppressWarnings(max(lag)), # nolint: object_usage_linter
         lag_to = lag_within_x_latest(lag, .VAL, prop = ..within_latest) # nolint: object_usage_linter
       ), by = c(epikeytime_names)]
       without_missing <- .[!is.na(.VAL)][, list(
-        min_value = min(.VAL), # nolint: object_usage_linter
-        max_value = max(.VAL), # nolint: object_usage_linter
-        median_value = median(.VAL) # nolint: object_usage_linter
+        min_value = suppressWarnings(min(.VAL)), # nolint: object_usage_linter
+        max_value = suppressWarnings(max(.VAL)), # nolint: object_usage_linter
+        median_value = suppressWarnings(median(.VAL)) # nolint: object_usage_linter
       ), by = c(epikeytime_names)]
       merge(with_missing, without_missing, by = epikeytime_names, all = TRUE)
     } %>%
     setDF() %>%
     as_tibble()
   n_epikeytimes <- nrow(revision_behavior)
-  revision_behavior <- revision_behavior %>%
+  revision_behavior <- revision_behavior %>% # nolint: object_usage_linter
     filter(.data$min_lag <= .env$max_nonbulk_initial_lag) %>%
     mutate(
       spread = max_value - min_value, # nolint: object_usage_linter
       rel_spread = spread / max_value, # nolint: object_usage_linter
-      min_lag = n_steps_to_time_delta(min_lag, time_type), # nolint: object_usage_linter
-      max_lag = n_steps_to_time_delta(max_lag, time_type), # nolint: object_usage_linter
-      lag_near_latest = n_steps_to_time_delta(lag_to, time_type) # nolint: object_usage_linter
+      min_lag = n_steps_to_time_delta(min_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
+      max_lag = n_steps_to_time_delta(max_lag, time_type, require_integer = FALSE), # nolint: object_usage_linter
+      lag_near_latest = n_steps_to_time_delta(lag_to, time_type, require_integer = FALSE) # nolint: object_usage_linter
     ) %>%
     select(-lag_to) %>%
     relocate(
@@ -269,10 +288,13 @@ revision_analysis <- function(epi_arch,
     )
   n_nonbulk_epikeytimes <- nrow(revision_behavior)
   if (!return_only_tibble) {
-    revision_behavior <- structure(list(
+    revision_behavior <- structure(list( # nolint: object_usage_linter
       revision_behavior = revision_behavior,
       initial_reporting = initial_reporting,
-      max_nonbulk_initial_lag = n_steps_to_time_delta(max_nonbulk_initial_lag, time_type),
+      max_nonbulk_initial_lag = n_steps_to_time_delta( # nolint: object_usage_linter
+        max_nonbulk_initial_lag, time_type,
+        require_integer = FALSE
+      ),
       bulk_reporting_versions = bulk_reporting_versions,
       nonbulk_expanding_versions = nonbulk_expanding_versions,
       revision_only_versions = revision_only_versions,
@@ -362,8 +384,8 @@ print.revision_analysis <- function(x,
   cli_inform("No revisions:")
   cli_li(num_percent(total_num_unrevised, total_num, ""))
   total_quickly_revised <- sum( # nolint: object_usage_linter
-    time_delta_to_n_steps(rev_beh$max_lag, x$time_type) <=
-      time_delta_to_n_steps(quick_revision, x$time_type)
+    time_delta_to_n_steps(rev_beh$max_lag, x$time_type, require_integer = FALSE) <=
+      time_delta_to_n_steps(quick_revision, x$time_type, require_integer = FALSE)
   )
   cli_inform("Quick revisions (last revision within {format_time_delta(quick_revision, x$time_type)}
                 of the `time_value`):")
@@ -392,11 +414,22 @@ print.revision_analysis <- function(x,
 
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
-  units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[x$time_type]])) # nolint: object_usage_linter
-  cli::cli_h3("{toTitleCase(units_plural)} until within {.val {x$within_latest*100}}% of the latest value:")
+  lag_near_latest_time_type <- x$time_type
+  if (inherits(rev_beh[["lag_near_latest"]], "difftime")) {
+    lag_near_latest_time_type <- gsub("s$", "", units(rev_beh[["lag_near_latest"]]))
+  }
+  lag_near_latest_units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[lag_near_latest_time_type]])) # nolint: object_usage_linter
+  cli::cli_h3(
+    "{toTitleCase(lag_near_latest_units_plural)} until within {.val {x$within_latest*100}}% of the latest value:"
+  )
   time_delta_summary(rev_beh[["lag_near_latest"]], x$time_type) %>% print()
 
-  cli::cli_h3("{toTitleCase(units_plural)} until at the latest lag:")
+  max_lag_time_type <- x$time_type
+  if (inherits(rev_beh[["max_lag"]], "difftime")) {
+    max_lag_time_type <- gsub("s$", "", units(rev_beh[["max_lag"]]))
+  }
+  max_lag_units_plural <- pluralize(paste0("{qty(2)}", time_type_unit_pluralizer[[max_lag_time_type]])) # nolint: object_usage_linter
+  cli::cli_h3("{toTitleCase(max_lag_units_plural)} until at the latest lag:")
   time_delta_summary(rev_beh[["max_lag"]], x$time_type) %>% print()
 }
 
@@ -410,6 +443,10 @@ revision_summary <- revision_analysis
 #' @param prop optional length-1 double; proportion
 #' @keywords internal
 lag_within_x_latest <- function(lags, values, prop = .2) {
+  # Guard against empty inputs to prevent out-of-bounds indexing errors like `values[[0]]`.
+  if (length(values) == 0L) {
+    return(NA_real_)
+  }
   latest_value <- values[[length(values)]]
   close_enough <- abs(values - latest_value) < prop * latest_value
   # we want to ignore any stretches where it's close, but goes farther away later
@@ -455,18 +492,36 @@ num_percent <- function(a, b, b_description) {
 #' steps).
 #'
 #' @keywords internal
-time_delta_summary <- function(time_delta, time_type) {
+time_delta_summary <- function(time_delta, time_type = NULL) {
+  if (inherits(time_delta, "difftime")) {
+    time_type <- gsub("s$", "", units(time_delta))
+  }
+  if (is.null(time_type)) {
+    cli_abort("time_type must be provided if time_delta is not a difftime")
+  }
   if (length(time_delta) > 0) {
-    n_steps <- time_delta_to_n_steps(time_delta, time_type)
-    res <- data.frame(
+    n_steps <- time_delta_to_n_steps(time_delta, time_type, require_integer = FALSE)
+    summary_vals <- c(
       min = min(n_steps),
       median = median(n_steps),
-      mean = round(mean(n_steps), 1),
-      max = max(n_steps),
+      mean = mean(n_steps),
+      max = max(n_steps)
+    )
+    summary_deltas <- n_steps_to_time_delta(summary_vals, time_type, require_integer = FALSE)
+    res <- data.frame(
+      min = summary_deltas[1],
+      median = summary_deltas[2],
+      mean = summary_deltas[3],
+      max = summary_deltas[4],
       row.names = " ",
       check.names = FALSE
-    ) %>%
-      mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta(time_type)))
+    )
+    if (inherits(res$mean, "difftime")) {
+      units_saved <- units(res$mean)
+      res$mean <- as.difftime(round(as.numeric(res$mean), 1), units = units_saved)
+    } else {
+      res$mean <- round(res$mean, 1)
+    }
     res
   } else {
     data.frame()
