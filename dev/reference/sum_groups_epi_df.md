@@ -46,6 +46,8 @@ grad_employ_subset
 #> * time_type = integer
 #> * other_keys = age_group, edu_qual
 #> * as_of     = 2024-09-18
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency across all time series = 17967–17973 (see summary() for per-signal details)
 #> 
 #> # A tibble: 1,445 × 7
 #>    geo_value           age_group edu_qual time_value num_graduates med_income_2y
@@ -70,6 +72,8 @@ grad_employ_subset %>%
 #> * geo_type  = custom
 #> * time_type = integer
 #> * as_of     = 2024-09-18
+#> Latency (time between last available observation and epi_df's as_of, by time series):
+#> * latency  = 17967
 #> 
 #> # A tibble: 86 × 3
 #>    geo_value        time_value num_graduates

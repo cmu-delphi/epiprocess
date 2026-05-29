@@ -63,6 +63,10 @@
   available signal. This behavior is customizable with the `compactify`,
   `compactify_drop_initial_nas`, and `drop_nas` parameters. It also runs
   more quickly.
+- [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.md)
+  printed lag summaries now display fractional-week lags (e.g., when
+  `time_type = "week"` but versions fall mid-week) in days rather than
+  fractional weeks, for easier interpretation.
 
 ### Bug fixes
 
@@ -77,6 +81,8 @@
   Summary statistics about number of NAs and overall observations have
   also been updated to follow `min_waiting_period` and compactification
   steps.
+- [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/dev/reference/revision_analysis.md)
+  now computes lag relative to the end of each week.
 
 ## epiprocess 0.12
 

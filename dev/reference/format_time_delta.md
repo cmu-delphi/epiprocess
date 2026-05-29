@@ -12,5 +12,5 @@ This is meant to address the following:
 ## Usage
 
 ``` r
-format_time_delta(x, time_type)
+format_time_delta(x, time_type, require_integer = FALSE)
 ```

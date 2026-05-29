@@ -7,5 +7,5 @@ steps).
 ## Usage
 
 ``` r
-time_delta_summary(time_delta, time_type)
+time_delta_summary(time_delta, time_type = NULL)
 ```

@@ -5,7 +5,12 @@ Convert from integerish/infinite/mix to time_delta
 ## Usage
 
 ``` r
-n_steps_to_time_delta(n_steps, time_type, format = c("friendly", "fast"))
+n_steps_to_time_delta(
+  n_steps,
+  time_type,
+  format = c("friendly", "fast"),
+  require_integer = TRUE
+)
 ```
 
 ## Arguments

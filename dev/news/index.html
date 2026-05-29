@@ -71,6 +71,8 @@
 <li>Improved metadata handling and consistency in <code>epi_df</code> methods, including <code>pivot_wider</code> and <code>pivot_longer</code>.</li>
 <li>
 <code><a href="../reference/revision_analysis.html">revision_summary()</a></code> by default no longer removes revisions from non-NA values to explicit NAs, instead only dropping initial estimates of NA that were likely inserted by <code>epix_merge</code>ing with a more timely and/or more widely available signal. This behavior is customizable with the <code>compactify</code>, <code>compactify_drop_initial_nas</code>, and <code>drop_nas</code> parameters. It also runs more quickly.</li>
+<li>
+<code><a href="../reference/revision_analysis.html">revision_summary()</a></code> printed lag summaries now display fractional-week lags (e.g., when <code>time_type = "week"</code> but versions fall mid-week) in days rather than fractional weeks, for easier interpretation.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-12-0-9999">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-0-9999"></a></h3>
@@ -80,6 +82,8 @@
 <code>epi_slide_opt</code> (and wrappers <code>epi_slide_mean</code>, <code>epi_slide_sum</code>) now throw an informative error if the <code>.col_names</code> argument is omitted.</li>
 <li>
 <code><a href="../reference/revision_analysis.html">revision_summary()</a></code> with <code>drop_nas = FALSE</code> no longer ignores <code>min_waiting_period</code>. Summary statistics about number of NAs and overall observations have also been updated to follow <code>min_waiting_period</code> and compactification steps.</li>
+<li>
+<code><a href="../reference/revision_analysis.html">revision_summary()</a></code> now computes lag relative to the end of each week.</li>
 </ul></div>
 </div>
     <div class="section level2">
