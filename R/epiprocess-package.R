@@ -56,5 +56,5 @@ utils::globalVariables(c(
   "max_value", "min_value", "median_value", "spread",
   "rel_spread", "lag_to", "lag_near_latest", "n_revisions",
   "min_lag", "max_lag", ".key_interaction", "change", ".contrib",
-  ".running_count", ".VAL"
+  ".running_count", ".VAL", "..within_latest"
 ))
