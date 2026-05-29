@@ -188,8 +188,21 @@ revision_analysis <- function(epi_arch,
     revision_behavior <- revision_behavior %>%
       apply_compactify(ukey_names, compactify_abs_tol, init_nas_are_locf = compactify_drop_initial_nas)
   }
-  revision_behavior <- revision_behavior %>%
-    mutate(lag = time_minus_time_in_n_steps(version, time_value, time_type, require_integer = FALSE))
+  if (time_type == "week") {
+    lubridate_starting_iso_wday <- getOption("lubridate.week.start", 7)
+    starting_lt_wday <- lubridate_starting_iso_wday %% 7
+    ending_lt_wday <- (starting_lt_wday + 6) %% 7
+    revision_behavior <- revision_behavior %>%
+      mutate(lag = pmax(0, time_minus_time_in_n_steps(
+        version,
+        time_value + (ending_lt_wday - as.POSIXlt(time_value)$wday) %% 7,
+        time_type,
+        require_integer = FALSE
+      )))
+  } else {
+    revision_behavior <- revision_behavior %>%
+      mutate(lag = pmax(0, time_minus_time_in_n_steps(version, time_value, time_type, require_integer = FALSE)))
+  }
 
   total_na <- revision_behavior %>%
     filter(is.na(c_across(!!arg))) %>% # nolint: object_usage_linter
@@ -486,15 +499,27 @@ time_delta_summary <- function(time_delta, time_type = NULL) {
   }
   if (length(time_delta) > 0) {
     n_steps <- time_delta_to_n_steps(time_delta, time_type, require_integer = FALSE)
-    res <- data.frame(
+    summary_vals <- c(
       min = min(n_steps),
       median = median(n_steps),
-      mean = round(mean(n_steps), 1),
-      max = max(n_steps),
+      mean = mean(n_steps),
+      max = max(n_steps)
+    )
+    summary_deltas <- n_steps_to_time_delta(summary_vals, time_type, require_integer = FALSE)
+    res <- data.frame(
+      min = summary_deltas[1],
+      median = summary_deltas[2],
+      mean = summary_deltas[3],
+      max = summary_deltas[4],
       row.names = " ",
       check.names = FALSE
-    ) %>%
-      mutate(across(c(min, median, mean, max), ~ .x * unit_time_delta(time_type)))
+    )
+    if (inherits(res$mean, "difftime")) {
+      units_saved <- units(res$mean)
+      res$mean <- as.difftime(round(as.numeric(res$mean), 1), units = units_saved)
+    } else {
+      res$mean <- round(res$mean, 1)
+    }
     res
   } else {
     data.frame()

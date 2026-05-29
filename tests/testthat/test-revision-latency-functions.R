@@ -202,12 +202,12 @@ test_that("revision_summary bulk reporting summary works as expected", {
 test_that("revision_summary works for weekly time series with daily versions", {
   dummy_ex_weekly_daily_versions <- tibble::tribble(
     ~geo_value, ~time_value, ~version, ~value,
-    "ak", as.Date("2020-01-01"), as.Date("2020-01-01"), 1,
-    "ak", as.Date("2020-01-01"), as.Date("2020-01-03"), 5, # Friday
-    "ak", as.Date("2020-01-08"), as.Date("2020-01-08"), 6,
-    "ak", as.Date("2020-01-08"), as.Date("2020-01-09"), 7 # Thursday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-15"), 1,  # Wednesday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-17"), 5,  # Friday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-22"), 6,  # Wednesday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-23"), 7   # Thursday
   ) %>%
-    as_epi_archive(versions_end = as.Date("2020-01-15"), compactify = FALSE)
+    as_epi_archive(versions_end = as.Date("2020-01-30"), compactify = FALSE)
 
   expect_equal(dummy_ex_weekly_daily_versions$time_type, "week")
 
@@ -215,14 +215,10 @@ test_that("revision_summary works for weekly time series with daily versions", {
     rs <- revision_analysis(dummy_ex_weekly_daily_versions, min_waiting_period = 0)
   })
 
-  # Ensure the lags are converted to integer days:
-  # min_lag for 2020-01-01 starts at 2020-01-01, so 0 days
-  # max_lag for 2020-01-01 ends at 2020-01-03, so 2 days
-  # min_lag for 2020-01-08 starts at 2020-01-08, so 0 days
-  # max_lag for 2020-01-08 ends at 2020-01-09, so 1 day
+  # Ensure the lags are converted to integer days relative to the end of each week
 
   rb <- rs$revision_behavior
   expect_equal(units(rb$max_lag), "days")
-  expect_equal(as.numeric(rb$min_lag), c(0, 0))
-  expect_equal(as.numeric(rb$max_lag), c(2, 1))
+  expect_equal(as.numeric(rb$min_lag), c(4, 4))
+  expect_equal(as.numeric(rb$max_lag), c(6, 5))
 })
