@@ -397,6 +397,13 @@ autoplot_subsample_keys <- function(
 }
 
 
+autoplot_thin_series <- function(df, n_max = 300L) {
+  n <- nrow(df)
+  if (n <= n_max) return(df)
+  idx <- unique(round(seq(1L, n, length.out = n_max)))
+  df[idx, , drop = FALSE]
+}
+
 autoplot_plotly_dropdown <- function(
   data, group_col, trace_col = NULL,
   color_map = NULL, .base_color = "#3A448F",
@@ -429,6 +436,7 @@ autoplot_plotly_dropdown <- function(
     purrr::map(sub_trace_vals, function(s_val) {
       s_data <- if (identical(s_val, "default")) g_data else g_data[g_data[[trace_col]] == s_val, ]
       s_data <- s_data[order(s_data$time_value), ]
+      s_data <- autoplot_thin_series(s_data)
 
       # "metadata" for the specific line
       lc <- if (!is.null(color_map)) {
@@ -450,30 +458,34 @@ autoplot_plotly_dropdown <- function(
   }) %>%
     purrr::list_flatten()
 
-  # Add the line to the plot
-  p <- purrr::reduce(trace_specs, function(p, spec) {
-    plotly::add_trace(p,
-      data = spec$data,
-      x = ~time_value, y = ~.response,
-      type = "scatter", mode = "lines",
-      line = list(color = spec$color, width = 1.5),
-      hoverinfo = "text",
-      text = ~ paste0(
-        dropdown_prefix, get(group_col),
-        if (spec$label != "") paste0("<br>", spec$label) else "",
-        "<br>Date: ", time_value,
-        "<br>Value: ", round(.response, 3)
-      ),
-      name = spec$label,
-      legendgroup = spec$label,
-      showlegend = (spec$g_val == unique_groups[1]) && spec$show_legend,
-      visible = (spec$g_val == unique_groups[1])
-    )
-  }, .init = plotly::plot_ly())
+  # Pre-build all trace attribute lists and assign to p$x$attrs in one shot,
+  # replacing the empty default trace created by plot_ly(). This avoids the
+  # O(N^2) list copies that purrr::reduce + add_trace produces in R.
+  # hovertemplate is intentionally omitted here: plotly_build() broadcasts
+  # scalar strings to one copy per data point, so we set it after the build.
+  trace_attrs <- setNames(
+    purrr::map(trace_specs, function(spec) {
+      list(
+        x = spec$data$time_value,
+        y = spec$data$.response,
+        type = "scatter",
+        mode = "lines",
+        line = list(color = spec$color, width = 1.5),
+        name = spec$label,
+        legendgroup = spec$label,
+        showlegend = (spec$g_val == unique_groups[1]) && spec$show_legend,
+        visible = (spec$g_val == unique_groups[1]),
+        data = NULL
+      )
+    }),
+    paste0("trace", seq_along(trace_specs) - 1L)
+  )
+  p <- plotly::plot_ly()
+  p$x$attrs <- trace_attrs
 
-  # Creates the buttons for the dropdown menu and updates the plot title
+  # Field order (method, args, label) matches existing RDS snapshots.
   trace_group_vals <- purrr::map_chr(trace_specs, ~ .x$g_val)
-  buttons <- purrr::map(unique_groups, function(g) {
+  steps <- purrr::map(unique_groups, function(g) {
     is_active <- trace_group_vals == g
     show_legend <- is_active & purrr::map_lgl(trace_specs, ~ .x$show_legend)
     list(
@@ -486,22 +498,52 @@ autoplot_plotly_dropdown <- function(
     )
   })
 
-  p %>%
+  result <- p %>%
     plotly::layout(
       title = list(text = paste0(dropdown_prefix, unique_groups[1])),
       xaxis = list(title = xaxis_title),
       yaxis = list(title = yaxis_title, fixedrange = TRUE),
-      legend = list(title = list(text = legend_title)),
-      updatemenus = list(
-        list(
-          type = "dropdown",
-          active = 0,
-          buttons = buttons,
-          x = 0.05, y = 1.15
-        )
-      )
+      legend = list(
+        title = list(text = legend_title),
+        tracegroupgap = 0,
+        font = list(size = 10),
+        bgcolor = "rgba(255,255,255,0.85)",
+        bordercolor = "rgba(0,0,0,0.15)",
+        borderwidth = 1,
+        xanchor = "right",
+        x = 0.99,
+        yanchor = "top",
+        y = 0.99
+      ),
+      updatemenus = list(list(
+        type = "dropdown",
+        active = 0,
+        buttons = steps,
+        x = 0.05, y = 1.15
+      ))
     ) %>%
-    plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"))
+    plotly::config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")) %>%
+    plotly::partial_bundle()
+
+  # Force a final build to populate x$data, then post-process in one pass:
+  # replace the per-point broadcast hovertemplate with a single scalar string
+  # and strip click-event arrays (customdata, ids, key) that add bulk.
+  # Finally, clear x$attrs so the htmlwidgets rendering call to plotly_build()
+  # finds nothing to re-process and preserves our scalar hovertemplates.
+  result <- plotly::plotly_build(result)
+  result$x$data <- purrr::map2(result$x$data, trace_specs, function(tr, spec) {
+    tr$hovertemplate <- paste0(
+      dropdown_prefix, spec$g_val,
+      if (spec$label != "") paste0("<br>", spec$label) else "",
+      "<br>Date: %{x}<br>Value: %{y:.4g}<extra></extra>"
+    )
+    tr$customdata <- NULL
+    tr$ids <- NULL
+    tr$key <- NULL
+    tr
+  })
+  result$x$attrs <- list()
+  result
 }
 
 autoplot_resolve_vars <- function(opt, geo_and_other_keys, nvars, all_avail_names, color = FALSE) {
@@ -568,7 +610,40 @@ autoplot_get_label <- function(type, vars = character(0), format = c("none", "pr
 }
 
 autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
-  p_plotly <- plotly::ggplotly(p)
+  # tooltip = character(0) prevents ggplotly from embedding hover text vectors
+  p_plotly <- plotly::ggplotly(p, tooltip = character(0))
+
+  # Strip ggplotly source-data caches (raw data frames + unevaluated attrs).
+  # These are only needed for plotly's own hover/click pipeline, which we
+  # bypass entirely with hovertemplate below.
+  p_plotly$x$visdat <- NULL
+  p_plotly$x$cur_data <- NULL
+  p_plotly$x$attrs <- NULL
+
+  # Reduce payload for line traces:
+  # - Replace per-point text vectors with a single hovertemplate string
+  # - Strip click-event arrays (customdata, ids, key) not needed here
+  # - Thin dense series to ≤300 points (same cap as the dropdown path)
+  p_plotly$x$data <- purrr::map(p_plotly$x$data, function(tr) {
+    n <- length(tr$x %||% integer(0))
+    if (n < 2L || !isTRUE(grepl("lines", tr$mode %||% ""))) return(tr)
+    prefix <- tr$name %||% ""
+    tr$hovertemplate <- paste0(
+      if (nzchar(prefix)) paste0(prefix, "<br>") else "",
+      "%{x}<br>%{y:.4g}<extra></extra>"
+    )
+    tr$text <- NULL
+    tr$hoverinfo <- NULL
+    tr$customdata <- NULL
+    tr$ids <- NULL
+    tr$key <- NULL
+    if (n > 300L) {
+      idx <- unique(round(seq(1L, n, length.out = 300L)))
+      tr$x <- tr$x[idx]
+      tr$y <- tr$y[idx]
+    }
+    tr
+  })
 
   if (!is.infinite(.max_keys) && (".colours" %in% names(object))) {
     trace_names <- purrr::map_chr(p_plotly$x$data, ~ .x$name %||% "")
@@ -600,9 +675,19 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
     p_plotly$x$layout[[ax]]$fixedrange <- TRUE
   }
   p_plotly <- p_plotly %>%
+    plotly::layout(legend = list(
+      xanchor = "right", x = 0.99,
+      yanchor = "top", y = 0.99,
+      bgcolor = "rgba(255,255,255,0.85)",
+      bordercolor = "rgba(0,0,0,0.15)",
+      borderwidth = 1,
+      tracegroupgap = 0,
+      font = list(size = 10)
+    )) %>%
     plotly::config(
       modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d")
-    )
+    ) %>%
+    plotly::partial_bundle()
 
   return(p_plotly)
 }
