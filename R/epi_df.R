@@ -317,9 +317,11 @@ as_epi_df.tbl_df <- function(
   }
 
   assert(check_ukey_unique(x, c("geo_value", other_keys, "time_value"), c(
-    ">" = "If this is line list data, convert it to counts/rates first.",
-    ">" = "If this contains a demographic breakdown, check that you have
-           specified appropriate `other_keys`" # . from checkmate
+    "i" = "Common fixes:",
+    ">" = "If this is line list data, aggregate to counts or rates first.",
+    ">" = "If rows differ by a grouping column (e.g. age group), add it to `other_keys`.",
+    ">" = "If rows differ by signal name, use `signal_format = \"long\"` or `\"wide\"`
+           (see `?as_epi_df`)"
   )))
 
   new_epi_df(x, geo_type, time_type, as_of, other_keys)
