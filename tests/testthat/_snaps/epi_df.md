@@ -10,6 +10,8 @@
             <dbl>      <dbl> <int>
       1         1          1     1
       2         1          1     2
-      > If this is line list data, convert it to counts/rates first.
-      > If this contains a demographic breakdown, check that you have specified appropriate `other_keys`.
+      i Common fixes:
+      > If this is line list data, aggregate to counts or rates first.
+      > If rows differ by a grouping column (e.g. age group), add it to `other_keys`.
+      > If rows differ by signal name, use `signal_format = "long"` or `"wide"` (see `?as_epi_df`).
 

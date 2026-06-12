@@ -3,7 +3,7 @@
     Code
       df <- as_epi_df(raw)
     Message
-      Pivoting to wide format based on `signal` column.
+      Pivoting `value` to wide format using `signal` values as column names: `cases` and `deaths`.
       > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
       > To skip signal processing, pass `signal_format = "none"`.
 
@@ -12,7 +12,7 @@
     Code
       arch <- as_epi_archive(raw_arch)
     Message
-      Pivoting to wide format based on `signal` column.
+      Pivoting `value` to wide format using `signal` values as column names: `cases` and `deaths`.
       > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
       > To skip signal processing, pass `signal_format = "none"`.
 
@@ -21,7 +21,7 @@
     Code
       edf <- as_epi_df(raw_extra)
     Message
-      Pivoting to wide format based on `signal` column.
+      Pivoting `value` to wide format using `signal` values as column names: `cases` and `deaths`.
       > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
       > To skip signal processing, pass `signal_format = "none"`.
 
@@ -30,7 +30,7 @@
     Code
       arch_locf <- as_epi_archive(tib)
     Message
-      Pivoting to wide format based on `signal` column.
+      Pivoting `value` to wide format using `signal` values as column names: `a` and `b`.
       > To keep long format (`signal` added to `other_keys`), pass `signal_format = "long"`.
       > To skip signal processing, pass `signal_format = "none"`.
 
