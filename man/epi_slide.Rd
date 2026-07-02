@@ -128,7 +128,7 @@ multiple columns:
 
 (Here, the value 22 was selected using \code{epi_cor()} and averaging across
 \code{geo_value}s. See
-\href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+\href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2}{this
 manuscript} for some warnings & information using similar types of CFR
 estimators.)
 
@@ -183,7 +183,7 @@ with_cfr_estimates \%>\%
   print(n = 30)
 # (Here, the value 22 was selected using `epi_cor()` and averaging across
 # `geo_value`s. See
-# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2 for some
 # warnings & information using CFR estimators along these lines.)
 
 # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
