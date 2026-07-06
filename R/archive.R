@@ -579,7 +579,7 @@ as_epi_archive <- function(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...,
   versions_end = .versions_end
@@ -908,11 +908,11 @@ process_signal_archive <- function(
     value_var
   )
 
-  if (res$format == "none") {
+  if (res$format == "as_is") {
     return(archive)
   }
 
-  if (res$format == "long") {
+  if (res$format == "add_key") {
     cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
     archive$other_keys <- res$other_keys
     data.table::setkeyv(
@@ -922,8 +922,7 @@ process_signal_archive <- function(
     return(archive)
   }
 
-  # Wide
-  cli::cli_inform("Pivoting long to wide based on {.var {res$signal_var}} column.")
+  # pivot_wide
   archive$other_keys <- unique(c(archive$other_keys, res$signal_var))
   archive <- epix_pivot_wider(
     archive,

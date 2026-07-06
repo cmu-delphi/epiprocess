@@ -22,7 +22,7 @@ as_epi_df(x, ...)
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -33,7 +33,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -42,7 +42,7 @@ as_epi_df(x, ...)
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -87,9 +87,10 @@ as a character vector here (typical examples are "age" or sub-geographies).}
 the function will try to detect if the data is in long format and pivot
 to wide if necessary. This happens only if a unique signal identifier
 column (see \code{signal_var}) and a \code{value} column are both present,
-and the signal column contains more than one unique value. \code{"long"} format
-treats the signal as a metadata key by adding it to \code{other_keys}. \code{"wide"}
-format tries to pivot to wide.}
+and the signal column contains more than one unique value. \code{"add_key"}
+treats the signal as a metadata key by adding it to \code{other_keys}.
+\code{"pivot_wide"} tries to pivot to wide. \code{"as_is"} skips all signal
+processing.}
 
 \item{signal_var}{The name of the column that contains the signal
 identifiers. If \code{NULL}, the function will try to guess this column
