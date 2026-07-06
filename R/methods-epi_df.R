@@ -1051,6 +1051,8 @@ merge_epi_df_join <- function(res, x, y) {
   } else {
     return(decay_epi_df(res))
   }
+}
+
 #' @method drop_na epi_df
 #' @importFrom tidyr drop_na
 #' @export
