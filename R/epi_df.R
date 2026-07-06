@@ -212,9 +212,10 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #'   the function will try to detect if the data is in long format and pivot
 #'   to wide if necessary. This happens only if a unique signal identifier
 #'   column (see `signal_var`) and a `value` column are both present,
-#'   and the signal column contains more than one unique value. `"long"` format
-#'   treats the signal as a metadata key by adding it to `other_keys`. `"wide"`
-#'   format tries to pivot to wide. `"none"` skips all signal processing.
+#'   and the signal column contains more than one unique value. `"add_key"`
+#'   treats the signal as a metadata key by adding it to `other_keys`.
+#'   `"pivot_wide"` tries to pivot to wide. `"as_is"` skips all signal
+#'   processing.
 #' @param signal_var The name of the column that contains the signal
 #'   identifiers. If `NULL`, the function will try to guess this column
 #'   (see `signal_column_names()` for a list of column names that will be
@@ -248,7 +249,7 @@ as_epi_df.tbl_df <- function(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long", "none"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 ) {
@@ -320,7 +321,7 @@ as_epi_df.tbl_df <- function(
     "i" = "Common fixes:",
     ">" = "If this is line list data, aggregate to counts or rates first.",
     ">" = "If rows differ by a grouping column (e.g. age group), add it to `other_keys`.",
-    ">" = "If rows differ by signal name, use `signal_format = \"long\"` or `\"wide\"`
+    ">" = "If rows differ by signal name, use `signal_format = \"add_key\"` or `\"pivot_wide\"`
            (see `?as_epi_df`)"
   )))
 
@@ -340,7 +341,7 @@ as_epi_df.grouped_df <- function(x, ...) {
 #' @method as_epi_df data.frame
 #' @export
 as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
-                                 signal_format = c("auto", "wide", "long", "none"),
+                                 signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
                                  signal_var = NULL, ...) {
   as_epi_df(
     x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
@@ -353,7 +354,7 @@ as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
 #' @method as_epi_df tbl_ts
 #' @export
 as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(),
-                             signal_format = c("auto", "wide", "long", "none"),
+                             signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
                              signal_var = NULL, ...) {
   tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) > 0) {
@@ -382,16 +383,16 @@ process_signal_column <- function(
 ) {
   res <- validate_signal_format(x, signal_format, signal_var, other_keys, value_var)
 
-  if (res$format == "none") {
+  if (res$format == "as_is") {
     return(list(x = x, other_keys = other_keys))
   }
 
-  if (res$format == "long") {
+  if (res$format == "add_key") {
     cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
     return(list(x = x, other_keys = res$other_keys))
   }
 
-  # Wide
+  # pivot_wide
   x <- x %>%
     tidyr::pivot_wider(
       id_cols = tidyselect::all_of(c("geo_value", other_keys, "time_value")),

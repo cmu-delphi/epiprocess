@@ -11,7 +11,7 @@ indicate development versions beyond 0.x.
   values, and excludes bulk reporting for some statistics.
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
 - Added `plot_heatmap()`, which provides heatmap visualization for `epi_df` objects.
-- `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"long"`, the signal column is added to `other_keys` instead of pivoting. When `"wide"`, it always pivots to wide.
+- `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"add_key"`, the signal column is added to `other_keys` instead of pivoting. When `"pivot_wide"`, it always pivots to wide. When `"as_is"`, all signal processing is skipped.
 - `print.epi_df()` now includes a **Latency info** section that summarizes reporting lags and identifies "lagging keys".
 - `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 - `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.

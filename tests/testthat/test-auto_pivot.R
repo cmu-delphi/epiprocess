@@ -46,21 +46,21 @@ test_that("Explicit signal formats (long/wide) and guessing", {
   )
 
   # Explicit long format
-  expect_snapshot(df_long <- as_epi_df(raw, signal_format = "long", signal_var = "custom_signal"))
+  expect_snapshot(df_long <- as_epi_df(raw, signal_format = "add_key", signal_var = "custom_signal"))
   expect_true("custom_signal" %in% attr(df_long, "metadata")$other_keys)
   expect_true("value" %in% names(df_long))
 
   # Guessing long if NULL
   raw_guess <- dplyr::rename(raw, signal = custom_signal)
-  expect_snapshot(df_long_guess <- as_epi_df(raw_guess, signal_format = "long"))
+  expect_snapshot(df_long_guess <- as_epi_df(raw_guess, signal_format = "add_key"))
   expect_true("signal" %in% attr(df_long_guess, "metadata")$other_keys)
 
   # Explicit wide format
-  expect_snapshot(df_wide <- as_epi_df(raw, signal_format = "wide", signal_var = "custom_signal"))
+  expect_snapshot(df_wide <- as_epi_df(raw, signal_format = "pivot_wide", signal_var = "custom_signal"))
   expect_named(df_wide, c("geo_value", "time_value", "a", "b"))
 
   # Guessing wide if NULL
-  expect_snapshot(df_wide_guess <- as_epi_df(raw_guess, signal_format = "wide"))
+  expect_snapshot(df_wide_guess <- as_epi_df(raw_guess, signal_format = "pivot_wide"))
   expect_named(df_wide_guess, c("geo_value", "time_value", "a", "b"))
 
   # Explicit signal_var activates pivot in auto mode
@@ -106,18 +106,18 @@ test_that("Error handling and non-scalar validations", {
 
   # Cannot guess
   expect_error(
-    as_epi_df(raw_error, signal_format = "long"),
+    as_epi_df(raw_error, signal_format = "add_key"),
     class = "epiprocess__unspecified_signal_var"
   )
 
   # Multiple candidates in non-auto mode
   raw_multi <- dplyr::mutate(raw_error, signal = "s", signal_name = "v")
   expect_error(
-    as_epi_df(raw_multi, signal_format = "long"),
+    as_epi_df(raw_multi, signal_format = "add_key"),
     class = "epiprocess__multiple_signal_candidates"
   )
   expect_error(
-    as_epi_archive(dplyr::mutate(raw_multi, version = test_date), signal_format = "wide"),
+    as_epi_archive(dplyr::mutate(raw_multi, version = test_date), signal_format = "pivot_wide"),
     class = "epiprocess__multiple_signal_candidates"
   )
 
@@ -160,12 +160,12 @@ test_that("Error handling and non-scalar validations", {
 
   # wide pivot requires value column
   expect_error(
-    as_epi_df(dplyr::select(raw_error, -value), signal_var = "custom", signal_format = "wide"),
+    as_epi_df(dplyr::select(raw_error, -value), signal_var = "custom", signal_format = "pivot_wide"),
     class = "epiprocess__wide_pivot_requires_value_col"
   )
 })
 
-test_that("signal_format = 'none' skips all signal processing", {
+test_that("signal_format = 'as_is' skips all signal processing", {
   # A column named "signal" that is a data column, not a long-format identifier.
   # Normally the single unique value would trigger a "Keeping in long format" message.
   raw <- dplyr::tibble(
@@ -179,18 +179,18 @@ test_that("signal_format = 'none' skips all signal processing", {
   expect_message(as_epi_df(raw), "long")
 
   # With "none": silent, signal column untouched, not added to other_keys
-  expect_silent(df <- as_epi_df(raw, signal_format = "none"))
+  expect_silent(df <- as_epi_df(raw, signal_format = "as_is"))
   expect_setequal(names(df), c("geo_value", "time_value", "signal", "value"))
   expect_false("signal" %in% attr(df, "metadata")$other_keys)
 
   # Archive: same
   raw_arch <- dplyr::mutate(raw, version = test_date + 6)
-  expect_silent(arch <- as_epi_archive(raw_arch, signal_format = "none"))
+  expect_silent(arch <- as_epi_archive(raw_arch, signal_format = "as_is"))
   expect_setequal(names(arch$DT), c("geo_value", "time_value", "signal", "value", "version"))
   expect_false("signal" %in% arch$other_keys)
 
-  # signal_var is also ignored when signal_format = "none"
-  expect_silent(df2 <- as_epi_df(raw, signal_format = "none", signal_var = "signal"))
+  # signal_var is also ignored when signal_format = "as_is"
+  expect_silent(df2 <- as_epi_df(raw, signal_format = "as_is", signal_var = "signal"))
   expect_setequal(names(df2), c("geo_value", "time_value", "signal", "value"))
   expect_false("signal" %in% attr(df2, "metadata")$other_keys)
 })

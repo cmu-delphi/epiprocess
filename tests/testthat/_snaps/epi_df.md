@@ -13,5 +13,5 @@
       i Common fixes:
       > If this is line list data, aggregate to counts or rates first.
       > If rows differ by a grouping column (e.g. age group), add it to `other_keys`.
-      > If rows differ by signal name, use `signal_format = "long"` or `"wide"` (see `?as_epi_df`).
+      > If rows differ by signal name, use `signal_format = "add_key"` or `"pivot_wide"` (see `?as_epi_df`).
 
