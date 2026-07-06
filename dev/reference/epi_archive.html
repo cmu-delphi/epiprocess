@@ -102,7 +102,7 @@ additional features.</p>
 <span>  compactify_abs_tol <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  clobberable_versions_start <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  .versions_end <span class="op">=</span> <span class="fu"><a href="max_version_with_row_in.html">max_version_with_row_in</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
-<span>  signal_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"wide"</span>, <span class="st">"long"</span><span class="op">)</span>,</span>
+<span>  signal_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"pivot_wide"</span>, <span class="st">"add_key"</span>, <span class="st">"as_is"</span><span class="op">)</span>,</span>
 <span>  signal_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  versions_end <span class="op">=</span> <span class="va">.versions_end</span></span>
@@ -194,9 +194,10 @@ used to rename columns.</p></dd>
 the function will try to detect if the data is in long format and pivot
 to wide if necessary. This happens only if a unique signal identifier
 column (see <code>signal_var</code>) and a <code>value</code> column are both present,
-and the signal column contains more than one unique value. <code>"long"</code> format
-treats the signal as a metadata key by adding it to <code>other_keys</code>. <code>"wide"</code>
-format tries to pivot to wide.</p></dd>
+and the signal column contains more than one unique value. <code>"add_key"</code>
+treats the signal as a metadata key by adding it to <code>other_keys</code>.
+<code>"pivot_wide"</code> tries to pivot to wide. <code>"as_is"</code> skips all signal
+processing.</p></dd>
 
 
 <dt id="arg-signal-var">signal_var<a class="anchor" aria-label="anchor" href="#arg-signal-var"></a></dt>

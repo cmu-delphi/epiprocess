@@ -22,7 +22,7 @@ as_epi_df(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -35,7 +35,7 @@ as_epi_df(
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -45,7 +45,7 @@ as_epi_df(
   x,
   as_of,
   other_keys = character(),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...
 )
@@ -106,9 +106,9 @@ new_epi_df(
   try to detect if the data is in long format and pivot to wide if
   necessary. This happens only if a unique signal identifier column (see
   `signal_var`) and a `value` column are both present, and the signal
-  column contains more than one unique value. `"long"` format treats the
-  signal as a metadata key by adding it to `other_keys`. `"wide"` format
-  tries to pivot to wide.
+  column contains more than one unique value. `"add_key"` treats the
+  signal as a metadata key by adding it to `other_keys`. `"pivot_wide"`
+  tries to pivot to wide. `"as_is"` skips all signal processing.
 
 - signal_var:
 
@@ -330,7 +330,7 @@ attr(ex3, "metadata")
 #> [1] "day"
 #> 
 #> $as_of
-#> [1] "2026-05-29 02:13:14 UTC"
+#> [1] "2026-07-06 19:47:06 UTC"
 #> 
 #> $other_keys
 #> [1] "state" "pol"  

@@ -30,7 +30,7 @@ as_epi_archive(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
-  signal_format = c("auto", "wide", "long"),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
   signal_var = NULL,
   ...,
   versions_end = .versions_end
@@ -122,9 +122,9 @@ validate_epi_archive(x)
   try to detect if the data is in long format and pivot to wide if
   necessary. This happens only if a unique signal identifier column (see
   `signal_var`) and a `value` column are both present, and the signal
-  column contains more than one unique value. `"long"` format treats the
-  signal as a metadata key by adding it to `other_keys`. `"wide"` format
-  tries to pivot to wide.
+  column contains more than one unique value. `"add_key"` treats the
+  signal as a metadata key by adding it to `other_keys`. `"pivot_wide"`
+  tries to pivot to wide. `"as_is"` skips all signal processing.
 
 - signal_var:
 

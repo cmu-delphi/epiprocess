@@ -36,8 +36,8 @@ df <- pub_covidcast(
   as_epi_df()
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
-#>   instead, pass `signal_format = "wide"` instead.
-#> → Silence with `signal_format = "long"`
+#>   instead, pass `signal_format = "pivot_wide"` instead.
+#> → Silence with `signal_format = "add_key"`
 #> Adding `signal` to `other_keys`.
 
 # Static plot with many keys (subsampling will occur)
@@ -162,8 +162,8 @@ df_versions <- pub_covidcast(
   as_epi_archive()
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
-#>   instead, pass `signal_format = "wide"` instead.
-#> → Silence with `signal_format = "long"`
+#>   instead, pass `signal_format = "pivot_wide"` instead.
+#> → Silence with `signal_format = "add_key"`
 #> Adding `signal` to `other_keys`.
 
 # Static epi_archive plot showing all captured versions

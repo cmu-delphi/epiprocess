@@ -25,8 +25,9 @@
   now support a `signal_format` argument (defaulting to `"auto"`) and
   `signal_var`. When `"auto"`, the functions detect a signal column with
   a `value` column and \>1 unique signal, and automatically pivot to
-  wide format. When `"long"`, the signal column is added to `other_keys`
-  instead of pivoting. When `"wide"`, it always pivots to wide.
+  wide format. When `"add_key"`, the signal column is added to
+  `other_keys` instead of pivoting. When `"pivot_wide"`, it always
+  pivots to wide. When `"as_is"`, all signal processing is skipped.
 - [`print.epi_df()`](https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.md)
   now includes a **Latency info** section that summarizes reporting lags
   and identifies “lagging keys”.
