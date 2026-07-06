@@ -86,6 +86,19 @@ tidyr::unnest
 #' @export
 tidyr::complete
 
+
+#' @importFrom tidyr drop_na
+#' @export
+tidyr::drop_na
+
+#' @importFrom tidyr pivot_wider
+#' @export
+tidyr::pivot_wider
+
+#' @importFrom tidyr pivot_longer
+#' @export
+tidyr::pivot_longer
+
 # We don't provide a method for full_seq, but complete-ing using
 # full_seq(time_value) is still needed to make some downstream things behave
 # nicely.  So make that more ergonomic/discoverable with a re-export:

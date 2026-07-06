@@ -16,6 +16,7 @@ Authors@R: c(
     person("Dmitry", "Shemetov", role = "aut"),
     person("Ryan", "Tibshirani", role = "aut"),
     person("David", "Weber", , "davidweb@andrew.cmu.edu", role = "ctb"),
+    person("Javier", "Martinez-Rodriguez", role = "ctb"),
     person("Lionel", "Henry", role = "ctb",
            comment = "Author of included rlang fragments"),
     person("Hadley", "Wickham", role = "ctb",
@@ -52,9 +53,11 @@ Imports:
     magrittr,
     methods,
     pkgconfig,
+    plotly,
     purrr,
     rlang,
     slider,
+    stats,
     tibble,
     tidyr,
     tidyselect (>= 1.2.0),
@@ -101,6 +104,7 @@ Collate:
     'epi_df.R'
     'epi_df_forbidden_methods.R'
     'epiprocess-package.R'
+    'extra_plots.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'

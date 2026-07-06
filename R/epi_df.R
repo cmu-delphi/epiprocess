@@ -208,6 +208,17 @@ new_epi_df <- function(x = tibble::tibble(geo_value = character(), time_value = 
 #' @order 1
 #' @param x An `epi_df`, `data.frame`, [tibble::tibble], or [tsibble::tsibble]
 #'   to be converted
+#' @param signal_format Format of the signal data. If `"auto"` (default),
+#'   the function will try to detect if the data is in long format and pivot
+#'   to wide if necessary. This happens only if a unique signal identifier
+#'   column (see `signal_var`) and a `value` column are both present,
+#'   and the signal column contains more than one unique value. `"long"` format
+#'   treats the signal as a metadata key by adding it to `other_keys`. `"wide"`
+#'   format tries to pivot to wide.
+#' @param signal_var The name of the column that contains the signal
+#'   identifiers. If `NULL`, the function will try to guess this column
+#'   (see `signal_column_names()` for a list of column names that will be
+#'   checked).
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example, `geo_value = STATEFP, time_value = end_date`.
 #' @return * Of `as_epi_df()`: an (ungrouped) `epi_df`
@@ -229,8 +240,6 @@ as_epi_df.epi_df <- function(x, ...) {
 #' @rdname epi_df
 #' @order 1
 #' @importFrom rlang .data
-#' @importFrom tidyselect any_of
-#' @importFrom cli cli_inform
 #' @method as_epi_df tbl_df
 #' @export
 as_epi_df.tbl_df <- function(
@@ -239,11 +248,24 @@ as_epi_df.tbl_df <- function(
   time_type = deprecated(),
   as_of,
   other_keys = character(),
+  signal_format = c("auto", "wide", "long"),
+  signal_var = NULL,
   ...
 ) {
+  signal_format <- rlang::arg_match(signal_format)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "geo_value", geo_column_names())
+
+  res <- process_signal_column(
+    x,
+    signal_format = signal_format,
+    signal_var = signal_var,
+    other_keys = other_keys
+  )
+  x <- res$x
+  other_keys <- res$other_keys
+
   if (!test_subset(c("geo_value", "time_value"), names(x))) {
     cli_abort(
       "Either columns `geo_value` and `time_value` or related columns
@@ -271,17 +293,17 @@ as_epi_df.tbl_df <- function(
         "as_of" %in% names(attributes(x)$metadata)
     ) {
       as_of <- attributes(x)$metadata$as_of
-    } else if ("as_of" %in% names(x)) {
-      # Next check for as_of, issue, or version columns
-      as_of <- max(x$as_of)
-    } else if ("issue" %in% names(x)) {
-      as_of <- max(x$issue)
-    } else if ("version" %in% names(x)) {
-      as_of <- max(x$version)
     } else {
-      # If we got here then we failed
-      as_of <- Sys.time()
-    } # Use the current day-time
+      # Guessing as_of from version columns
+      candidates <- vctrs::vec_set_intersect(version_column_names(), names(x))
+
+      if (length(candidates) > 0) {
+        as_of <- max(x[[candidates[[1]]]])
+      } else {
+        # If we got here then we failed
+        as_of <- Sys.time()
+      }
+    }
   }
 
   assert_character(other_keys)
@@ -315,20 +337,67 @@ as_epi_df.grouped_df <- function(x, ...) {
 #' @order 1
 #' @method as_epi_df data.frame
 #' @export
-as_epi_df.data.frame <- function(x, as_of, other_keys = character(), ...) {
-  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+as_epi_df.data.frame <- function(x, as_of, other_keys = character(),
+                                 signal_format = c("auto", "wide", "long"),
+                                 signal_var = NULL, ...) {
+  as_epi_df(
+    x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
+    signal_format = signal_format, signal_var = signal_var, ...
+  )
 }
 
 #' @rdname epi_df
 #' @order 1
 #' @method as_epi_df tbl_ts
 #' @export
-as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(), ...) {
+as_epi_df.tbl_ts <- function(x, as_of, other_keys = character(),
+                             signal_format = c("auto", "wide", "long"),
+                             signal_var = NULL, ...) {
   tsibble_other_keys <- setdiff(tsibble::key_vars(x), "geo_value")
   if (length(tsibble_other_keys) > 0) {
     other_keys <- unique(c(other_keys, tsibble_other_keys))
   }
-  as_epi_df(x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys, ...)
+  as_epi_df(
+    x = tibble::as_tibble(x), as_of = as_of, other_keys = other_keys,
+    signal_format = signal_format, signal_var = signal_var, ...
+  )
+}
+
+
+#' Process signal column in epi data
+#'
+#' Handles signal detection and transformation based on `signal_format`.
+#'
+#' @return A list with `x` and `other_keys`.
+#' @keywords internal
+#' @noRd
+process_signal_column <- function(
+  x,
+  signal_format,
+  signal_var,
+  other_keys,
+  value_var = "value"
+) {
+  res <- validate_signal_format(x, signal_format, signal_var, other_keys, value_var)
+
+  if (res$format == "none") {
+    return(list(x = x, other_keys = other_keys))
+  }
+
+  if (res$format == "long") {
+    cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
+    return(list(x = x, other_keys = res$other_keys))
+  }
+
+  # Wide
+  cli::cli_inform("Pivoting long to wide based on {.var {res$signal_var}} column.")
+  x <- x %>%
+    tidyr::pivot_wider(
+      id_cols = tidyselect::all_of(c("geo_value", other_keys, "time_value")),
+      names_from = tidyselect::all_of(res$signal_var),
+      values_from = tidyselect::all_of(value_var)
+    )
+  list(x = x, other_keys = res$other_keys)
 }
 
 #' Test for `epi_df` format

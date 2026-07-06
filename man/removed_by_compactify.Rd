@@ -4,7 +4,12 @@
 \alias{removed_by_compactify}
 \title{get the entries that \code{compactify} would remove}
 \usage{
-removed_by_compactify(updates_df, ukey_names, abs_tol)
+removed_by_compactify(
+  updates_df,
+  ukey_names,
+  abs_tol,
+  init_nas_are_locf = FALSE
+)
 }
 \description{
 get the entries that \code{compactify} would remove

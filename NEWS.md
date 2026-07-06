@@ -3,16 +3,46 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
-# epiprocess 0.12.1
+# epiprocess 0.12.0.9999
+
+## New features
+- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
+- `revision_summary()` now detects bulk reporting adding new time
+  values, and excludes bulk reporting for some statistics.
+- Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
+- Added `plot_heatmap()`, which provides heatmap visualization for `epi_df` objects.
+- `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"long"`, the signal column is added to `other_keys` instead of pivoting. When `"wide"`, it always pivots to wide.
+- `print.epi_df()` now includes a **Latency info** section that summarizes reporting lags and identifies "lagging keys".
+- `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
+- `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
 
 ## Improvements
 
 - Optimized `epi_df` joins for performance and improved metadata handling (e.g., preserving class when joining with richer `epi_df` objects).
-- Includes the `linelist_to_archive` function to convert a linelist database in an `epi_archive`. 
+- Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
+- `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
+- Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
+- `revision_summary()` by default no longer removes revisions from
+  non-NA values to explicit NAs, instead only dropping initial
+  estimates of NA that were likely inserted by `epix_merge`ing with a
+  more timely and/or more widely available signal.  This behavior is
+  customizable with the `compactify`, `compactify_drop_initial_nas`,
+  and `drop_nas` parameters.  It also runs more quickly.
+- `revision_summary()` printed lag summaries now display fractional-week
+  lags (e.g., when `time_type = "week"` but versions fall mid-week) in
+  days rather than fractional weeks, for easier interpretation.
 
 ## Bug fixes
+
 - `autoplot.epi_archive` now works properly on archives that contain a column
   named `v` (#674, thanks to @pcollender for the report).
+- `epi_slide_opt` (and wrappers `epi_slide_mean`, `epi_slide_sum`) now throw an informative error if the `.col_names` argument is omitted.
+- `revision_summary()` with `drop_nas = FALSE` no longer ignores
+  `min_waiting_period`.  Summary statistics about number of NAs and
+  overall observations have also been updated to follow
+  `min_waiting_period` and compactification steps.
+- `revision_summary()` now computes lag relative to the end of each
+  week.
 
 # epiprocess 0.12
 

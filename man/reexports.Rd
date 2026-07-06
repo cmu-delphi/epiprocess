@@ -22,6 +22,9 @@
 \alias{cross_join}
 \alias{unnest}
 \alias{complete}
+\alias{drop_na}
+\alias{pivot_wider}
+\alias{pivot_longer}
 \alias{full_seq}
 \alias{autoplot}
 \title{Objects exported from other packages}
@@ -35,7 +38,7 @@ below to see their documentation.
 
   \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 
-  \item{tidyr}{\code{\link[tidyr]{complete}}, \code{\link[tidyr]{full_seq}}, \code{\link[tidyr]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr]{complete}}, \code{\link[tidyr]{drop_na}}, \code{\link[tidyr]{full_seq}}, \code{\link[tidyr]{pivot_longer}}, \code{\link[tidyr]{pivot_wider}}, \code{\link[tidyr]{unnest}}}
 
   \item{tsibble}{\code{\link[tsibble:as-tsibble]{as_tsibble}}}
 }}

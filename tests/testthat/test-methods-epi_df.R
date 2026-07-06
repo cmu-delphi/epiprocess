@@ -333,6 +333,7 @@ test_that("sum_groups_epi_df works", {
     sum_groups_epi_df(x:y, group_cols = c("time_value", "geo_value", "indic_var1"))
   expect_equal(out, expected_out)
 })
+
 test_that("joins preserve epi_df class and metadata when unique", {
   x <- tibble(geo_value = 1, time_value = 1, x_val = 1) %>% as_epi_df()
   y <- tibble(geo_value = 1, time_value = 1, y_val = 2) %>% as_epi_df()
@@ -664,4 +665,11 @@ test_that("joins with richer key tibble decay silently", {
   expect_silent(res <- left_join(x, y, by = c("geo_value", "time_value")))
   expect_s3_class(res, "tbl_df")
   expect_false(inherits(res, "epi_df"))
+})
+
+test_that("print on 0-row edf does not malfunction", {
+  expect_snapshot(as_epi_df(
+    tibble(geo_value = character(), time_value = integer(), value = integer()),
+    as_of = 5
+  ))
 })
