@@ -984,8 +984,8 @@ merge_epi_df_join <- function(res, x, y) {
   meta <- attr(x, "metadata")
 
   # NA checks for essential keys
-  has_na_geo <- anyMissing(res$geo_value)
-  has_na_time <- anyMissing(res$time_value)
+  has_na_geo <- vctrs::vec_any_missing(res$geo_value)
+  has_na_time <- vctrs::vec_any_missing(res$time_value)
   has_na_essential <- has_na_geo || has_na_time
 
   # If y is also an epi_df, merge its keys and check for metadata mismatches
@@ -1028,7 +1028,9 @@ merge_epi_df_join <- function(res, x, y) {
   }
 
   # check for NAs in keys
-  has_na_other <- length(meta$other_keys) > 0L && anyMissing(res[meta$other_keys])
+  # vec_any_missing on a data frame only flags fully-NA rows, so check each key column
+  has_na_other <- length(meta$other_keys) > 0L &&
+    any(vapply(res[meta$other_keys], vctrs::vec_any_missing, logical(1)))
   if (has_na_essential || has_na_other) {
     cli::cli_warn(c(
       "NA values found in key columns of the join result.",
