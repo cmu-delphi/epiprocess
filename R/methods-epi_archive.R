@@ -146,11 +146,21 @@ epix_as_of_latest <- function(x) {
   x %>% epix_as_of(.$versions_end)
 }
 
+#' Get the latest snapshot from an `epi_archive` object
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`; please use [`epix_as_of_latest`] instead.
+#'
+#' The latest snapshot is an `epi_df` snapshot of the data, as of the
+#' last recorded version in `x`.
+#'
+#' @param x An `epi_archive` object
+#' @return The latest snapshot, in `epi_df` format
 #' @export
 epix_as_of_current <- function(x) {
   lifecycle::deprecate_warn(
     "0.13.0", "epix_as_of_current()", "epix_as_of_latest()",
-    details = 'Future versions of `epix_as_of_current` may remove this deprecation, but change its implementation to require "current" to be sometime recent, i.e., require there to be a nontrivial recent update to the data.'
+    details = 'Future versions of `epix_as_of_current` may remove this deprecation, but change its implementation to require "current" to be sometime recent, i.e., require there to be a nontrivial recent update to the data.' # nolint: line_length_linter
   )
   epix_as_of_latest(x)
 }
