@@ -784,6 +784,10 @@ signal_column_names <- function() {
 #' Validate signal format and signal_var
 #' @keywords internal
 validate_signal_format <- function(x, signal_format, signal_var, other_keys, value_var = "value") {
+  if (signal_format == "as_is") {
+    return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
+  }
+
   # Validation of provided signal_var
   if (!is.null(signal_var)) {
     if (length(signal_var) > 1) {
@@ -820,7 +824,14 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
       unique_signals <- unique(x[[signal_var]])
       if (length(unique_signals) > 1) {
         # Our processing was built expecting wide format, so convert:
-        signal_format <- "wide"
+        cli::cli_inform(c(
+          "Pivoting {.var {value_var}} to wide format using {.var {signal_var}}
+           values as column names: {.var {unique_signals}}.",
+          ">" = "To keep long format ({.var {signal_var}} added to `other_keys`),
+                 pass {.code signal_format = \"add_key\"}.",
+          ">" = "To skip signal processing, pass {.code signal_format = \"as_is\"}."
+        ), class = "epiprocess__auto_pivot_inform")
+        signal_format <- "pivot_wide"
       } else {
         # It's convenient to be able to just use `value` if there's
         # only one signal, so let's not auto-convert in this case:
@@ -828,14 +839,14 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
           'Keeping this data in "long" format,
            with {.var {signal_var}} and {.var {value_var}} columns.',
           ">" = 'To convert to wide format with a(n) {.var {unique_signals}} column instead,
-                 pass {.code signal_format = "wide"} instead.',
-          ">" = 'Silence with {.code signal_format = "long"}'
+                 pass {.code signal_format = "pivot_wide"} instead.',
+          ">" = 'Silence with {.code signal_format = "add_key"}'
         ))
-        signal_format <- "long"
+        signal_format <- "add_key"
       }
     } else {
       # Input doesn't look like long format; no extra processing needed:
-      return(list(format = "none", signal_var = signal_var, other_keys = other_keys))
+      return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
     }
   }
 
@@ -854,19 +865,19 @@ validate_signal_format <- function(x, signal_format, signal_var, other_keys, val
     )
   }
 
-  if (signal_format == "long") {
+  if (signal_format == "add_key") {
     other_keys <- unique(c(other_keys, signal_var))
-    return(list(format = "long", signal_var = signal_var, other_keys = other_keys))
+    return(list(format = "add_key", signal_var = signal_var, other_keys = other_keys))
   }
 
-  # Must be "wide" now
+  # Must be "pivot_wide" now
   if (!(value_var %in% names(x))) {
     cli::cli_abort("Pivoting to wide requires a {.var {value_var}} column.",
       class = "epiprocess__wide_pivot_requires_value_col"
     )
   }
 
-  return(list(format = "wide", signal_var = signal_var, other_keys = other_keys))
+  return(list(format = "pivot_wide", signal_var = signal_var, other_keys = other_keys))
 }
 
 #' rename potential time_value columns
