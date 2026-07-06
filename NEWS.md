@@ -30,6 +30,10 @@ indicate development versions beyond 0.x.
 - `revision_summary()` printed lag summaries now display fractional-week
   lags (e.g., when `time_type = "week"` but versions fall mid-week) in
   days rather than fractional weeks, for easier interpretation.
+- `epix_as_of_current()` been renamed `epix_as_of_latest()`, to help
+  express that it's giving the latest available snapshot in an archive
+  which may or may not be "current".  `epix_as_of_current()` remains
+  in place with a deprecation warning.
 
 ## Bug fixes
 

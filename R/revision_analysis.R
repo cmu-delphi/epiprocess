@@ -111,8 +111,7 @@
 #' @importFrom rlang list2 syms dots_n
 #' @importFrom vctrs vec_cast
 #' @importFrom stats quantile
-#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across
-#'   everything ungroup summarize if_else %>%
+#' @importFrom dplyr mutate group_by arrange filter if_any all_of across pull pick c_across everything ungroup summarize if_else %>%
 revision_analysis <- function(epi_arch,
                               ...,
                               min_waiting_period = as.difftime(60, units = "days"),

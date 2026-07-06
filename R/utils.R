@@ -358,8 +358,7 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #'
 #' @template ref-time-value-label
 #'
-#' @importFrom rlang is_function new_function f_env is_environment missing_arg
-#'  f_rhs is_formula caller_arg caller_env
+#' @importFrom rlang is_function new_function f_env is_environment missing_arg f_rhs is_formula caller_arg caller_env
 #' @keywords internal
 as_slide_computation <- function(.f, ...,
                                  .f_arg = caller_arg(.f), .call = caller_env(),

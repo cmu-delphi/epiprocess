@@ -207,8 +207,7 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #' @importFrom data.table key address rbindlist setDF copy
 #' @importFrom tibble as_tibble new_tibble validate_tibble
 #' @importFrom dplyr group_by groups
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-#'  env missing_arg
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms env missing_arg
 #'
 #' @export
 epix_slide.grouped_epi_archive <- function(
