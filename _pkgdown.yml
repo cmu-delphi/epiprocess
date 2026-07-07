@@ -72,6 +72,7 @@ reference:
     desc: Functions operating on `epi_archive` objects.
   - contents:
       - epix_as_of
+      - epix_as_of_latest
       - epix_as_of_current
       - epix_slide
       - revision_summary
