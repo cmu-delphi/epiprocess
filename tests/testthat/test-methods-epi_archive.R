@@ -135,7 +135,7 @@ test_that("epix_as_of_latest works as expected", {
     as.Date("2020-06-04")
   )
   expect_snapshot_warning(
-    ea2_data %>% as_epi_archive() %>% epix_as_of_current(),
+    same_with_current <- attr(ea2_data %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
     class = "lifecycle_warning_deprecated"
   )
   expect_equal(
