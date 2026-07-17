@@ -1227,3 +1227,18 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
     }
   }
 }
+
+#' Manually override `geo_type` and/or `time_type` metadata
+#'
+#' @param x an `epi_df`
+#' @param geo_type optional; new `geo_type` string
+#' @param time_type optional; new `time_type` string
+#' @return `x` with updated metadata
+#' @keywords internal
+force_meta <- function(x, geo_type = NULL, time_type = NULL) {
+  meta <- attr(x, "metadata")
+  if (!is.null(geo_type)) meta$geo_type <- geo_type
+  if (!is.null(time_type)) meta$time_type <- time_type
+  attr(x, "metadata") <- meta
+  x
+}

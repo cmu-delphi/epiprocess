@@ -13,6 +13,13 @@
 \alias{relocate}
 \alias{rename}
 \alias{slice}
+\alias{left_join}
+\alias{right_join}
+\alias{inner_join}
+\alias{full_join}
+\alias{anti_join}
+\alias{semi_join}
+\alias{cross_join}
 \alias{unnest}
 \alias{complete}
 \alias{drop_na}
@@ -27,7 +34,7 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr]{arrange}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
+  \item{dplyr}{\code{\link[dplyr:filter-joins]{anti_join}}, \code{\link[dplyr]{arrange}}, \code{\link[dplyr]{cross_join}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr:mutate-joins]{full_join}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr:mutate-joins]{inner_join}}, \code{\link[dplyr:mutate-joins]{left_join}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr:mutate-joins]{right_join}}, \code{\link[dplyr:filter-joins]{semi_join}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
 
   \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 

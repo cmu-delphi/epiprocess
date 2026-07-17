@@ -18,6 +18,7 @@ indicate development versions beyond 0.x.
 
 ## Improvements
 
+- Optimized `epi_df` joins for performance and improved metadata handling (e.g., preserving class when joining with richer `epi_df` objects).
 - Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
 - `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
 - Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.

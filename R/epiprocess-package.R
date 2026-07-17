@@ -45,6 +45,7 @@
 #' @importFrom vctrs vec_slice
 #' @importFrom vctrs vec_slice<-
 #' @importFrom vctrs vec_sort
+#' @importFrom vctrs vec_set_union
 #' @importFrom vctrs vec_unique
 ## usethis namespace: end
 NULL
