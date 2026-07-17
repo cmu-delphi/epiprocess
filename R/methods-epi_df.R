@@ -944,6 +944,117 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
     arrange_canonical()
 }
 
+#' @method left_join epi_df
+#' @export
+left_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method right_join epi_df
+#' @export
+right_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method inner_join epi_df
+#' @export
+inner_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method full_join epi_df
+#' @export
+full_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method cross_join epi_df
+#' @export
+cross_join.epi_df <- function(x, y, ..., copy = FALSE, suffix = c(".x", ".y")) {
+  # Cross joins violates epi_df uniqueness. We force decay to tibble.
+  decay_epi_df(NextMethod())
+}
+
+# Helper to merge keys and validate result
+merge_epi_df_join <- function(res, x, y) {
+  meta <- attr(x, "metadata")
+
+  # NA checks for essential keys
+  has_na_geo <- vctrs::vec_any_missing(res$geo_value)
+  has_na_time <- vctrs::vec_any_missing(res$time_value)
+  has_na_essential <- has_na_geo || has_na_time
+
+  # If y is also an epi_df, merge its keys and check for metadata mismatches
+  if (is_epi_df(y)) {
+    y_meta <- attr(y, "metadata")
+    y_other_keys <- y_meta$other_keys
+
+    # Skip union if y has no extra keys or identical keys
+    if (length(y_other_keys) > 0L && !identical(meta$other_keys, y_other_keys)) {
+      meta$other_keys <- vctrs::vec_set_union(meta$other_keys, y_other_keys)
+    }
+
+    # Warn on metadata type mismatches
+    if (!has_na_essential) {
+      if (meta$geo_type != y_meta$geo_type) {
+        cli::cli_warn(c(
+          "Mismatched `geo_type` found in join.",
+          "i" = "x: {.val {meta$geo_type}}, y: {.val {y_meta$geo_type}}",
+          "!" = "Result will use x's `geo_type`: {.val {meta$geo_type}}."
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
+      }
+      if (meta$time_type != y_meta$time_type) {
+        cli::cli_warn(c(
+          "Mismatched `time_type` found in join.",
+          "i" = "x: {.val {meta$time_type}}, y: {.val {y_meta$time_type}}",
+          "!" = "Result will use x's `time_type`: {.val {meta$time_type}}."
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
+      }
+    }
+  }
+
+  # check other_keys
+  missing_keys <- meta$other_keys[!meta$other_keys %in% names(res)]
+  if (length(missing_keys) > 0L) {
+    cli::cli_warn(c(
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the join result.",
+      "!" = "Decaying to a `tibble`."
+    ), class = "epiprocess__merge_epi_df_join__missing_keys")
+    return(decay_epi_df(res))
+  }
+
+  # check for NAs in keys
+  # vec_any_missing on a data frame only flags fully-NA rows, so check each key column
+  has_na_other <- length(meta$other_keys) > 0L &&
+    any(vapply(res[meta$other_keys], vctrs::vec_any_missing, logical(1)))
+  if (has_na_essential || has_na_other) {
+    cli::cli_warn(c(
+      "NA values found in key columns of the join result.",
+      "i" = "This often happens when joining data with missing keys.",
+      "i" = "Consider using `inner_join` to drop missing rows.",
+      "!" = "Decaying to a `tibble`."
+    ))
+    return(decay_epi_df(res))
+  }
+
+  # Check uniqueness
+  is_unique <- check_ukey_unique(dplyr::ungroup(res), c("geo_value", meta$other_keys, "time_value"))
+
+  if (isTRUE(is_unique)) {
+    attr(res, "metadata") <- meta
+    if (!inherits(res, "epi_df")) {
+      class(res) <- c("epi_df", class(res))
+    }
+    return(res)
+  } else {
+    return(decay_epi_df(res))
+  }
+}
+
 #' @method drop_na epi_df
 #' @importFrom tidyr drop_na
 #' @export

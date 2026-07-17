@@ -175,7 +175,6 @@ test_that("epix_as_of_latest works as expected", {
 })
 
 
-
 test_that("filter.epi_archive works as expected", {
   ea2 <- ea2_data %>%
     as_epi_archive()

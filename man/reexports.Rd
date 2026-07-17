@@ -13,6 +13,13 @@
 \alias{relocate}
 \alias{rename}
 \alias{slice}
+\alias{left_join}
+\alias{right_join}
+\alias{inner_join}
+\alias{full_join}
+\alias{anti_join}
+\alias{semi_join}
+\alias{cross_join}
 \alias{unnest}
 \alias{complete}
 \alias{drop_na}
@@ -27,7 +34,7 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr:arrange]{arrange()}}, \code{\link[dplyr:filter]{filter()}}, \code{\link[dplyr:group_by]{group_by()}}, \code{\link[dplyr:group_modify]{group_modify()}}, \code{\link[dplyr:mutate]{mutate()}}, \code{\link[dplyr:relocate]{relocate()}}, \code{\link[dplyr:rename]{rename()}}, \code{\link[dplyr:slice]{slice()}}, \code{\link[dplyr:ungroup]{ungroup()}}}
+  \item{dplyr}{\code{\link[dplyr:anti_join]{anti_join()}}, \code{\link[dplyr:arrange]{arrange()}}, \code{\link[dplyr:cross_join]{cross_join()}}, \code{\link[dplyr:filter]{filter()}}, \code{\link[dplyr:full_join]{full_join()}}, \code{\link[dplyr:group_by]{group_by()}}, \code{\link[dplyr:group_modify]{group_modify()}}, \code{\link[dplyr:inner_join]{inner_join()}}, \code{\link[dplyr:left_join]{left_join()}}, \code{\link[dplyr:mutate]{mutate()}}, \code{\link[dplyr:relocate]{relocate()}}, \code{\link[dplyr:rename]{rename()}}, \code{\link[dplyr:right_join]{right_join()}}, \code{\link[dplyr:semi_join]{semi_join()}}, \code{\link[dplyr:slice]{slice()}}, \code{\link[dplyr:ungroup]{ungroup()}}}
 
   \item{ggplot2}{\code{\link[ggplot2:autoplot]{autoplot()}}}
 
