@@ -80,7 +80,7 @@ NEWS](https://github.com/cmu-delphi/epiprocess/blob/dev/NEWS.md).
 
 `git pull`
 
-[`urlchecker::url_check()`](https://rdrr.io/pkg/urlchecker/man/url_check.html).
+[`urlchecker::url_check()`](https://urlchecker.r-lib.org/reference/url_check.html).
 
 - This may choke on the MIT license url, and that’s ok.
 

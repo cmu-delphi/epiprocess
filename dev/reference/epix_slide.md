@@ -4,7 +4,7 @@
 simulating how a forecaster, nowcaster, or other algorithm would have
 behaved in real time, factoring in reporting latency and data revisions;
 see
-[[`vignette("backtesting", package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
+[`vignette("backtesting", package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
 for a walkthrough.
 
 ## Usage

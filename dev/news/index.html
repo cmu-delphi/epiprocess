@@ -65,7 +65,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="improvements-0-12-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-0-9999"></a></h3>
-<ul><li>Key interaction labels in <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> and <code><a href="../reference/plot_heatmap.html">plot_heatmap()</a></code> have been standardized to use <code>;</code> as a separator for improved readability.</li>
+<ul><li>Optimized <code>epi_df</code> joins for performance and improved metadata handling (e.g., preserving class when joining with richer <code>epi_df</code> objects).</li>
+<li>Key interaction labels in <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> and <code><a href="../reference/plot_heatmap.html">plot_heatmap()</a></code> have been standardized to use <code>;</code> as a separator for improved readability.</li>
 <li>
 <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> now more intelligently selects a plot column when multiple numeric candidates are available. If a column named <code>value</code> is present, it is favored. If no column named <code>value</code> is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.</li>
 <li>Improved metadata handling and consistency in <code>epi_df</code> methods, including <code>pivot_wider</code> and <code>pivot_longer</code>.</li>

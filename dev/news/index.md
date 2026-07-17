@@ -43,6 +43,9 @@
 
 ### Improvements
 
+- Optimized `epi_df` joins for performance and improved metadata
+  handling (e.g., preserving class when joining with richer `epi_df`
+  objects).
 - Key interaction labels in
   [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
   and
