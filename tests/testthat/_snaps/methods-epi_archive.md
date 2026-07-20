@@ -1,3 +1,9 @@
+# epix_as_of_latest works as expected
+
+    `epix_as_of_current()` was deprecated in epiprocess 0.13.0.
+    i Please use `epix_as_of_latest()` instead.
+    i Future versions of `epix_as_of_current` may remove this deprecation, but change its implementation to require "current" to be sometime recent, i.e., require there to be a nontrivial recent update to the data.
+
 # filter.epi_archive works as expected
 
     Code

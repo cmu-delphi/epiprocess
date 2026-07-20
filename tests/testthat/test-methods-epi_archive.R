@@ -129,9 +129,17 @@ test_that("group_vars works as expected", {
   )
 })
 
-test_that("epix_as_of_now works as expected", {
+test_that("epix_as_of_latest works as expected", {
   expect_equal(
-    attr(ea2_data %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    attr(ea2_data %>% as_epi_archive() %>% epix_as_of_latest(), "metadata")$as_of,
+    as.Date("2020-06-04")
+  )
+  expect_snapshot_warning(
+    same_with_current <- attr(ea2_data %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    class = "lifecycle_warning_deprecated"
+  )
+  expect_equal(
+    same_with_current,
     as.Date("2020-06-04")
   )
   time_value <- as.Date("2020-06-01")
@@ -141,7 +149,7 @@ test_that("epix_as_of_now works as expected", {
     "ca", time_value + 7, time_value + 7, 2,
   )
   expect_equal(
-    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    attr(df %>% as_epi_archive() %>% epix_as_of_latest(), "metadata")$as_of,
     as.Date("2020-06-08")
   )
   time_value <- tsibble::yearmonth(as.Date("2020-06-01") - lubridate::month(1))
@@ -151,7 +159,7 @@ test_that("epix_as_of_now works as expected", {
     "ca", time_value + lubridate::month(1), time_value + lubridate::month(1), 2,
   )
   expect_equal(
-    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    attr(df %>% as_epi_archive() %>% epix_as_of_latest(), "metadata")$as_of,
     tsibble::yearmonth("2020-06")
   )
   time_value <- 2020
@@ -161,10 +169,11 @@ test_that("epix_as_of_now works as expected", {
     "ca", time_value + 7, time_value + 7, 2,
   )
   expect_equal(
-    attr(df %>% as_epi_archive() %>% epix_as_of_current(), "metadata")$as_of,
+    attr(df %>% as_epi_archive() %>% epix_as_of_latest(), "metadata")$as_of,
     2027
   )
 })
+
 
 test_that("filter.epi_archive works as expected", {
   ea2 <- ea2_data %>%

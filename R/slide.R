@@ -339,10 +339,11 @@ epi_slide <- function(
   # through the list of reference time values within a group and then resets
   # back to 1 when switching groups.
   slide_comp_wrapper_factory <- function(kept_ref_time_values) {
+    wrapper_env <- environment()
     i <- 1L
     slide_comp_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
-      i <<- i + 1L
+      assign("i", i + 1L, envir = wrapper_env)
       .slide_comp(.x, .group_key, .ref_time_value, ...)
     }
     slide_comp_wrapper

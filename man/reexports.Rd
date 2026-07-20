@@ -34,12 +34,12 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr:filter-joins]{anti_join}}, \code{\link[dplyr]{arrange}}, \code{\link[dplyr]{cross_join}}, \code{\link[dplyr]{filter}}, \code{\link[dplyr:mutate-joins]{full_join}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr:group_map]{group_modify}}, \code{\link[dplyr:mutate-joins]{inner_join}}, \code{\link[dplyr:mutate-joins]{left_join}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr:mutate-joins]{right_join}}, \code{\link[dplyr:filter-joins]{semi_join}}, \code{\link[dplyr]{slice}}, \code{\link[dplyr:group_by]{ungroup}}}
+  \item{dplyr}{\code{\link[dplyr:anti_join]{anti_join()}}, \code{\link[dplyr:arrange]{arrange()}}, \code{\link[dplyr:cross_join]{cross_join()}}, \code{\link[dplyr:filter]{filter()}}, \code{\link[dplyr:full_join]{full_join()}}, \code{\link[dplyr:group_by]{group_by()}}, \code{\link[dplyr:group_modify]{group_modify()}}, \code{\link[dplyr:inner_join]{inner_join()}}, \code{\link[dplyr:left_join]{left_join()}}, \code{\link[dplyr:mutate]{mutate()}}, \code{\link[dplyr:relocate]{relocate()}}, \code{\link[dplyr:rename]{rename()}}, \code{\link[dplyr:right_join]{right_join()}}, \code{\link[dplyr:semi_join]{semi_join()}}, \code{\link[dplyr:slice]{slice()}}, \code{\link[dplyr:ungroup]{ungroup()}}}
 
-  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
+  \item{ggplot2}{\code{\link[ggplot2:autoplot]{autoplot()}}}
 
-  \item{tidyr}{\code{\link[tidyr]{complete}}, \code{\link[tidyr]{drop_na}}, \code{\link[tidyr]{full_seq}}, \code{\link[tidyr]{pivot_longer}}, \code{\link[tidyr]{pivot_wider}}, \code{\link[tidyr]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr:complete]{complete()}}, \code{\link[tidyr:drop_na]{drop_na()}}, \code{\link[tidyr:full_seq]{full_seq()}}, \code{\link[tidyr:pivot_longer]{pivot_longer()}}, \code{\link[tidyr:pivot_wider]{pivot_wider()}}, \code{\link[tidyr:unnest]{unnest()}}}
 
-  \item{tsibble}{\code{\link[tsibble:as-tsibble]{as_tsibble}}}
+  \item{tsibble}{\code{\link[tsibble:as_tsibble]{as_tsibble()}}}
 }}
 

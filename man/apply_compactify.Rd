@@ -23,7 +23,7 @@ would be \code{key(DT)}.}
 columns when determining whether something can be compactified away; see
 \code{\link{is_locf}}}
 
-\item{init_nas_are_locf}{bool; do we treat \link[vctrs:missing]{entirely-missing values} in the initial measurement for
+\item{init_nas_are_locf}{bool; do we treat \link[vctrs:vec_detect_missing]{entirely-missing values} in the initial measurement for
 each epikey-time as LOCF?  Ordinarily \code{FALSE}, but \code{TRUE} if
 we're trying to "invert" an \code{\link{epix_merge}}, i.e., we've just
 narrowed down the value column set and are trying to remove extra
