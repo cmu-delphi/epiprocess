@@ -20,6 +20,8 @@ Useful links:
 
 Authors:
 
+- Logan Brooks <lcbrooks+github@andrew.cmu.edu>
+
 - Nat DeFries
 
 - Daniel McDonald

@@ -71,6 +71,13 @@
   printed lag summaries now display fractional-week lags (e.g., when
   `time_type = "week"` but versions fall mid-week) in days rather than
   fractional weeks, for easier interpretation.
+- [`epix_as_of_current()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_current.md)
+  been renamed
+  [`epix_as_of_latest()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_latest.md),
+  to help express that it’s giving the latest available snapshot in an
+  archive which may or may not be “current”.
+  [`epix_as_of_current()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_current.md)
+  remains in place with a deprecation warning.
 
 ### Bug fixes
 

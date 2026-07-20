@@ -7,7 +7,3 @@ Not meant for when describing tidyselect `...`.
 ``` r
 tidyselect_arg_roxygen
 ```
-
-## Format
-
-An object of class `character` of length 1.

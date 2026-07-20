@@ -107,10 +107,15 @@ Functions operating on `epi_archive` objects.
 
   Generate a snapshot from an `epi_archive` object
 
-- [`epix_as_of_current()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_current.md)
+- [`epix_as_of_latest()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_latest.md)
   :
 
-  Get the latest snapshot from an `epi_archive` object.
+  Get the latest snapshot from an `epi_archive` object
+
+- [`epix_as_of_current()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_as_of_current.md)
+  **\[deprecated\]** :
+
+  Get the latest snapshot from an `epi_archive` object
 
 - [`epix_slide()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.md)
   : Take each requested (group and) version in an archive, run a

@@ -419,9 +419,9 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-07-17 23:16:17.427113
+#> * as_of     = 2026-07-20 16:01:10.768368
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 341 weeks
+#> * latency  = 342 weeks
 #> 
 #> # A tibble: 305 × 4
 #>   geo_value age_group time_value  rate
@@ -518,9 +518,9 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-07-17 23:16:17.427113
+#> * as_of     = 2026-07-20 16:01:10.768368
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 341 weeks
+#> * latency  = 342 weeks
 #> 
 #> # A tibble: 61 × 3
 #>   geo_value time_value rate_overall_recalc

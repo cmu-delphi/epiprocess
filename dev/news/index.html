@@ -74,6 +74,8 @@
 <code><a href="../reference/revision_analysis.html">revision_summary()</a></code> by default no longer removes revisions from non-NA values to explicit NAs, instead only dropping initial estimates of NA that were likely inserted by <code>epix_merge</code>ing with a more timely and/or more widely available signal. This behavior is customizable with the <code>compactify</code>, <code>compactify_drop_initial_nas</code>, and <code>drop_nas</code> parameters. It also runs more quickly.</li>
 <li>
 <code><a href="../reference/revision_analysis.html">revision_summary()</a></code> printed lag summaries now display fractional-week lags (e.g., when <code>time_type = "week"</code> but versions fall mid-week) in days rather than fractional weeks, for easier interpretation.</li>
+<li>
+<code><a href="../reference/epix_as_of_current.html">epix_as_of_current()</a></code> been renamed <code><a href="../reference/epix_as_of_latest.html">epix_as_of_latest()</a></code>, to help express that it’s giving the latest available snapshot in an archive which may or may not be “current”. <code><a href="../reference/epix_as_of_current.html">epix_as_of_current()</a></code> remains in place with a deprecation warning.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-12-0-9999">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-0-9999"></a></h3>

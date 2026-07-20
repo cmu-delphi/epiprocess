@@ -8,7 +8,3 @@ Helper data for
 ``` r
 time_type_unit_abbrs
 ```
-
-## Format
-
-An object of class `character` of length 3.

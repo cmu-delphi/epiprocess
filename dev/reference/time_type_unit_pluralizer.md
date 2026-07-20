@@ -8,7 +8,3 @@ used as a cli format string and may run code.
 ``` r
 time_type_unit_pluralizer
 ```
-
-## Format
-
-An object of class `character` of length 4.
