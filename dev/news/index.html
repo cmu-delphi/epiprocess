@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.12.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,9 +45,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.12.0.9999" id="epiprocess-01209999">epiprocess 0.12.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-01209999"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.13.0" id="epiprocess-0130">epiprocess 0.13.0<a class="anchor" aria-label="anchor" href="#epiprocess-0130"></a></h2>
 <div class="section level3">
-<h3 id="new-features-0-12-0-9999">New features<a class="anchor" aria-label="anchor" href="#new-features-0-12-0-9999"></a></h3>
+<h3 id="new-features-0-13-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-13-0"></a></h3>
 <ul><li>
 <code><a href="../reference/epi_df.html">as_epi_df()</a></code> and <code><a href="../reference/epi_archive.html">as_epi_archive()</a></code> now recognize <code>reference_time</code> and <code>report_time</code> columns, mapping them to <code>time_value</code> and <code>version</code> / <code>as_of</code> respectively.</li>
 <li>
@@ -64,7 +64,7 @@
 <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> now includes <code>.max_keys</code> and <code>.interactive</code> parameters. The <code>.max_keys</code> parameter helps manage large datasets by restricting the number of key combinations shown. The <code>.interactive</code> feature enables interactive plots using Plotly, which now supports <code>.facet_to_dropdown</code> to consolidate facets into a dropdown menu.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-0-12-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-12-0-9999"></a></h3>
+<h3 id="improvements-0-13-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-13-0"></a></h3>
 <ul><li>Optimized <code>epi_df</code> joins for performance and improved metadata handling (e.g., preserving class when joining with richer <code>epi_df</code> objects).</li>
 <li>Key interaction labels in <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> and <code><a href="../reference/plot_heatmap.html">plot_heatmap()</a></code> have been standardized to use <code>;</code> as a separator for improved readability.</li>
 <li>
@@ -78,7 +78,7 @@
 <code><a href="../reference/epix_as_of_current.html">epix_as_of_current()</a></code> been renamed <code><a href="../reference/epix_as_of_latest.html">epix_as_of_latest()</a></code>, to help express that it’s giving the latest available snapshot in an archive which may or may not be “current”. <code><a href="../reference/epix_as_of_current.html">epix_as_of_current()</a></code> remains in place with a deprecation warning.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-12-0-9999">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-0-9999"></a></h3>
+<h3 id="bug-fixes-0-13-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-13-0"></a></h3>
 <ul><li>
 <code>autoplot.epi_archive</code> now works properly on archives that contain a column named <code>v</code> (<a href="https://github.com/cmu-delphi/epiprocess/issues/674" class="external-link">#674</a>, thanks to <a href="https://github.com/pcollender" class="external-link">@pcollender</a> for the report).</li>
 <li>

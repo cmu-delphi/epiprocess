@@ -1,6 +1,6 @@
 # Changelog
 
-## epiprocess 0.12.0.9999
+## epiprocess 0.13.0
 
 ### New features
 

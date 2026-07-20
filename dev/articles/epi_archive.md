@@ -294,12 +294,12 @@ modeling. Merging two `epi_archive` objects together is a bit tricky
 however, since we need to handle datasets that might get revised at
 different times. The function
 [`epix_merge()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_merge.md)
-is made to smooth this out. Below we merge the working `epi_archive` of
-versioned percentage CLI from outpatient visits to another one of
-versioned COVID-19 case reporting data, which we fetch the from the
+is made to smooth this out. Below, we merge the working `epi_archive`
+for the versioned percentage CLI from outpatient visits with another
+versioned COVID-19 case reporting dataset, which we fetch from the
 [COVIDcast
-API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/),
-on the rate scale (counts per 100,000 people in the population).
+API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html), on
+the rate scale (counts per 100,000 people in the population).
 
 ``` r
 

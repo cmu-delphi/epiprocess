@@ -58,12 +58,12 @@ Source:
 
 Brooks L, DeFries N, McDonald D, Ray E, Shemetov D, Tibshirani R (2026).
 *epiprocess: Tools for basic signal processing in epidemiology*. R
-package version 0.12.0.9999, <https://github.com/cmu-delphi/epiprocess>.
+package version 0.13.0, <https://github.com/cmu-delphi/epiprocess>.
 
     @Manual{,
       title = {epiprocess: Tools for basic signal processing in epidemiology},
       author = {Logan Brooks and Nat DeFries and Daniel McDonald and Evan Ray and Dmitry Shemetov and Ryan Tibshirani},
       year = {2026},
-      note = {R package version 0.12.0.9999},
+      note = {R package version 0.13.0},
       url = {https://github.com/cmu-delphi/epiprocess},
     }

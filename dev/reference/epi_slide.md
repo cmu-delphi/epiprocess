@@ -167,7 +167,7 @@ It will be ungrouped if `.x` was ungrouped, and have the same groups as
 (Here, the value 22 was selected using
 [`epi_cor()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_cor.md)
 and averaging across `geo_value`s. See [this
-manuscript](https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1)
+manuscript](https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2)
 for some warnings & information using similar types of CFR estimators.)
 
 See
@@ -298,7 +298,7 @@ with_cfr_estimates %>%
 #> # ℹ 1 more variable: cfr_estimate_v0 <dbl>
 # (Here, the value 22 was selected using `epi_cor()` and averaging across
 # `geo_value`s. See
-# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2 for some
 # warnings & information using CFR estimators along these lines.)
 
 # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a

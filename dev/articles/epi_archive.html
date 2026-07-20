@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.12.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -343,9 +343,9 @@ such as when we grab data from multiple sources for joint analysis or
 modeling. Merging two <code>epi_archive</code> objects together is a bit
 tricky however, since we need to handle datasets that might get revised
 at different times. The function <code><a href="../reference/epix_merge.html">epix_merge()</a></code> is made to
-smooth this out. Below we merge the working <code>epi_archive</code> of
-versioned percentage CLI from outpatient visits to another one of
-versioned COVID-19 case reporting data, which we fetch the from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/" class="external-link">COVIDcast
+smooth this out. Below, we merge the working <code>epi_archive</code>
+for the versioned percentage CLI from outpatient visits with another
+versioned COVID-19 case reporting dataset, which we fetch from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html" class="external-link">COVIDcast
 API</a>, on the rate scale (counts per 100,000 people in the
 population).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
