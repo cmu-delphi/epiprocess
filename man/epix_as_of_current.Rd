@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods-epi_archive.R
 \name{epix_as_of_current}
 \alias{epix_as_of_current}
-\title{Get the latest snapshot from an \code{epi_archive} object.}
+\title{Get the latest snapshot from an \code{epi_archive} object}
 \usage{
 epix_as_of_current(x)
 }
@@ -10,8 +10,11 @@ epix_as_of_current(x)
 \item{x}{An \code{epi_archive} object}
 }
 \value{
-The latest snapshot from an \code{epi_archive} object
+The latest snapshot, in \code{epi_df} format
 }
 \description{
-The latest snapshot is the snapshot of the last known version.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}; please use \code{\link{epix_as_of_latest}} instead.
+
+The latest snapshot is an \code{epi_df} snapshot of the data, as of the
+last recorded version in \code{x}.
 }

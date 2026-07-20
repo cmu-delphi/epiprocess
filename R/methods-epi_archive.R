@@ -133,16 +133,36 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
   return(as_of_epi_df)
 }
 
-#' Get the latest snapshot from an `epi_archive` object.
+#' Get the latest snapshot from an `epi_archive` object
 #'
-#' The latest snapshot is the snapshot of the last known version.
+#' The latest snapshot is an `epi_df` snapshot of the data, as of the
+#' last recorded version in `x`.
 #'
 #' @param x An `epi_archive` object
-#' @return The latest snapshot from an `epi_archive` object
+#' @return The latest snapshot, in `epi_df` format
 #' @export
-epix_as_of_current <- function(x) {
+epix_as_of_latest <- function(x) {
   assert_class(x, "epi_archive")
   x %>% epix_as_of(.$versions_end)
+}
+
+#' Get the latest snapshot from an `epi_archive` object
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`; please use [`epix_as_of_latest`] instead.
+#'
+#' The latest snapshot is an `epi_df` snapshot of the data, as of the
+#' last recorded version in `x`.
+#'
+#' @param x An `epi_archive` object
+#' @return The latest snapshot, in `epi_df` format
+#' @export
+epix_as_of_current <- function(x) {
+  lifecycle::deprecate_warn(
+    "0.13.0", "epix_as_of_current()", "epix_as_of_latest()",
+    details = 'Future versions of `epix_as_of_current` may remove this deprecation, but change its implementation to require "current" to be sometime recent, i.e., require there to be a nontrivial recent update to the data.' # nolint: line_length_linter
+  )
+  epix_as_of_latest(x)
 }
 
 #' Set the `versions_end` attribute of an `epi_archive` object
@@ -859,26 +879,28 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'
 #' @export
 epix_slide <- function(
-    .x,
-    .f,
-    ...,
-    .before = Inf,
-    .versions = NULL,
-    .new_col_name = NULL,
-    .all_versions = FALSE) {
+  .x,
+  .f,
+  ...,
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
+) {
   UseMethod("epix_slide")
 }
 
 
 #' @export
 epix_slide.epi_archive <- function(
-    .x,
-    .f,
-    ...,
-    .before = Inf,
-    .versions = NULL,
-    .new_col_name = NULL,
-    .all_versions = FALSE) {
+  .x,
+  .f,
+  ...,
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
+) {
   # For an "ungrouped" slide, treat all rows as belonging to one big
   # group (group by 0 vars), like `dplyr::summarize`, and let the
   # resulting `grouped_epi_archive` handle the slide:
@@ -1007,7 +1029,6 @@ dplyr_col_modify.col_modify_recorder_df <- function(data, cols) {
   attr(data, "epiprocess::col_modify_recorder_df::cols") <- cols
   data
 }
-
 
 
 #' [`dplyr::filter`] for `epi_archive`s

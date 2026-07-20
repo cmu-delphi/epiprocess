@@ -64,21 +64,21 @@ dummy_ex_integerly <- dummy_ex$DT %>%
 stopifnot(dummy_ex_integerly$time_type == "integer")
 
 test_that("revision_summary works for dummy datasets", {
-  rs1 <- dummy_ex %>% revision_summary()
-  rs2 <- dummy_ex %>% revision_summary(drop_nas = FALSE)
+  rs1 <- dummy_ex %>% revision_summary(bulk_reporting_level = 1)
+  rs2 <- dummy_ex %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
   expect_snapshot(rs1)
   expect_snapshot(rs1$revision_behavior %>% print(n = 10, width = 300))
   expect_snapshot(rs2)
   expect_snapshot(rs2$revision_behavior %>% print(n = 10, width = 300))
 
   # Weekly dummy is mostly just "day" -> "week", but quick-revision summary changes:
-  rs3 <- dummy_ex_weekly %>% revision_summary(drop_nas = FALSE)
+  rs3 <- dummy_ex_weekly %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
   expect_snapshot(rs3)
   expect_snapshot(rs3$revision_behavior %>% print(n = 10, width = 300))
   # Yearmonthly has the same story. It would have been close to encountering
   # min_waiting_period-based filtering but we actually set its versions_end to
   # sometime in 2080 rather than 2022:
-  rs4 <- dummy_ex_yearmonthly %>% revision_summary(drop_nas = FALSE)
+  rs4 <- dummy_ex_yearmonthly %>% revision_summary(bulk_reporting_level = 1, drop_nas = FALSE)
   expect_snapshot(rs4)
   expect_snapshot(rs4$revision_behavior %>% print(n = 10, width = 300))
   # Integer is very much like daily. We have to provide some of the
@@ -89,6 +89,7 @@ test_that("revision_summary works for dummy datasets", {
   # something nonsensical, but we tried.
   rs5 <- dummy_ex_integerly %>%
     revision_summary(
+      bulk_reporting_level = 1,
       min_waiting_period = 60,
       drop_nas = FALSE
     )
@@ -97,8 +98,8 @@ test_that("revision_summary works for dummy datasets", {
 })
 
 test_that("tidyselect is functional", {
-  expect_no_error(quiet(revision_summary(dummy_ex, value)))
-  expect_no_error(quiet(revision_summary(dummy_ex, starts_with("val"))))
+  expect_no_error(revision_summary(dummy_ex, value))
+  expect_no_error(revision_summary(dummy_ex, starts_with("val")))
   # column order shouldn't matter
   with_later_key_col <- dummy_ex$DT %>%
     select(geo_value, time_value, value, version) %>%
@@ -184,4 +185,40 @@ test_that("revision_summary default min_waiting_period works as expected", {
       revision_summary(return_only_tibble = TRUE),
     regexp = "Unsupported time_type"
   )
+})
+
+test_that("revision_summary bulk reporting summary works as expected", {
+  expect_snapshot(
+    bind_rows(
+      tibble(geo_value = 1, time_value = 1:100, version = (100 + 9) %/% 7 * 7, value = 1:100),
+      tibble(geo_value = 1, time_value = 101:200, version = (time_value + 9) %/% 7 * 7, value = 1:100)
+    ) %>%
+      mutate(across(c(time_value, version), ~ as.Date("2020-01-01") + .x - 1)) %>%
+      as_epi_archive() %>%
+      revision_summary()
+  )
+})
+
+test_that("revision_summary works for weekly time series with daily versions", {
+  dummy_ex_weekly_daily_versions <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-15"), 1, # Wednesday
+    "ak", as.Date("2020-01-05"), as.Date("2020-01-17"), 5, # Friday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-22"), 6, # Wednesday
+    "ak", as.Date("2020-01-12"), as.Date("2020-01-23"), 7 # Thursday
+  ) %>%
+    as_epi_archive(versions_end = as.Date("2020-01-30"), compactify = FALSE)
+
+  expect_equal(dummy_ex_weekly_daily_versions$time_type, "week")
+
+  expect_no_error({
+    rs <- revision_analysis(dummy_ex_weekly_daily_versions, min_waiting_period = 0)
+  })
+
+  # Ensure the lags are converted to integer days relative to the end of each week
+
+  rb <- rs$revision_behavior
+  expect_equal(units(rb$max_lag), "days")
+  expect_equal(as.numeric(rb$min_lag), c(4, 4))
+  expect_equal(as.numeric(rb$max_lag), c(6, 5))
 })

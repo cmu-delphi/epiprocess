@@ -35,7 +35,7 @@ data-frame-type column if you provide a name for such a column (e.g., via
 You can specify the computation in one of the following ways:
 \itemize{
 \item Don't provide \code{.f}, and instead use one or more
-\code{\link[dplyr:summarise]{dplyr::summarize}}-esque \link[rlang:args_data_masking]{"data-masking"}
+\code{\link[dplyr:summarize]{dplyr::summarize}}-esque \link[rlang:args_data_masking]{"data-masking"}
 expressions in \code{...}, e.g., \code{cfr_estimate_v0 = death_rate_7d_av[[22]]/case_rate_7d_av[[1]]}. This way is sometimes more
 convenient, but also has the most computational overhead.
 \item Provide a formula in \code{.f}, e.g., \code{~ .x$death_rate_7d_av[[22]]/.x$case_rate_7d_av[[1]]}. In this formula, \code{.x}
@@ -58,7 +58,7 @@ The values of \code{g} and \code{t} are also available to data-masking expressio
 formula-based computations as \code{.group_key} and \code{.ref_time_value},
 respectively. Formula computations also let you use \code{.y} or \code{.z},
 respectively, as additional names for these same quantities (similar to
-\code{\link[dplyr:group_map]{dplyr::group_modify}}).
+\code{\link[dplyr:group_modify]{dplyr::group_modify}}).
 }}
 
 \item{.window_size}{The size of the sliding window. The accepted values
@@ -128,7 +128,7 @@ multiple columns:
 
 (Here, the value 22 was selected using \code{epi_cor()} and averaging across
 \code{geo_value}s. See
-\href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+\href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2}{this
 manuscript} for some warnings & information using similar types of CFR
 estimators.)
 
@@ -155,16 +155,16 @@ stage if necessary.
 
 \subsection{Advanced uses of \code{.f} via tidy evaluation}{
 
-If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link[rlang:dot-data]{.data}}
-and \code{\link[rlang:dot-data]{.env}}, we make some additional "pronoun"-like bindings available:
+If specifying \code{.f} via tidy evaluation, in addition to the standard \code{\link[rlang:.data]{.data}}
+and \code{\link[rlang:.env]{.env}}, we make some additional "pronoun"-like bindings available:
 \itemize{
-\item .x, which is like \code{.x} in \code{\link[dplyr:group_map]{dplyr::group_modify}}; an ordinary object
-like an \code{epi_df} rather than an rlang \link[rlang:as_data_mask]{pronoun}
+\item .x, which is like \code{.x} in \code{\link[dplyr:group_modify]{dplyr::group_modify}}; an ordinary object
+like an \code{epi_df} rather than an rlang \link[rlang:as_data_pronoun]{pronoun}
 like \code{.data}; this allows you to use additional \code{dplyr}, \code{tidyr}, and
 \code{epiprocess} operations. If you have multiple expressions in \code{...}, this
 won't let you refer to the output of the earlier expressions, but \code{.data}
 will.
-\item .group_key, which is like \code{.y} in \code{\link[dplyr:group_map]{dplyr::group_modify}}.
+\item .group_key, which is like \code{.y} in \code{\link[dplyr:group_modify]{dplyr::group_modify}}.
 \item .ref_time_value, which is the element of \code{.ref_time_values} that
 determined the time window for the current computation.
 }
@@ -183,7 +183,7 @@ with_cfr_estimates \%>\%
   print(n = 30)
 # (Here, the value 22 was selected using `epi_cor()` and averaging across
 # `geo_value`s. See
-# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+# https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2 for some
 # warnings & information using CFR estimators along these lines.)
 
 # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
@@ -253,7 +253,6 @@ cases_deaths_subset \%>\%
   ) \%>\%
   ungroup() \%>\%
   select(geo_value, time_value, slide_value)
-
 
 
 # Use the geo_value or the ref_time_value in the slide computation

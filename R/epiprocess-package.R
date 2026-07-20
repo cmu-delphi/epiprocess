@@ -16,8 +16,13 @@
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom cli pluralize
 #' @importFrom cli qty
+#' @importFrom data.table .N
+#' @importFrom data.table .SD
 #' @importFrom data.table as.data.table
+#' @importFrom data.table fifelse
 #' @importFrom data.table key
+#' @importFrom data.table setDF
+#' @importFrom data.table setDT
 #' @importFrom data.table setkeyv
 #' @importFrom dplyr arrange
 #' @importFrom dplyr grouped_df
@@ -36,16 +41,21 @@
 #' @importFrom vctrs vec_rbind
 #' @importFrom vctrs vec_recycle_common
 #' @importFrom vctrs vec_rep
+#' @importFrom vctrs vec_set_difference
 #' @importFrom vctrs vec_slice
 #' @importFrom vctrs vec_slice<-
 #' @importFrom vctrs vec_sort
+#' @importFrom vctrs vec_set_union
+#' @importFrom vctrs vec_unique
 ## usethis namespace: end
 NULL
 
 utils::globalVariables(c(
   ".", ".x", ".group_key", ".ref_time_value", "resid",
-  "fitted", ".response", "geo_value", "time_value",
-  "value", ".real", "lag", "max_value", "min_value",
-  "median_value", "spread", "rel_spread", "lag_to",
-  "lag_near_latest", "n_revisions", "min_lag", "max_lag"
+  "fitted", ".response", ".response_name", ".facets", ".colours",
+  "geo_value", "time_value", "value", "name", ".real", "lag",
+  "max_value", "min_value", "median_value", "spread",
+  "rel_spread", "lag_to", "lag_near_latest", "n_revisions",
+  "min_lag", "max_lag", ".key_interaction", "change", ".contrib",
+  ".running_count", ".VAL", "..within_latest"
 ))

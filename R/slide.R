@@ -21,7 +21,7 @@
 #'
 #' (Here, the value 22 was selected using `epi_cor()` and averaging across
 #' `geo_value`s. See
-#' \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1}{this
+#' \href{https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2}{this
 #' manuscript} for some warnings & information using similar types of CFR
 #' estimators.)
 #'
@@ -137,7 +137,7 @@
 #'   print(n = 30)
 #' # (Here, the value 22 was selected using `epi_cor()` and averaging across
 #' # `geo_value`s. See
-#' # https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v1 for some
+#' # https://www.medrxiv.org/content/10.1101/2024.12.27.24319518v2 for some
 #' # warnings & information using CFR estimators along these lines.)
 #'
 #' # In addition to the [`dplyr::mutate`]-like syntax, you can feed in a
@@ -209,7 +209,6 @@
 #'   select(geo_value, time_value, slide_value)
 #'
 #'
-#'
 #' # Use the geo_value or the ref_time_value in the slide computation
 #' cases_deaths_subset %>%
 #'   epi_slide(~ .x$geo_value[[1]], .window_size = 7)
@@ -217,9 +216,10 @@
 #' cases_deaths_subset %>%
 #'   epi_slide(~ .x$time_value[[1]], .window_size = 7)
 epi_slide <- function(
-    .x, .f, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE) {
+  .x, .f, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE
+) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(provided_args %in% c("x", "f", "ref_time_values", "new_col_name", "all_rows"))) {
@@ -339,10 +339,11 @@ epi_slide <- function(
   # through the list of reference time values within a group and then resets
   # back to 1 when switching groups.
   slide_comp_wrapper_factory <- function(kept_ref_time_values) {
+    wrapper_env <- environment()
     i <- 1L
     slide_comp_wrapper <- function(.x, .group_key, ...) {
       .ref_time_value <- kept_ref_time_values[[i]]
-      i <<- i + 1L
+      assign("i", i + 1L, envir = wrapper_env)
       .slide_comp(.x, .group_key, .ref_time_value, ...)
     }
     slide_comp_wrapper
@@ -393,10 +394,11 @@ epi_slide <- function(
 # Slide applied to one group.  See `?group_modify` for the expected structure. The dots
 # `...` forward their inputs to the function `f`.
 epi_slide_one_group <- function(
-    .data_group, .group_key,
-    ...,
-    .slide_comp_factory, .before, .after, .ref_time_values, .all_rows,
-    .new_col_name, .used_data_masking, .time_type, .date_seq_list) {
+  .data_group, .group_key,
+  ...,
+  .slide_comp_factory, .before, .after, .ref_time_values, .all_rows,
+  .new_col_name, .used_data_masking, .time_type, .date_seq_list
+) {
   available_ref_time_values <- .ref_time_values[
     .ref_time_values >= min(.data_group$time_value) & .ref_time_values <= max(.data_group$time_value)
   ]
@@ -742,10 +744,11 @@ get_before_after_from_window <- function(window_size, align, time_type) {
 #'   ) %>%
 #'   print(n = 40)
 epi_slide_opt <- function(
-    .x, .col_names, .f, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+  .x, .col_names, .f, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
+) {
   assert_class(.x, "epi_df")
 
   # Deprecated argument handling
@@ -824,6 +827,15 @@ epi_slide_opt <- function(
   # using `names(pos)` directly for robustness and in case we later want to
   # allow users to rename fields via tidyselection.
   col_names_quo <- enquo(.col_names)
+  if (rlang::quo_is_missing(col_names_quo)) {
+    cli_abort(
+      paste0(
+        "`.col_names` must be specified. Please provide the columns you want to ",
+        "slide over (e.g., `value` or `c(cases, deaths)`)."
+      ),
+      class = "epiprocess__epi_slide_opt__missing_col_names"
+    )
+  }
   pos <- eval_select(col_names_quo, data = .x, allow_rename = FALSE)
   col_names_chr <- names(.x)[pos]
 
@@ -1057,10 +1069,11 @@ epi_slide_opt <- function(
 #'
 #' @export
 epi_slide_mean <- function(
-    .x, .col_names, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+  .x, .col_names, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
+) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
@@ -1117,10 +1130,11 @@ epi_slide_mean <- function(
 #'
 #' @export
 epi_slide_sum <- function(
-    .x, .col_names, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+  .x, .col_names, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
+) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {

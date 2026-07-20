@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Logan Brooks \email{lcbrooks+github@andrew.cmu.edu}
   \item Nat DeFries
   \item Daniel McDonald
   \item Evan Ray
@@ -37,6 +38,7 @@ Other contributors:
   \item Chloe You [contributor]
   \item Quang Nguyen [contributor]
   \item David Weber \email{davidweb@andrew.cmu.edu} [contributor]
+  \item Javier Martinez-Rodriguez [contributor]
   \item Lionel Henry (Author of included rlang fragments) [contributor]
   \item Hadley Wickham (Author of included rlang fragments) [contributor]
   \item Posit (Copyright holder of included rlang fragments) [copyright holder]

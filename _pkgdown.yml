@@ -32,6 +32,7 @@ articles:
       - outliers
       - growth_rate
       - correlation
+      - advanced_plotting
 
   - title: Developer
     contents:
@@ -63,6 +64,7 @@ reference:
     desc: Constructors and information for `epi_archive` objects.
   - contents:
       - epi_archive
+      - linelist_to_archive
       - clone
       - group_by.epi_archive
 
@@ -70,6 +72,7 @@ reference:
     desc: Functions operating on `epi_archive` objects.
   - contents:
       - epix_as_of
+      - epix_as_of_latest
       - epix_as_of_current
       - epix_slide
       - revision_summary
@@ -82,6 +85,7 @@ reference:
   - title: Basic analysis and visualization
   - contents:
       - starts_with("autoplot")
+      - plot_heatmap
       - starts_with("print")
       - revision_summary
 

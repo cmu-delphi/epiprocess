@@ -166,7 +166,7 @@ unit_time_delta <- function(time_type, format = c("friendly", "fast")) {
 #'   result match the addition result for non-infinite entries.
 #'
 #' @keywords internal
-time_delta_to_n_steps <- function(time_delta, time_type) {
+time_delta_to_n_steps <- function(time_delta, time_type, require_integer = TRUE) {
   # could be S3 if we're willing to export
   if (inherits(time_delta, "difftime")) {
     output_units <- switch(time_type,
@@ -176,12 +176,12 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
     )
     units(time_delta) <- output_units # converts number to represent same duration; not just attr<-
     n_steps <- vec_data(time_delta)
-    if (!is_bare_integerish(n_steps)) {
+    if (require_integer && !is_bare_integerish(n_steps)) {
       cli_abort("`time_delta` did not appear to contain only integerish numbers
                  of steps between time values of time type {format_chr_with_quotes(time_type)}")
     }
     n_steps
-  } else if (is_bare_integerish(time_delta)) { # (allows infinite values)
+  } else if (is_bare_integerish(time_delta) || !require_integer) {
     switch(time_type,
       day = ,
       week = ,
@@ -190,7 +190,7 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
       cli_abort("Invalid or unsupported time_type {format_chr_with_quotes(time_type)}")
     )
   } else {
-    cli_abort("Invalid or unsupported kind of `time_delta`")
+    cli_abort("Invalid or unsupported kind of `time_delta` (class '{class(time_delta)[1]}')")
   }
 }
 
@@ -204,11 +204,24 @@ time_delta_to_n_steps <- function(time_delta, time_type) {
 #'   Default is `"friendly"`.
 #'
 #' @keywords internal
-n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast")) {
-  if (!is_bare_integerish(n_steps)) {
+n_steps_to_time_delta <- function(n_steps, time_type, format = c("friendly", "fast"), require_integer = TRUE) {
+  if (require_integer && !is_bare_integerish(n_steps)) {
     cli_abort("`n_steps` did not appear to be integerish (or infinite, or a mix)")
   }
-  n_steps * unit_time_delta(time_type, format)
+  res <- n_steps * unit_time_delta(time_type, format)
+  if (!require_integer && inherits(res, "difftime") && units(res) == "weeks") {
+    non_special <- n_steps[!is.infinite(n_steps) & !is.na(n_steps)]
+    if (any(abs(non_special - round(non_special)) > 1e-9)) {
+      units(res) <- "days"
+      # avoid precision issues when rounding
+      res_num <- as.numeric(res)
+      rounded <- round(res_num)
+      close_to_int <- !is.na(res_num) & !is.infinite(res_num) & (abs(res_num - rounded) < 1e-9)
+      res_num[close_to_int] <- rounded[close_to_int]
+      res <- as.difftime(res_num, units = "days")
+    }
+  }
+  res
 }
 
 #' Standardize time_deltas to a multiple of [`unit_time_delta()`]
@@ -270,8 +283,8 @@ time_type_unit_pluralizer <- c(
 #' - time deltas for yearmonths and integers don't have units attached at all
 #'
 #' @keywords internal
-format_time_delta <- function(x, time_type) {
-  n_steps <- time_delta_to_n_steps(x, time_type) # nolint: object_usage_linter
+format_time_delta <- function(x, time_type, require_integer = FALSE) {
+  n_steps <- time_delta_to_n_steps(x, time_type, require_integer) # nolint: object_usage_linter
   # time_type_unit_pluralizer[[time_type]] is a format string controlled by us
   # and/or downstream devs, so we can paste it onto our format string safely:
   pluralize(paste0("{n_steps} ", time_type_unit_pluralizer[[time_type]]))
@@ -346,8 +359,13 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
 #'   should equal `y`.
 #'
 #' @keywords internal
-time_minus_time_in_n_steps <- function(x, y, time_type) {
-  time_delta_to_n_steps(x - y, time_type)
+time_minus_time_in_n_steps <- function(x, y, time_type, require_integer = TRUE) {
+  if (inherits(x, "POSIXt") && inherits(y, "Date")) {
+    x <- as.Date(x)
+  } else if (inherits(x, "Date") && inherits(y, "POSIXt")) {
+    y <- as.Date(y)
+  }
+  time_delta_to_n_steps(x - y, time_type, require_integer = require_integer)
 }
 
 #' Advance/retreat time_values by specified number of time "steps"
@@ -367,4 +385,38 @@ time_plus_n_steps <- function(x, y, time_type) {
 #' @rdname time_plus_n_steps
 time_minus_n_steps <- function(x, y, time_type) {
   x - y * unit_time_delta(time_type, "fast")
+}
+
+#' Get `time_type` of an `epi_*` object
+#'
+#' @param x an `epi_*` object
+#'
+#' @keywords internal
+time_type <- function(x) UseMethod("time_type")
+
+#' @export
+time_type.epi_df <- function(x) attr(x, "metadata")$time_type
+
+#' @export
+time_type.epi_archive <- function(x) x$time_type
+
+# Not making a `time_type<-` as that implies validation.
+
+#' Set, without validation, the `time_type` of an `epi_*` object
+#'
+#' @param x an `epi_*` object
+#'
+#' @keywords internal
+set_time_type0 <- function(x, value) UseMethod("set_time_type0")
+
+#' @export
+set_time_type0.epi_df <- function(x, value) {
+  attr(x, "metadata")$time_type <- value
+  x
+}
+
+#' @export
+set_time_type0.epi_archive <- function(x, value) {
+  x$time_type <- value
+  x
 }

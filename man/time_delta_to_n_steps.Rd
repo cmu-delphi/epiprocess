@@ -4,7 +4,7 @@
 \alias{time_delta_to_n_steps}
 \title{Convert a time delta to a integerish number of "unit" steps between time values}
 \usage{
-time_delta_to_n_steps(time_delta, time_type)
+time_delta_to_n_steps(time_delta, time_type, require_integer = TRUE)
 }
 \arguments{
 \item{time_delta}{a vector that can be added to time values of time type

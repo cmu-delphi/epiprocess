@@ -59,7 +59,31 @@ as_tsibble.epi_df <- function(x, key, ...) {
 
 #' Base S3 methods for an `epi_df` object
 #'
-#' Print and summary functions for an `epi_df` object.
+#' The `print` and `summary` methods provide informative displays of an
+#' `epi_df` object. Both show the data's dimensions and core metadata
+#' such as `geo_type`, `time_type`, `other_keys`, and `as_of`.
+#'
+#' ### print method
+#' This method also includes a brief latency summary, representing the
+#' difference between the `as_of` date and the most recent observation
+#' found in the data.
+#'
+#' ### summary method
+#' This method provides a more detailed look at the data's structure:
+#'
+#' * The time range section reports the global minimum and maximum time
+#'   values found across all time series. It notes whether every series covers
+#'   this full span or if some start later or end earlier, providing insight
+#'   into staggered data availability across different geographic units.
+#' * The gap analysis section identifies missing data patterns by
+#'   distinguishing between missing rows (implicit gaps where time steps
+#'   are skipped) and missing values (explicit NAs within the observed
+#'   range of a series). It also reports the average number of rows per
+#'   time value to help detect potential coverage issues.
+#' * The latency section details the time difference between the most recent
+#'   observation and the `as_of` date of the `epi_df`. This breakdown is
+#'   provided per signal to highlight specific key combinations that
+#'   are lagging or entirely empty.
 #'
 #' @param x an `epi_df`
 #' @method print epi_df
@@ -79,22 +103,153 @@ print.epi_df <- function(x, ...) {
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(x)$metadata$as_of))
   # Conditional output (silent if attribute is NULL):
   cat(sprintf("* %-9s = %s\n", "decay_to_tibble", attr(x, "decay_to_tibble")))
-  cat("\n")
+  # Latency info:
+  # Note: sections below use tryCatch as a defensive programming measure.
+  if (nrow(x) != 0L) {
+    tryCatch(
+      print_latency_info(x),
+      error = function(e) NULL
+    )
+    cat("\n")
+  }
   NextMethod()
+}
+
+# Internal helper for print.epi_df — compact aggregate view
+print_latency_info <- function(x) {
+  md <- attr(x, "metadata")
+  as_of <- md$as_of
+  as_of_valid <- !is.null(as_of) && !is.na(as_of) && (length(as_of) > 0)
+  integer_time <- isTRUE(md$time_type %in% c("integer", "custom"))
+
+  keys <- key_colnames(x)
+  key_no_t <- setdiff(keys, "time_value")
+  sigs <- setdiff(names(x), keys)
+  # Exclude complex columns from signal calculations
+  sigs <- sigs[vapply(
+    x[sigs],
+    function(col) is.numeric(col) || is.logical(col),
+    logical(1)
+  )]
+  if (!as_of_valid) {
+    return(invisible(NULL))
+  }
+
+  # Get min/max non-NA time_value per (keys × signal).
+  smry_long <- epi_ts_range(x, key_no_t, sigs)
+
+  # Compute lags for each time series in natural units
+  combo_lags <- time_minus_time_in_n_steps(
+    as_of, smry_long$max_t, md$time_type,
+    # This prevents problems with latency calculations
+    require_integer = FALSE
+  )
+
+  # Check for empty time series and create message
+  empty_serie <- dplyr::case_when(
+    all(smry_long$empty) ~ "* No time series detected",
+    any(smry_long$empty) ~ "* Empty time series detected",
+    TRUE ~ ""
+  )
+
+  # Remove NA lags
+  combo_lags <- combo_lags[!is.na(combo_lags) & !smry_long$empty]
+
+  if (length(combo_lags) >= 1) {
+    # Format the lag range
+    unit_format <- if (integer_time) "" else time_type_unit_pluralizer[[md$time_type]] %||% ""
+    # For a range, we'll generally want the plural label
+    unit <- if (integer_time) "" else cli::pluralize(paste0(" {qty(2)}", unit_format))
+    lag_min <- as.integer(min(combo_lags))
+    lag_max <- as.integer(max(combo_lags))
+
+    # Create the range string
+    range_str <- if (lag_min == lag_max) {
+      sprintf("%d%s", lag_min, unit)
+    } else {
+      sprintf("%d\u2013%d%s", lag_min, lag_max, unit)
+    }
+
+    # Add hint if the lag range spread is large
+    notable_threshold <- if (isTRUE(md$time_type == "day")) 7 else 2
+    hint <- if ((lag_max - lag_min) >= notable_threshold) " (see summary() for per-signal details)" else ""
+    # Check if there are multiple signals
+    if (length(sigs) <= 1 || nrow(na.omit(x[sigs])) == 0) {
+      sent_series <- ""
+    } else {
+      sent_series <- "across all time series"
+    }
+
+    lag_msg <- sprintf("* latency %s = %s%s\n", sent_series, range_str, hint)
+  } else {
+    lag_msg <- ""
+  }
+  # Print the latency info
+  cat("Latency (time between last available observation and epi_df's as_of, by time series):\n")
+  cat(lag_msg)
+  cat(empty_serie)
+}
+
+# Min/max non-NA time_value per (epikey x signal).
+epi_ts_range <- function(x, key_no_t, sigs) {
+  smry <- x %>%
+    dplyr::ungroup()
+
+  # long format for empty sigs and all NA sigs
+  if (!(length(sigs) == 0)) {
+    smry <- smry %>%
+      tidyr::pivot_longer(dplyr::all_of(sigs),
+        names_to = "..sig",
+        values_to = "..val"
+      )
+  } else {
+    smry <- smry %>%
+      dplyr::mutate(..sig = NA, ..val = NA)
+  }
+
+  # Identify signal-specific ranges and identify non-lag gaps
+  smry %>%
+    dplyr::group_by(dplyr::pick(dplyr::all_of(c(key_no_t, "..sig")))) %>%
+    dplyr::summarize(
+      n_non_na = sum(!is.na(.data$..val)),
+      n_t = dplyr::n(),
+      empty = .data$n_non_na == 0,
+      # If empty, we take the min/max of all time_values
+      min_t = if (.data$empty) {
+        min(.data$time_value)
+      } else {
+        min(.data$time_value[!is.na(.data$..val)])
+      },
+      max_t = if (.data$empty) {
+        max(.data$time_value)
+      } else {
+        max(.data$time_value[!is.na(.data$..val)])
+      },
+      n_gap_na = sum(
+        !all(is.na(.data$..val)) & is.na(.data$..val) &
+          # The idea is to count the number of NA values that
+          # are not at the beginning or end of the time series
+          .data$time_value > .data$min_t & .data$time_value < .data$max_t
+      ),
+      .groups = "drop"
+    )
 }
 
 #' Summarize `epi_df` object
 #'
-#' Prints a variety of summary statistics about the `epi_df` object, such as
-#' the time range included and geographic coverage.
+#' @description
+#' `summary()` provides detailed statistics about the `epi_df` object, including
+#' the time range included, gap analysis, and per-signal latency. See the
+#' `print` method documentation for a comprehensive description of the output.
+#' See Details: section for what specifically is included.
 #'
 #' @param object an `epi_df`
-#' @param ... Additional arguments, for compatibility with `summary()`.
-#'   Currently unused.
+#' @param ... Additional arguments; unused in `summary()`; forwarded
+#'     to underlying base or `{dplyr}` methods in the rest.
 #'
 #' @method summary epi_df
 #' @importFrom rlang .data
-#' @importFrom stats median
+#' @importFrom stats na.omit
 #' @rdname print.epi_df
 #' @export
 summary.epi_df <- function(object, ...) {
@@ -106,17 +261,257 @@ summary.epi_df <- function(object, ...) {
   }
   cat(sprintf("* %-9s = %s\n", "as_of", attributes(object)$metadata$as_of))
   cat("----------\n")
-  cat(sprintf("* %-27s = %s\n", "min time value", min(object$time_value)))
-  cat(sprintf("* %-27s = %s\n", "max time value", max(object$time_value)))
-  cat(sprintf(
-    "* %-27s = %i\n", "average rows per time value",
-    as.integer(
-      object %>%
-        dplyr::group_by(.data$time_value) %>%
-        dplyr::summarize(num = dplyr::n()) %>%
-        dplyr::summarize(mean(.data$num))
+  summary_time_latency(object)
+}
+
+# Internal helper for summary.epi_df — orchestrates time range, gap, and latency analysis
+summary_time_latency <- function(x) {
+  if (nrow(x) == 0) {
+    return(invisible(NULL))
+  }
+
+  keys <- key_colnames(x)
+  key_no_t <- setdiff(keys, "time_value")
+  sigs <- setdiff(names(x), keys)
+  # Exclude complex columns from signal calculations
+  sigs <- sigs[vapply(
+    x[sigs],
+    function(col) is.numeric(col) || is.logical(col),
+    logical(1)
+  )]
+  md <- attr(x, "metadata")
+  as_of <- md$as_of
+  as_of_valid <- !is.null(as_of) && !is.na(as_of) && (length(as_of) > 0)
+  integer_time <- isTRUE(md$time_type %in% c("integer", "custom"))
+
+  # Per-(key combination × signal) time ranges
+  # Note: sections below use tryCatch as a defensive programming measure.
+  smry_ts <- tryCatch(epi_ts_range(x, key_no_t, sigs), error = function(e) NULL)
+
+  if (is.null(smry_ts)) {
+    return(invisible(NULL))
+  }
+
+  # Time range information
+  tryCatch(epi_df_time_range_info(x, smry_ts), error = function(e) NULL)
+
+  # Time gap information
+  tryCatch(
+    epi_df_time_gap_info(x, smry_ts, key_no_t, sigs, md),
+    error = function(e) NULL
+  )
+
+  # Latency information
+  tryCatch(
+    epi_df_latency_info(
+      x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time
+    ),
+    error = function(e) NULL
+  )
+
+  return(invisible(NULL))
+}
+
+# Internal helper for min/max time values summary
+epi_df_time_range_info <- function(x, smry_ts) {
+  cat("Time range:\n")
+  all_empty <- all(smry_ts$empty) # nolint: object_usage_linter
+  same_start <- dplyr::n_distinct(smry_ts$min_t[!smry_ts$empty]) <= 1 # nolint: object_usage_linter
+  same_end <- dplyr::n_distinct(smry_ts$max_t[!smry_ts$empty]) <= 1 # nolint: object_usage_linter
+
+  min_desc <- dplyr::case_when(
+    all_empty ~ "",
+    same_start ~ " (same for every time series)",
+    TRUE ~ " (but some time series start later)"
+  )
+  max_desc <- dplyr::case_when(
+    all_empty ~ "",
+    same_end ~ " (same for every time series)",
+    TRUE ~ " (but some time series end earlier)"
+  )
+
+  cat(sprintf("* %-27s = %s%s\n", "min time value", min(x$time_value), min_desc))
+  cat(sprintf("* %-27s = %s%s\n", "max time value", max(x$time_value), max_desc))
+}
+
+# Internal helper for gap analysis summary
+epi_df_time_gap_info <- function(x, smry_ts, key_no_t, sigs, md) {
+  # Calculate gap metrics at the key-combination level
+  smry_all_gaps <- smry_ts %>%
+    dplyr::group_by(dplyr::pick(dplyr::all_of(key_no_t))) %>%
+    dplyr::summarize(
+      n_t = dplyr::first(.data$n_t),
+      min_t = min(.data$min_t),
+      max_t = max(.data$max_t),
+      expected_n = time_minus_time_in_n_steps(.data$max_t, .data$min_t, md$time_type) + 1,
+      has_implicit = dplyr::first(.data$n_t) < .data$expected_n,
+      n_sig_imp = as.integer(.data$has_implicit) * length(sigs),
+      # Total signals with internal non-lag gaps
+      n_sig_gap = sum(.data$n_gap_na > 0),
+      .groups = "drop"
     )
-  ))
+
+  cat("Gaps:\n")
+  n_imp_keys <- sum(smry_all_gaps$n_sig_imp > 0, na.rm = TRUE)
+  n_gap_keys <- sum(smry_all_gaps$n_sig_gap > 0, na.rm = TRUE)
+
+  n_printed <- 0
+  if (n_imp_keys > 0) {
+    n_sig <- sum(smry_all_gaps$n_sig_imp)
+    sig_label <- if (n_sig == 1) "signal" else "signals"
+    cat(sprintf(
+      "* missing rows (unobserved time values in %d/%d key combinations, affecting %d %s)\n",
+      n_imp_keys, nrow(smry_all_gaps), n_sig, sig_label
+    ))
+    n_printed <- 1
+  }
+  if (n_gap_keys > 0) {
+    n_sig <- sum(smry_all_gaps$n_sig_gap)
+    sig_label <- if (n_sig == 1) "signal" else "signals"
+    cat(sprintf(
+      "* missing values (NAs within the time series in %d/%d key combinations, affecting %d %s)\n",
+      n_gap_keys, nrow(smry_all_gaps), n_sig, sig_label
+    ))
+    n_printed <- 1
+  }
+
+  if (n_printed == 0) {
+    cat(sprintf("* %-27s = none detected\n", "time gaps"))
+  }
+
+  # Average rows per time value
+  avg_rows <- nrow(x) / dplyr::n_distinct(x$time_value)
+  cat(sprintf("* %-27s = %.2f\n", "average rows per time value", avg_rows))
+}
+
+# Internal helper for latency reporting summary
+epi_df_latency_info <- function(x, smry_ts, key_no_t, sigs, md, as_of_valid, integer_time) {
+  cat("Latency (time between last available time_value and epi_df's as_of, by time series):\n")
+
+  # Check for empty time series and return message if none detected
+  if (length(sigs) == 0) {
+    cat("* No time series detected\n")
+    return(invisible(NULL))
+  }
+
+  # Determine the unit for time
+  unit_format <- if (integer_time) "" else time_type_unit_pluralizer[[md$time_type]] %||% ""
+  # Note: a space is prefixed for unit label formatting
+  unit <- if (integer_time) "" else cli::pluralize(paste0(" {qty(2)}", unit_format))
+
+  max_sigs <- 8
+  fired_reasons <- character(0)
+  as_of <- md$as_of
+
+  # Iterate over signals and print latency information
+  for (sig in head(sigs, max_sigs)) {
+    ts_sig <- smry_ts[smry_ts$..sig == sig, ]
+
+    # Check for empty time series and return message if all NA detected
+    if (all(ts_sig$empty)) {
+      cat(sprintf("* %s: all NA\n", sig))
+      next
+    }
+
+    # Range based on non-empty time series
+    ts_non_empty <- ts_sig[!ts_sig$empty, ]
+    lags <- if (as_of_valid) {
+      time_minus_time_in_n_steps(as_of, ts_non_empty$max_t, md$time_type, require_integer = FALSE)
+    } else {
+      NA_real_
+    }
+    lag_min <- as.integer(min(lags, na.rm = TRUE))
+    lag_max <- as.integer(max(lags, na.rm = TRUE))
+    om <- max(ts_non_empty$max_t, na.rm = TRUE)
+
+    # Format the lag range
+    range_str <- if (as_of_valid && !all(is.na(lags))) {
+      if (lag_min == lag_max) {
+        sprintf("latency %d%s ", lag_min, unit)
+      } else {
+        sprintf("latency %d\u2013%d%s ", lag_min, lag_max, unit)
+      }
+    } else {
+      ""
+    }
+
+    out <- sprintf("* %s: %s(max time %s)", sig, range_str, as.character(om))
+
+    # Identify empty keys for this signal
+    ts_empty <- ts_sig[ts_sig$empty, ]
+    n_empty <- nrow(ts_empty)
+    if (n_empty > 0) {
+      out <- paste0(
+        out,
+        "; empty: ",
+        format_key_combos(ts_empty[, key_no_t, drop = FALSE], max_sigs)
+      )
+    }
+
+    # Identify lagging keys for this signal
+    lagging_rows <- ts_non_empty[ts_non_empty$max_t < om, key_no_t, drop = FALSE]
+    n_lagging <- nrow(lagging_rows)
+    if (n_lagging > 0) {
+      out <- paste0(
+        out,
+        "; lagging keys: ",
+        format_key_combos(lagging_rows, max_sigs)
+      )
+    }
+
+    # Collect notable reasons
+    notable_threshold <- if (isTRUE(md$time_type == "day")) 7 else 2
+    reasons <- c()
+    if (as_of_valid && !all(is.na(lags)) && lag_max > notable_threshold) {
+      unit_pl <- cli::pluralize(paste0(" {qty(", lag_max, ")}", unit_format))
+      reasons <- c(
+        reasons,
+        sprintf("latency > %d%s", notable_threshold, unit_pl)
+      )
+    }
+    if (n_lagging > 0) reasons <- c(reasons, "lagging keys")
+    if (n_empty > 0) reasons <- c(reasons, "empty keys")
+    if (length(reasons) > 0) {
+      fired_reasons <- union(fired_reasons, reasons)
+      out <- paste0(out, " (!)")
+    }
+    cat(out, "\n", sep = "")
+  }
+
+  # Print summary for other signals if there are more than max_sigs
+  if ((n_more <- length(sigs) - max_sigs) > 0) {
+    cat(sprintf(
+      "* ... and %d other signal%s\n",
+      n_more,
+      if (n_more == 1) "" else "s"
+    ))
+  }
+
+  # Print notable latency reasons if any
+  if (length(fired_reasons) > 0) {
+    cat(sprintf(
+      "(!): notable latency (%s)\n",
+      paste(fired_reasons, collapse = "; ")
+    ))
+  }
+}
+
+# Helper to format key combinations
+# TODO: reuse function in #693
+format_key_combos <- function(df, max_n = 8) {
+  n <- nrow(df)
+  if (n == 0) {
+    return("")
+  }
+
+  # Paste across columns with "; "
+  keys_str <- apply(df, 1, paste, collapse = "; ")
+
+  if (n <= max_n) {
+    paste(keys_str, collapse = "; ")
+  } else {
+    sprintf("%d keys (e.g., %s)", n, paste(head(keys_str, 2), collapse = "; "))
+  }
 }
 
 #' Drop any `epi_df` metadata and class on a data frame
@@ -547,4 +942,156 @@ sum_groups_epi_df <- function(.x, sum_cols, group_cols = "time_value") {
     other_keys = intersect(attr(.x, "metadata")$other_keys, group_cols)
   ) %>%
     arrange_canonical()
+}
+
+#' @method left_join epi_df
+#' @export
+left_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method right_join epi_df
+#' @export
+right_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method inner_join epi_df
+#' @export
+inner_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                              ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method full_join epi_df
+#' @export
+full_join.epi_df <- function(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"),
+                             ..., keep = NULL) {
+  merge_epi_df_join(NextMethod(), x, y)
+}
+
+#' @method cross_join epi_df
+#' @export
+cross_join.epi_df <- function(x, y, ..., copy = FALSE, suffix = c(".x", ".y")) {
+  # Cross joins violates epi_df uniqueness. We force decay to tibble.
+  decay_epi_df(NextMethod())
+}
+
+# Helper to merge keys and validate result
+merge_epi_df_join <- function(res, x, y) {
+  meta <- attr(x, "metadata")
+
+  # NA checks for essential keys
+  has_na_geo <- vctrs::vec_any_missing(res$geo_value)
+  has_na_time <- vctrs::vec_any_missing(res$time_value)
+  has_na_essential <- has_na_geo || has_na_time
+
+  # If y is also an epi_df, merge its keys and check for metadata mismatches
+  if (is_epi_df(y)) {
+    y_meta <- attr(y, "metadata")
+    y_other_keys <- y_meta$other_keys
+
+    # Skip union if y has no extra keys or identical keys
+    if (length(y_other_keys) > 0L && !identical(meta$other_keys, y_other_keys)) {
+      meta$other_keys <- vctrs::vec_set_union(meta$other_keys, y_other_keys)
+    }
+
+    # Warn on metadata type mismatches
+    if (!has_na_essential) {
+      if (meta$geo_type != y_meta$geo_type) {
+        cli::cli_warn(c(
+          "Mismatched `geo_type` found in join.",
+          "i" = "x: {.val {meta$geo_type}}, y: {.val {y_meta$geo_type}}",
+          "!" = "Result will use x's `geo_type`: {.val {meta$geo_type}}."
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
+      }
+      if (meta$time_type != y_meta$time_type) {
+        cli::cli_warn(c(
+          "Mismatched `time_type` found in join.",
+          "i" = "x: {.val {meta$time_type}}, y: {.val {y_meta$time_type}}",
+          "!" = "Result will use x's `time_type`: {.val {meta$time_type}}."
+        ), class = "epiprocess__merge_epi_df_join__metadata_mismatch")
+      }
+    }
+  }
+
+  # check other_keys
+  missing_keys <- meta$other_keys[!meta$other_keys %in% names(res)]
+  if (length(missing_keys) > 0L) {
+    cli::cli_warn(c(
+      "Key column{?s} {.val {missing_keys}} {?is/are} missing from the join result.",
+      "!" = "Decaying to a `tibble`."
+    ), class = "epiprocess__merge_epi_df_join__missing_keys")
+    return(decay_epi_df(res))
+  }
+
+  # check for NAs in keys
+  # vec_any_missing on a data frame only flags fully-NA rows, so check each key column
+  has_na_other <- length(meta$other_keys) > 0L &&
+    any(vapply(res[meta$other_keys], vctrs::vec_any_missing, logical(1)))
+  if (has_na_essential || has_na_other) {
+    cli::cli_warn(c(
+      "NA values found in key columns of the join result.",
+      "i" = "This often happens when joining data with missing keys.",
+      "i" = "Consider using `inner_join` to drop missing rows.",
+      "!" = "Decaying to a `tibble`."
+    ))
+    return(decay_epi_df(res))
+  }
+
+  # Check uniqueness
+  is_unique <- check_ukey_unique(dplyr::ungroup(res), c("geo_value", meta$other_keys, "time_value"))
+
+  if (isTRUE(is_unique)) {
+    attr(res, "metadata") <- meta
+    if (!inherits(res, "epi_df")) {
+      class(res) <- c("epi_df", class(res))
+    }
+    return(res)
+  } else {
+    return(decay_epi_df(res))
+  }
+}
+
+#' @method drop_na epi_df
+#' @importFrom tidyr drop_na
+#' @export
+drop_na.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  reclass(res, attr(data, "metadata"))
+}
+
+#' @method pivot_wider epi_df
+#' @importFrom tidyr pivot_wider
+#' @export
+pivot_wider.epi_df <- function(data, ...) {
+  res <- NextMethod()
+  # Extract the 'names_from' field from the dots.
+  dots <- rlang::enquos(...)
+  names_from_enquo <- dots$names_from %||% rlang::quo(name)
+  names_from_chr <- names(tidyselect::eval_select(
+    names_from_enquo, data,
+    allow_rename = FALSE
+  ))
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- vctrs::vec_set_difference(
+    attr(template, "metadata")$other_keys, names_from_chr
+  )
+  reconstruct_light_edf(res, template)
+}
+
+#' @method pivot_longer epi_df
+#' @importFrom tidyr pivot_longer
+#' @export
+pivot_longer.epi_df <- function(data, ..., names_to = "name") {
+  res <- NextMethod()
+  # Use setdiff to filter out the special `".value"` placeholder
+  new_keys <- setdiff(names_to, ".value")
+  template <- vctrs::vec_ptype(data)
+  attr(template, "metadata")$other_keys <- unique(
+    c(attr(template, "metadata")$other_keys, new_keys)
+  )
+  reconstruct_light_edf(res, template)
 }
