@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Tools for basic signal processing in epidemiology • epiprocess</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
 <link href="deps/Source_Serif_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,7 @@
     <li><a class="dropdown-item" href="articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
@@ -74,7 +75,7 @@
 <code>epi_df</code> is for working with a snapshot of data at a single point in time</li>
 <li>
 <code>epi_archive</code> is for working with histories of data that changes over time</li>
-<li>one of the most common uses of <code>epi_archive</code> is for accurate backtesting of forecasting models, see <code>vignette("backtesting", package="epipredict")</code>
+<li>one of the most common uses of <code>epi_archive</code> is for accurate backtesting of forecasting models, see <code><a href="https://cmu-delphi.github.io/epipredict/articles/backtesting.html" class="external-link">vignette("backtesting", package="epipredict")</a></code>
 </li>
 </ul>
 </li>

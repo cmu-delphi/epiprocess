@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Working with epi_df objects and time series data • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Source_Serif_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -170,7 +171,7 @@ computed on top of the original counts:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">geo_value</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>minor_breaks <span class="op">=</span> <span class="st">"month"</span>, date_labels <span class="op">=</span> <span class="st">"%b %y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Date"</span>, y <span class="op">=</span> <span class="st">"Reported COVID-19 cases"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="epi_df_files/figure-html/unnamed-chunk-6-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epi_df_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>As we can see from the Texas plot, the state moved to weekly
 reporting of COVID-19 cases in summer of 2021.</p>
 <p>Note that without <code><a href="../reference/epi_slide.html">epi_slide()</a></code>, the computation is much
@@ -187,6 +188,8 @@ computation would be the following, which is easy to get wrong:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7sd</span></span></span>
@@ -232,6 +235,8 @@ to be able to forward to your function</li>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">slide_value</span></span></span>
@@ -258,6 +263,8 @@ references to the columns must be made with the prefix
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">slide_value</span></span></span>
@@ -295,6 +302,8 @@ cases:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_mean</span> <span style="font-weight: bold;">cases_sd</span></span></span>
@@ -325,6 +334,8 @@ over fewer than 7 observations if there is missingness
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7dav</span></span></span>
@@ -342,6 +353,8 @@ over fewer than 7 observations if there is missingness
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 810 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,026 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span> <span style="font-weight: bold;">cases_7dsum</span></span></span>
@@ -415,6 +428,11 @@ Epidata API</a>.</p>
 <span>  <span class="co"># The API currently outputs `epiweek` in Date format (the constituent Sunday);</span></span>
 <span>  <span class="co"># rename it to remind us that it's not in YYYYww format:</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>time_value <span class="op">=</span> <span class="va">epiweek</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: There was 1 warning in `mutate()`.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `age_group = case_match(...)`.</span></span>
+<span><span class="co">#&gt; Caused by warning:</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> `case_match()` was deprecated in dplyr 1.2.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `recode_values()` instead.</span></span>
 <span><span class="va">flu_data</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">location</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">age_group</span>  <span style="font-weight: bold;">rate</span></span></span>
@@ -436,7 +454,9 @@ the <code>age_group</code> column as an additional group key:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
 <span><span class="co">#&gt; * other_keys = age_group</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:49:56.017082</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:18.738343</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency  = 342 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">age_group</span> <span style="font-weight: bold;">time_value</span>  <span style="font-weight: bold;">rate</span></span></span>
@@ -520,7 +540,9 @@ rate.</p>
 <span><span class="co">#&gt; An `epi_df` object, 61 x 3 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:49:56.017082</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:18.738343</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency  = 342 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 61 × 3</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">rate_overall_recalc</span></span></span>
@@ -578,6 +600,8 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency  = 1475 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 3</span></span></span>
 <span><span class="co">#&gt;    <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span></span></span>
@@ -608,6 +632,8 @@ the dataset <code>edf</code> from above, but modify it slightly.</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency  = 1475 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 3</span></span></span>
 <span><span class="co">#&gt;    <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases</span></span></span>
@@ -832,7 +858,7 @@ provide useful summaries, in slightly different formats.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"County"</span>, y <span class="op">=</span> <span class="st">"Date"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="epi_df_files/figure-html/unnamed-chunk-29-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epi_df_files/figure-html/unnamed-chunk-29-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>Using the <code><a href="https://tsibble.tidyverts.org/reference/fill_gaps.html" class="external-link">fill_gaps()</a></code> function from
 <code>tsibble</code>, we can replace all gaps by an explicit value. The
 default is <code>NA</code>, but in the current case, where missingness
@@ -902,7 +928,6 @@ MA around July 1, 2021.</p>
 <span><span class="co">#&gt; * geo_type  = custom</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 variables: </span><span style="color: #949494; font-weight: bold;">geo_value</span><span style="color: #949494;"> &lt;chr&gt;, </span><span style="color: #949494; font-weight: bold;">time_value</span><span style="color: #949494;"> &lt;date&gt;, </span><span style="color: #949494; font-weight: bold;">cases</span><span style="color: #949494;"> &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   </span><span style="color: #949494; font-weight: bold;">cases_7dav</span><span style="color: #949494;"> &lt;dbl&gt;</span></span></span>
@@ -921,7 +946,6 @@ MA around July 1, 2021.</p>
 <span><span class="co">#&gt; * geo_type  = custom</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2024-03-20</span></span>
-<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 variables: </span><span style="color: #949494; font-weight: bold;">geo_value</span><span style="color: #949494;"> &lt;chr&gt;, </span><span style="color: #949494; font-weight: bold;">time_value</span><span style="color: #949494;"> &lt;date&gt;, </span><span style="color: #949494; font-weight: bold;">cases</span><span style="color: #949494;"> &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   </span><span style="color: #949494; font-weight: bold;">cases_7dav</span><span style="color: #949494;"> &lt;dbl&gt;</span></span></span></code></pre></div>

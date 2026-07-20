@@ -1,0 +1,406 @@
+# epiprocess
+
+The [epiprocess](https://github.com/cmu-delphi/epiprocess) package works
+with epidemiological time series data and provides tools to manage,
+analyze, and process the data in preparation for modeling. It is
+designed to work in tandem with
+[epipredict](https://cmu-delphi.github.io/epipredict/), which provides
+pre-built epiforecasting models and as well as tools to build custom
+models. Both packages are designed to lower the barrier to entry and
+implementation cost for epidemiological time series analysis and
+forecasting.
+
+[epiprocess](https://github.com/cmu-delphi/epiprocess) contains:
+
+- [`epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/epi_df.md)
+  and
+  [`epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/epi_archive.md),
+  two data frame classes (that work like a
+  [tibble](https://tibble.tidyverse.org/) with
+  [dplyr](https://dplyr.tidyverse.org) verbs) for working with
+  epidemiological time series data
+  - `epi_df` is for working with a snapshot of data at a single point in
+    time
+  - `epi_archive` is for working with histories of data that changes
+    over time
+  - one of the most common uses of `epi_archive` is for accurate
+    backtesting of forecasting models, see
+    [`vignette("backtesting", package="epipredict")`](https://cmu-delphi.github.io/epipredict/articles/backtesting.html)
+- signal processing tools building on these data structures such as
+  - [`epi_slide()`](https://cmu-delphi.github.io/epiprocess/reference/epi_slide.md)
+    for sliding window operations (aids with feature creation)
+  - [`epix_slide()`](https://cmu-delphi.github.io/epiprocess/reference/epix_slide.md)
+    for sliding window operations on archives (aids with backtesting)
+  - [`growth_rate()`](https://cmu-delphi.github.io/epiprocess/reference/growth_rate.md)
+    for computing growth rates
+  - [`detect_outlr()`](https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.md)
+    for outlier detection
+  - [`epi_cor()`](https://cmu-delphi.github.io/epiprocess/reference/epi_cor.md)
+    for computing correlations
+
+If you are new to this set of tools, you may be interested learning
+through a book format: [Introduction to Epidemiological
+Forecasting](https://cmu-delphi.github.io/delphi-tooling-book/).
+
+You may also be interested in:
+
+- [epidatr](https://cmu-delphi.github.io/epidatr/), for accessing wide
+  range of epidemiological data sets, including COVID-19 data, flu data,
+  and more.
+- [rtestim](https://github.com/dajmcdon/rtestim), a package for
+  estimating the time-varying reproduction number of an epidemic.
+
+This package is provided by the [Delphi group](https://delphi.cmu.edu/)
+at Carnegie Mellon University.
+
+## Installation
+
+To install:
+
+``` r
+
+# Stable version
+pak::pkg_install("cmu-delphi/epiprocess@main")
+
+# Dev version
+pak::pkg_install("cmu-delphi/epiprocess@dev")
+```
+
+The package is not yet on CRAN.
+
+## Usage
+
+Once `epiprocess` and `epidatr` are installed, you can use the following
+code to get started:
+
+``` r
+
+library(epiprocess)
+library(epidatr)
+library(dplyr)
+library(magrittr)
+```
+
+Get COVID-19 confirmed cumulative case data from JHU CSSE for
+California, Florida, New York, and Texas, from March 1, 2020 to January
+31, 2022
+
+``` r
+
+df <- pub_covidcast(
+  source = "jhu-csse",
+  signals = "confirmed_cumulative_num",
+  geo_type = "state",
+  time_type = "day",
+  geo_values = "ca,fl,ny,tx",
+  time_values = epirange(20200301, 20220131),
+  as_of = as.Date("2024-01-01")
+) %>%
+  select(geo_value, time_value, cases_cumulative = value)
+df
+#> # A tibble: 2,808 × 3
+#>   geo_value time_value cases_cumulative
+#>   <chr>     <date>                <dbl>
+#> 1 ca        2020-03-01               19
+#> 2 fl        2020-03-01                0
+#> 3 ny        2020-03-01                0
+#> 4 tx        2020-03-01                0
+#> 5 ca        2020-03-02               23
+#> 6 fl        2020-03-02                1
+#> # ℹ 2,802 more rows
+```
+
+Convert the data to an `epi_df` object and sort by `geo_value` and
+`time_value`. You can work with an `epi_df` like you can with a
+[tibble](https://tibble.tidyverse.org/) by using
+[dplyr](https://dplyr.tidyverse.org) verbs.
+
+``` r
+
+edf <- df %>%
+  as_epi_df(as_of = as.Date("2024-01-01")) %>%
+  arrange_canonical() %>%
+  group_by(geo_value) %>%
+  mutate(cases_daily = cases_cumulative - lag(cases_cumulative, default = 0)) %>%
+  ungroup()
+edf
+#> An `epi_df` object, 2,808 x 4 with metadata:
+#> * geo_type  = state
+#> * time_type = day
+#> * as_of     = 2024-01-01
+#> 
+#> # A tibble: 2,808 × 4
+#>   geo_value time_value cases_cumulative cases_daily
+#>   <chr>     <date>                <dbl>       <dbl>
+#> 1 ca        2020-03-01               19          19
+#> 2 ca        2020-03-02               23           4
+#> 3 ca        2020-03-03               29           6
+#> 4 ca        2020-03-04               40          11
+#> 5 ca        2020-03-05               50          10
+#> 6 ca        2020-03-06               68          18
+#> # ℹ 2,802 more rows
+```
+
+Compute the 7 day moving average of the confirmed daily cases for each
+`geo_value`
+
+``` r
+
+edf <- edf %>%
+  epi_slide_mean(cases_daily, .window_size = 7, na.rm = TRUE, .prefix = "smoothed_")
+edf
+#> An `epi_df` object, 2,808 x 5 with metadata:
+#> * geo_type  = state
+#> * time_type = day
+#> * as_of     = 2024-01-01
+#> 
+#> # A tibble: 2,808 × 5
+#>   geo_value time_value cases_cumulative cases_daily smoothed_cases_daily
+#>   <chr>     <date>                <dbl>       <dbl>                <dbl>
+#> 1 ca        2020-03-01               19          19                19   
+#> 2 ca        2020-03-02               23           4                11.5 
+#> 3 ca        2020-03-03               29           6                 9.67
+#> 4 ca        2020-03-04               40          11                10   
+#> 5 ca        2020-03-05               50          10                10   
+#> 6 ca        2020-03-06               68          18                11.3 
+#> # ℹ 2,802 more rows
+```
+
+Autoplot the confirmed daily cases for each `geo_value`
+
+``` r
+
+edf %>%
+  autoplot(smoothed_cases_daily)
+```
+
+![](reference/figures/README-unnamed-chunk-7-1.svg)
+
+# Package index
+
+## `epi_df` basics
+
+Constructors and information for `epi_df` objects.
+
+- [`as_epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/epi_df.md)
+  [`is_epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/epi_df.md)
+  [`new_epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/epi_df.md)
+  :
+
+  Test for `epi_df` format
+
+- [`group_epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/group_epi_df.md)
+  :
+
+  Group an `epi_df` object by default keys
+
+## `epi_df` manipulation
+
+Functions operating on `epi_df` objects.
+
+- [`complete(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/complete.epi_df.md)
+  :
+
+  "Complete" an `epi_df`, adding missing rows and/or replacing `NA`s
+
+- [`epi_slide()`](https://cmu-delphi.github.io/epiprocess/reference/epi_slide.md)
+  :
+
+  More general form of `epi_slide_opt` for rolling/running computations
+
+- [`epi_slide_opt()`](https://cmu-delphi.github.io/epiprocess/reference/epi_slide_opt.md)
+  [`epi_slide_mean()`](https://cmu-delphi.github.io/epiprocess/reference/epi_slide_opt.md)
+  [`epi_slide_sum()`](https://cmu-delphi.github.io/epiprocess/reference/epi_slide_opt.md)
+  : Calculate rolling or running means, sums, etc., or custom
+  calculations
+
+- [`sum_groups_epi_df()`](https://cmu-delphi.github.io/epiprocess/reference/sum_groups_epi_df.md)
+  :
+
+  Aggregate an `epi_df` object
+
+- [`epi_cor()`](https://cmu-delphi.github.io/epiprocess/reference/epi_cor.md)
+  :
+
+  Compute correlations between variables in an `epi_df` object
+
+- [`detect_outlr()`](https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.md)
+  [`detect_outlr_rm()`](https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.md)
+  [`detect_outlr_stl()`](https://cmu-delphi.github.io/epiprocess/reference/detect_outlr.md)
+  : Detect outliers
+
+- [`growth_rate()`](https://cmu-delphi.github.io/epiprocess/reference/growth_rate.md)
+  : Estimate growth rate
+
+- [`growth_rate_params()`](https://cmu-delphi.github.io/epiprocess/reference/growth_rate_params.md)
+  : Optional parameters for growth rate methods
+
+- [`as_tibble(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/as_tibble.epi_df.md)
+  : Convert to tibble
+
+- [`as_tsibble(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/as_tsibble.epi_df.md)
+  : Convert to tsibble format
+
+## `epi_archive` basics
+
+Constructors and information for `epi_archive` objects.
+
+- [`as_epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/epi_archive.md)
+  [`is_epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/epi_archive.md)
+  [`new_epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/epi_archive.md)
+  [`validate_epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/epi_archive.md)
+  :
+
+  `as_epi_archive` converts a data frame, data table, or tibble into an
+  `epi_archive` object.
+
+- [`linelist_to_archive()`](https://cmu-delphi.github.io/epiprocess/reference/linelist_to_archive.md)
+  :
+
+  Convert a line list to an `epi_archive` object
+
+- [`clone()`](https://cmu-delphi.github.io/epiprocess/reference/clone.md)
+  :
+
+  Clone an `epi_archive` object.
+
+- [`group_by(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`group_by(`*`<grouped_epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`group_by_drop_default(`*`<grouped_epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`group_vars(`*`<grouped_epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`groups(`*`<grouped_epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`ungroup(`*`<grouped_epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  [`is_grouped_epi_archive()`](https://cmu-delphi.github.io/epiprocess/reference/group_by.epi_archive.md)
+  :
+
+  `group_by` and related methods for `epi_archive`,
+  `grouped_epi_archive`
+
+## `epi_archive` manipulation
+
+Functions operating on `epi_archive` objects.
+
+- [`epix_as_of()`](https://cmu-delphi.github.io/epiprocess/reference/epix_as_of.md)
+  :
+
+  Generate a snapshot from an `epi_archive` object
+
+- [`epix_as_of_latest()`](https://cmu-delphi.github.io/epiprocess/reference/epix_as_of_latest.md)
+  :
+
+  Get the latest snapshot from an `epi_archive` object
+
+- [`epix_as_of_current()`](https://cmu-delphi.github.io/epiprocess/reference/epix_as_of_current.md)
+  **\[deprecated\]** :
+
+  Get the latest snapshot from an `epi_archive` object
+
+- [`epix_slide()`](https://cmu-delphi.github.io/epiprocess/reference/epix_slide.md)
+  : Take each requested (group and) version in an archive, run a
+  computation (e.g., forecast)
+
+- [`revision_analysis()`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  [`print(`*`<revision_analysis>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  : A function to describe revision behavior for an archive.
+
+- [`epix_merge()`](https://cmu-delphi.github.io/epiprocess/reference/epix_merge.md)
+  :
+
+  Merge two `epi_archive` objects
+
+- [`filter(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/filter.epi_archive.md)
+  :
+
+  [`dplyr::filter`](https://dplyr.tidyverse.org/reference/filter.html)
+  for `epi_archive`s
+
+- [`epix_fill_through_version()`](https://cmu-delphi.github.io/epiprocess/reference/epix_fill_through_version.md)
+  :
+
+  Fill `epi_archive` unobserved history
+
+- [`epix_truncate_versions_after()`](https://cmu-delphi.github.io/epiprocess/reference/epix_truncate_versions_after.md)
+  :
+
+  Filter an `epi_archive` object to keep only older versions
+
+- [`set_versions_end()`](https://cmu-delphi.github.io/epiprocess/reference/set_versions_end.md)
+  :
+
+  Set the `versions_end` attribute of an `epi_archive` object
+
+## Basic analysis and visualization
+
+- [`autoplot(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/autoplot-epi.md)
+  [`autoplot(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/autoplot-epi.md)
+  [`plot(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/autoplot-epi.md)
+  [`plot(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/autoplot-epi.md)
+  : Automatically plot an epi_df or epi_archive
+
+- [`plot_heatmap()`](https://cmu-delphi.github.io/epiprocess/reference/plot_heatmap.md)
+  : Plot a heatmap for an epi_df
+
+- [`print(`*`<epi_archive>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_archive.md)
+  :
+
+  Print information about an `epi_archive` object
+
+- [`print(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  [`summary(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  [`group_by(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  [`ungroup(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  [`group_modify(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  [`unnest(`*`<epi_df>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/print.epi_df.md)
+  :
+
+  Base S3 methods for an `epi_df` object
+
+- [`revision_analysis()`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  [`print(`*`<revision_analysis>`*`)`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  [`revision_summary()`](https://cmu-delphi.github.io/epiprocess/reference/revision_analysis.md)
+  : A function to describe revision behavior for an archive.
+
+## Example data
+
+- [`cases_deaths_subset`](https://cmu-delphi.github.io/epidatasets/reference/cases_deaths_subset.html)
+  : Subset of JHU daily state COVID-19 cases and deaths from 6 states
+  (from epidatasets)
+- [`archive_cases_dv_subset`](https://cmu-delphi.github.io/epidatasets/reference/archive_cases_dv_subset.html)
+  : Subset of daily COVID-19 doctor visits and cases from 6 states in
+  archive format (from epidatasets)
+- [`covid_incidence_county_subset`](https://cmu-delphi.github.io/epidatasets/reference/covid_incidence_county_subset.html)
+  : Subset of JHU daily COVID-19 cases from counties in Massachusetts
+  and Vermont (from epidatasets)
+- [`covid_incidence_outliers`](https://cmu-delphi.github.io/epidatasets/reference/covid_incidence_outliers.html)
+  : Subset of JHU daily COVID-19 cases from New Jersey and Florida (from
+  epidatasets)
+- [`covid_case_death_rates_extended`](https://cmu-delphi.github.io/epidatasets/reference/covid_case_death_rates_extended.html)
+  : JHU daily COVID-19 cases and deaths rates from all states (from
+  epidatasets)
+
+# Articles
+
+### Using the package
+
+Basic usage and examples.
+
+- [Get started with
+  epiprocess](https://cmu-delphi.github.io/epiprocess/articles/epiprocess.md):
+- [Working with epi_df objects and time series
+  data](https://cmu-delphi.github.io/epiprocess/articles/epi_df.md):
+- [Working with epi_archive objects and data
+  revisions](https://cmu-delphi.github.io/epiprocess/articles/epi_archive.md):
+- [Detect and correct outliers in
+  signals](https://cmu-delphi.github.io/epiprocess/articles/outliers.md):
+- [Estimate growth rates in
+  signals](https://cmu-delphi.github.io/epiprocess/articles/growth_rate.md):
+- [Correlate signals across locations and
+  time](https://cmu-delphi.github.io/epiprocess/articles/correlation.md):
+- [Advanced Plotting with
+  epiprocess](https://cmu-delphi.github.io/epiprocess/articles/advanced_plotting.md):
+
+### Developer
+
+- [Compactify to remove redundant archive
+  data](https://cmu-delphi.github.io/epiprocess/articles/compactify.md):

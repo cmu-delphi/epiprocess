@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Get started with epiprocess • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Source_Serif_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -135,7 +136,9 @@ follows:</p>
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 4 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:50:27.880165</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:46.929805</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 1631 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -156,7 +159,7 @@ wrapper to <code>ggplot2</code>).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">edf</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">cases_cumulative</span><span class="op">)</span></span></code></pre></div>
-<p><img src="epiprocess_files/figure-html/unnamed-chunk-5-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epiprocess_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>We can compute the 7 day moving average of the confirmed daily cases
 for each <code>geo_value</code> by using the
 <code><a href="../reference/epi_slide_opt.html">epi_slide_mean()</a></code> function. For a more in-depth guide to
@@ -168,7 +171,9 @@ sliding, see <code><a href="../articles/epi_df.html">vignette("epi_df")</a></cod
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:50:27.880165</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:46.929805</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 1631 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -191,7 +196,9 @@ see <code><a href="../articles/growth_rate.html">vignette("growth_rate")</a></co
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:50:27.880165</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:46.929805</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 1631–1632 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Groups:   geo_value [4]</span></span></span>
@@ -215,7 +222,9 @@ see <code><a href="../articles/outliers.html">vignette("outliers")</a></code>.</
 <span><span class="co">#&gt; An `epi_df` object, 2,808 x 5 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
-<span><span class="co">#&gt; * as_of     = 2025-06-05 22:50:27.880165</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-07-20 16:55:46.929805</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency across all time series = 1631 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,808 × 5</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">cases_cumulative</span> <span style="font-weight: bold;">cases_daily</span> <span style="font-weight: bold;">outlier_info$rm_lower</span></span></span>
@@ -300,10 +309,9 @@ objects, though the interface is a bit different.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">issue</span>, percent_cli <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">dv</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-26</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-06 / 2021-11-29</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-11-29</span></span>
+<pre><code><span><span class="co">#&gt; An `epi_archive` object, with:</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Time range:    2020-06-01 -- 2021-11-26 (times are days)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Version range: 2020-06-06 -- 2021-11-29</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> A preview of the table (117124 rows x 4 columns):</span></span>
 <span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">#&gt;         geo_value time_value    version percent_cli</span></span>
@@ -321,6 +329,15 @@ objects, though the interface is a bit different.</p>
 <span><span class="co">#&gt; 117124:        tx 2021-11-26 2021-11-29    1.858596</span></span></code></pre>
 <p>See <code><a href="../articles/epi_archive.html">vignette("epi_archive")</a></code> for a more in-depth guide to
 <code>epi_archive</code> objects.</p>
+</div>
+<div class="section level2">
+<h2 id="advanced-plotting">Advanced Plotting<a class="anchor" aria-label="anchor" href="#advanced-plotting"></a>
+</h2>
+<p>The <a href="https://github.com/cmu-delphi/epiprocess" class="external-link">epiprocess</a> package provides advanced visualization
+capabilities for both <code>epi_df</code> and <code>epi_archive</code>
+objects, including interactive plotting and multi-variable heatmaps. For
+a detailed overview and examples, see
+<code><a href="../articles/advanced_plotting.html">vignette("advanced_plotting")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data-attribution">Data attribution<a class="anchor" aria-label="anchor" href="#data-attribution"></a>

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Working with epi_archive objects and data revisions • epiprocess</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Source_Serif_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
     <li><a class="dropdown-item" href="../articles/outliers.html">Detect and correct outliers in signals</a></li>
     <li><a class="dropdown-item" href="../articles/growth_rate.html">Estimate growth rates in signals</a></li>
     <li><a class="dropdown-item" href="../articles/correlation.html">Correlate signals across locations and time</a></li>
+    <li><a class="dropdown-item" href="../articles/advanced_plotting.html">Advanced Plotting with epiprocess</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -156,10 +157,9 @@ format.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">geo_value</span>, <span class="va">time_value</span>, <span class="va">version</span>, <span class="va">percent_cli</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/epi_archive.html">as_epi_archive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">dv_archive</span></span>
-<span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span></span>
+<span><span class="co">#&gt; An `epi_archive` object, with:</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Time range:    2020-06-01 -- 2021-11-30 (times are days)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Version range: 2020-06-02 -- 2021-12-01</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> A preview of the table (119316 rows x 4 columns):</span></span>
 <span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">#&gt;         geo_value time_value    version percent_cli</span></span>
@@ -192,6 +192,8 @@ of the signal variables as of a given version.</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = day</span></span>
 <span><span class="co">#&gt; * as_of     = 2021-06-01</span></span>
+<span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
+<span><span class="co">#&gt; * latency  = 3 days</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1,460 × 3</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">percent_cli</span></span></span>
@@ -243,7 +245,7 @@ dotted vertical lines.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time_value</span>, y <span class="op">=</span> <span class="va">percent_cli</span><span class="op">)</span>,</span>
 <span>    inherit.aes <span class="op">=</span> <span class="cn">FALSE</span>, color <span class="op">=</span> <span class="st">"black"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="epi_archive_files/figure-html/unnamed-chunk-6-1.png" width="90%" style="display: block; margin: auto;"></p>
+<p><img src="epi_archive_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
 <p>We can see some interesting and highly nontrivial revision behavior:
 at some points in time the provisional data snapshots grossly
 underestimate the latest curve (look in particular at Florida close to
@@ -265,37 +267,43 @@ summary. Here is an a sample of the output:</p>
 <code class="sourceCode R"><span><span class="va">revision_details</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/revision_analysis.html">revision_summary</a></span><span class="op">(</span><span class="va">dv_archive</span><span class="op">)</span></span>
 <span><span class="va">revision_details</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">An epi_archive spanning </span><span style="color: #0000BB; font-weight: bold;">2020-06-01</span><span style="font-weight: bold;"> to </span><span style="color: #0000BB; font-weight: bold;">2021-11-30</span><span style="font-weight: bold;">.</span> ──</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Revision analysis for archive spanning time values </span><span style="color: #0000BB; font-weight: bold;">2020-06-01</span><span style="font-weight: bold;"> to </span><span style="color: #0000BB; font-weight: bold;">2021-11-30</span><span style="font-weight: bold;">.</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Min lag (time to first version):</span></span>
+<span><span class="co">#&gt; ── Across epi_key + versions that add new time values:</span></span>
+<span><span class="co">#&gt; Freshest new time value's lag/latency:</span></span>
+<span><span class="co">#&gt;      min median     mean    max</span></span>
+<span><span class="co">#&gt;   3 days 3 days 3.1 days 4 days</span></span>
+<span><span class="co">#&gt; Farthest-back new time value's lag/latency:</span></span>
 <span><span class="co">#&gt;      min median     mean     max</span></span>
-<span><span class="co">#&gt;   3 days 3 days 3.5 days 12 days</span></span>
+<span><span class="co">#&gt;   3 days 3 days 3.3 days 12 days</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Fraction of epi_key + time_values with</span></span>
-<span><span class="co">#&gt; No revisions:</span></span>
-<span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
+<span><span class="co">#&gt; ── Across epi_key + time_value + versions: </span></span>
+<span><span class="co">#&gt; Fraction of all versions that are `NA`:• 0 out of 112,360 (0%)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Quick revisions (last revision within 3 days of the `time_value`):</span></span>
-<span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
+<span><span class="co">#&gt; ── Bulk reporting adding initial observations for older epikey + time values: </span></span>
+<span><span class="co">#&gt; Initial lags above 5 days were counted as bulk reporting.Fraction of epi_key + time_values initially added by bulk reporting:• 116 out of 1,956 (5.93%)</span></span>
+<span><span class="co">#&gt; Versions containing bulk reporting: 10• (2020-08-03, 2020-08-16, 2020-08-23, 2020-09-25, 2021-02-22, 2021-04-15,</span></span>
+<span><span class="co">#&gt; 2021-07-24, 2021-08-24, 2021-09-23, and 2021-09-30)</span></span>
+<span><span class="co">#&gt; Versions adding epikey + time values but no bulk reporting: 400Revision-only versions: 45</span></span>
+<span><span class="co">#&gt; ── Remaining information is for non-bulk-reported epikey + time values</span></span>
+<span><span class="co">#&gt;    with semi-stable versions past the waiting period available. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Few revisions (At most <span style="color: #0000BB;">3</span> revisions for that `time_value`):</span></span>
-<span><span class="co">#&gt; • 0 out of 1,956 (0%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Fraction of epi_key + time_values with </span></span>
+<span><span class="co">#&gt; No revisions:• 0 out of 1,840 (0%)</span></span>
+<span><span class="co">#&gt; Quick revisions (last revision within 3 days of the `time_value`):• 0 out of 1,840 (0%)</span></span>
+<span><span class="co">#&gt; Few revisions (At most <span style="color: #0000BB;">3</span> revisions for that `time_value`):• 0 out of 1,840 (0%)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Fraction of revised epi_key + time_values which have: </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Less than <span style="color: #0000BB;">0.1</span> spread in relative value:</span></span>
-<span><span class="co">#&gt; • 91 out of 1,956 (4.65%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Spread of more than <span style="color: #0000BB;">2.221</span> in actual value (when revised):</span></span>
-<span><span class="co">#&gt; • 671 out of 1,956 (34.3%)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Less than <span style="color: #0000BB;">0.1</span> spread in relative value:• 66 out of 1,840 (3.59%)</span></span>
+<span><span class="co">#&gt; Spread of more than <span style="color: #0000BB;">2.221</span> in actual value (when revised):• 658 out of 1,840 (35.76%)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Days until within <span style="color: #0000BB;">20</span>% of the latest value:</span></span>
 <span><span class="co">#&gt;      min median     mean     max</span></span>
-<span><span class="co">#&gt;   3 days 5 days 9.1 days 67 days</span></span></code></pre></div>
+<span><span class="co">#&gt;   3 days 5 days 8.9 days 67 days</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Days until at the latest lag:</span></span>
+<span><span class="co">#&gt;       min  median      mean     max</span></span>
+<span><span class="co">#&gt;   58 days 73 days 70.7 days 74 days</span></span></code></pre></div>
 <p>We can see from the output that, as mentioned above, this data set
 has a lot of revisions: there are no keys that have no revision at all
 and 34% of the keys change by 10% or more when revised.</p>
@@ -316,10 +324,10 @@ tibble. Here we collect a number of statistics for each state:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">n_rev</span> <span style="font-weight: bold;">min_lag</span> <span style="font-weight: bold;">max_lag</span> <span style="font-weight: bold;">spread</span> <span style="font-weight: bold;">rel_spread</span> <span style="font-weight: bold;">lag_near_latest</span></span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;drtn&gt;</span>         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca         56.4 3 days  74 days   2.53      0.304 11.278119 days </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> fl         56.4 3 days  74 days   2.29      0.280 10.830266 days </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ny         56.4 3 days  74 days   1.98      0.206  6.977505 days </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> tx         56.4 3 days  74 days   1.63      0.218  7.398773 days</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> ca         57.0 3 days  74 days   2.60      0.307 11.347826 days </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> fl         57   3 days  74 days   2.32      0.282 10.280435 days </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> ny         57   3 days  74 days   2.05      0.208  6.600000 days </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> tx         57.0 3 days  74 days   1.67      0.221  7.280435 days</span></span></code></pre></div>
 <p>Most of the states have similar stats on most of these features,
 except for the <code>time_near_latest</code> stat, which is the amount
 of time that it takes for the revisions to converge to within 20% of the
@@ -334,9 +342,9 @@ such as when we grab data from multiple sources for joint analysis or
 modeling. Merging two <code>epi_archive</code> objects together is a bit
 tricky however, since we need to handle datasets that might get revised
 at different times. The function <code><a href="../reference/epix_merge.html">epix_merge()</a></code> is made to
-smooth this out. Below we merge the working <code>epi_archive</code> of
-versioned percentage CLI from outpatient visits to another one of
-versioned COVID-19 case reporting data, which we fetch the from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html/" class="external-link">COVIDcast
+smooth this out. Below, we merge the working <code>epi_archive</code>
+for the versioned percentage CLI from outpatient visits with another
+versioned COVID-19 case reporting dataset, which we fetch from the <a href="https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html" class="external-link">COVIDcast
 API</a>, on the rate scale (counts per 100,000 people in the
 population).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -356,10 +364,9 @@ population).</p>
 <span></span>
 <span><span class="va">dv_cases_archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/epix_merge.html">epix_merge</a></span><span class="op">(</span><span class="va">dv_archive</span>, <span class="va">y</span>, sync <span class="op">=</span> <span class="st">"locf"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">dv_cases_archive</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; → An `epi_archive` object, with metadata:</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Min/max time values: 2020-06-01 / 2021-11-30</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> First/last version with update: 2020-06-02 / 2021-12-01</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Versions end: 2021-12-01</span></span>
+<pre><code><span><span class="co">#&gt; An `epi_archive` object, with:</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Time range:    2020-06-01 -- 2021-11-30 (times are days)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Version range: 2020-06-02 -- 2021-12-01</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> A preview of the table (129638 rows x 5 columns):</span></span>
 <span><span class="co">#&gt; Key: &lt;geo_value, time_value, version&gt;</span></span>
 <span><span class="co">#&gt;         geo_value time_value    version percent_cli case_rate_7d_av</span></span>
