@@ -3,7 +3,7 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
-# epiprocess 0.12.0.9999
+# epiprocess 0.13.0
 
 ## New features
 - `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
