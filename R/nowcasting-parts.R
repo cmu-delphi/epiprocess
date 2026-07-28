@@ -23,6 +23,30 @@
 # Predictor split merging step?
 #
 # We may also want to include 1-ahead iterative modeling...
+# - There's some messiness here, perhaps especially if going for a
+#   very statistical notation-like way of writing things with the
+#   "variables" as (epikey-reftime) keyset -> valset functions, since
+#   we are sometimes saying something like "fit y1 on xs, then
+#   predict, then treat y1 as if it were observed according to
+#   estimated distribution at test time but still train on actual y1
+#   training data", and sometimes not (never finished experimenting
+#   with alternative schemes), and expecting y2 model feature
+#   selection to pick up on it...
+#   - Perhaps the way to think about writing it is something like Y2 ~
+#     ... | Y1 ~ Y1Pred (rather than "Y1 ~ ... and then treat it as if
+#     it were "observed" according to the forecast simulation
+#     distribution)
+#     - Probably need to avoid tildes at least for Y2 ~ part, since
+#       this might imply that it actually smooths rather than just
+#       filters.
+#   - In epiforecastR repo, think this was represented as a separate
+#     data source "sim"?  And then feature requests had to specify
+#     "sim"?  Maybe with some hacks around it enforcing the specific
+#     train-test = real-simulated setup?
+#     - This also had the convenience of forcing everything to be
+#       intertwined simulations; in general, might have various
+#       distributional representations and might not all be tied to
+#       each other...
 #
 # Suppose we have a simple nowcaster:
 #
