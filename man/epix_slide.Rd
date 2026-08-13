@@ -70,13 +70,12 @@ January 15 won't include \code{time_value}s all the way through January 14, due
 to reporting latency. Unlike \code{epi_slide()}, \code{epix_slide()} won't fill in
 any missing \code{time_values} in this window.}
 
-\item{.versions}{Requested versions on which to run the computation. Each
-requested \code{.version} also serves as the anchor point from which
-the \code{time_value} window specified by \code{.before} is drawn. If \code{.versions} is
-missing, it will be set to a regularly-spaced sequence of values set to
-cover the range of \code{version}s in the \code{DT} plus the \code{versions_end}; the
-spacing of values will be guessed (using the GCD of the skips between
-values).}
+\item{.versions}{Optional; requested versions on which to run the computation.
+{r versions_param_roxygen()}.
+
+Each requested \code{.version} also serves as the anchor point from
+which the \code{time_value} window specified by \code{.before} is drawn for
+its computations.}
 
 \item{.new_col_name}{Either \code{NULL} or a string indicating the name of the new
 column that will contain the derived values. The default, \code{NULL}, will use
@@ -183,7 +182,7 @@ archive_cases_dv_subset \%>\%
 # to the data version history):
 case_death_rate_archive \%>\%
   epix_slide(
-    .versions = as.Date(c("2021-10-01", "2021-10-08")),
+    .versions = c("2021-10-01", "2021-10-08"),
     function(x, g, v) {
       epipredict::arx_forecaster(
         x,

@@ -927,10 +927,22 @@ guess_column_name <- function(x, column_name, substitutions) {
 
 ##########
 
-
+#' Force `x` with regular console output silenced; return invisibly
+#'
+#' Does not silence the message stream (which is normally `stderr()`).
+#'
+#' @param x argument to [`force`]
+#' @return result, invisibly
+#'
+#' @keywords internal
 quiet <- function(x) {
-  sink(tempfile())
-  on.exit(sink())
+  old_output_sink_stack_size <- sink.number()
+  on.exit({
+    if (sink.number() > old_output_sink_stack_size) sink()
+    # ^ If it looks like we actually got to divert below, clean up our
+    # diversion.
+  })
+  sink(nullfile())
   invisible(force(x))
 }
 
@@ -1240,4 +1252,71 @@ force_meta <- function(x, geo_type = NULL, time_type = NULL) {
   if (!is.null(time_type)) meta$time_type <- time_type
   attr(x, "metadata") <- meta
   x
+}
+
+
+
+#' Version of [`vctrs::vec_cast`] that allows chr <-> date
+#'
+#' Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
+#'
+#' @inheritParams vctrs::vec_cast
+#'
+#' @importFrom vctrs vec_ptype
+#' @keywords internal
+vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_ptype <- vec_ptype(x)
+  to_ptype <- vec_ptype(to)
+  date_ptype <- vec_ptype(vctrs::new_date())
+  if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
+    result <-
+      withCallingHandlers(
+        as.Date(x),
+        error = function(e) {
+          cli_abort(
+            c("Can't convert {x_arg} to character class",
+              "i" = "{x_arg} was {x}"
+            ),
+            parent = e,
+            class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+          )
+        }
+      )
+    if (!identical(is.na(x), is.na(result))) {
+      cli_abort(
+        c("Can't convert some entries of {x_arg} to character class",
+          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"
+        ),
+        class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+      )
+    }
+    result
+  } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
+    as.character(x)
+  } else {
+    vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+
+#' Does attempting to (quietly) force `x` raise an error?
+#'
+#' Does not silence any direct output to the message stream / stderr()
+#' not from messages, warnings, or errors.
+#'
+#' @param x argument to [`force`]
+#' @return Boolean
+#'
+#' @keywords internal
+forcing_raises_error <- function(x) {
+  (quiet( # outer parens remove invisible-ity
+    rlang::try_fetch(
+    {
+      force(x)
+      FALSE # if we get here, there was no error
+    },
+    message = function(c) invokeRestart("muffleMessage"),
+    warning = function(c) invokeRestart("muffleWarning"),
+    error = function(e) TRUE
+    )
+  ))
 }

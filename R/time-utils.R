@@ -420,3 +420,52 @@ set_time_type0.epi_archive <- function(x, value) {
   x$time_type <- value
   x
 }
+
+versions_param_roxygen <- function(optional = TRUE) glue::glue('
+  Either
+  (a) a vector containing the set of desired versions to
+      include,
+  (b) a description of the desired spacing, such as `"week"`,
+      `"2 weeks"`, `"month"`, or another string accepted by
+      [`seq`]\'s / [`seq.Date`]\'s `by` parameter, or
+  (c) `NULL`{if (optional) " (the default)" else ""},
+      to include all versions in the archive.
+
+  In case (a), we accept vectors that can be automatically converted
+  to match the [`vctrs::vec_ptype`] of versions in the archive;
+  we try both character-to-Date and [`vctrs::vec_cast`] conversions.
+')
+
+#' Standardize a `versions`/`.versions` argument into a vector of versions
+#'
+#' @param versions `r versions_param_roxygen(FALSE)`
+#' @param archive the `epi_archive` to select versions from.
+#' @return a vector with the same ptype as `archive$DT$version`
+#'
+#' @keywords internal
+versions_standardize <- function(versions, archive, versions_arg = caller_arg(versions), call = caller_call()) {
+    versions_arg # must force this before `versions` is
+    if (is.null(versions)) {
+                                        # all versions
+        versions <- vctrs::vec_unique(archive$DT$version)
+    } else if (is.character(versions) && length(versions) == 1L &&
+               forcing_raises_error(vec_cast_patched(versions, archive$DT$version))) {
+                                        # version spacing
+        min_version <- min(archive$DT$version)
+        versions_end <- archive$versions_end
+        versions <- seq(min_version, versions_end, by = versions)
+    } else {
+        versions <- withCallingHandlers(
+            vec_cast_patched(versions, archive$DT$version),
+            error = function(e) {
+                cli::cli_abort("{.arg {versions_arg}} did not look like
+                          (something that could be automatically converted to) a vector of versions,
+                          nor a version spacing specification,
+                          nor {.code NULL}.",
+                          class = "epiprocess__autoplot_archive_bad_versions",
+                          call = call, parent = e)
+            }
+        )
+    }
+    versions
+}

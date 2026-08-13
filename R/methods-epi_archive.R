@@ -732,13 +732,12 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   January 15 won't include `time_value`s all the way through January 14, due
 #'   to reporting latency. Unlike `epi_slide()`, `epix_slide()` won't fill in
 #'   any missing `time_values` in this window.
-#' @param .versions Requested versions on which to run the computation. Each
-#'   requested `.version` also serves as the anchor point from which
-#'   the `time_value` window specified by `.before` is drawn. If `.versions` is
-#'   missing, it will be set to a regularly-spaced sequence of values set to
-#'   cover the range of `version`s in the `DT` plus the `versions_end`; the
-#'   spacing of values will be guessed (using the GCD of the skips between
-#'   values).
+#' @param .versions Optional; requested versions on which to run the computation.
+#'   {r versions_param_roxygen()}.
+#'
+#'   Each requested `.version` also serves as the anchor point from
+#'   which the `time_value` window specified by `.before` is drawn for
+#'   its computations.
 #' @param .new_col_name Either `NULL` or a string indicating the name of the new
 #'   column that will contain the derived values. The default, `NULL`, will use
 #'   the name "slide_value" unless your slide computations output data frames,
@@ -828,7 +827,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #' # to the data version history):
 #' case_death_rate_archive %>%
 #'   epix_slide(
-#'     .versions = as.Date(c("2021-10-01", "2021-10-08")),
+#'     .versions = c("2021-10-01", "2021-10-08"),
 #'     function(x, g, v) {
 #'       epipredict::arx_forecaster(
 #'         x,
@@ -919,18 +918,6 @@ epix_slide.epi_archive <- function(
     ungroup()
 }
 
-
-#' Default value for `ref_time_values` in an `epix_slide`
-#'
-#' @noRd
-epix_slide_versions_default <- function(ea) {
-  versions_with_updates <- c(ea$DT$version, ea$versions_end)
-  if (ea$time_type == "yearmonth") {
-    min(versions_with_updates) + seq(0, max(versions_with_updates) - min(versions_with_updates), by = 1)
-  } else {
-    tidyr::full_seq(versions_with_updates, guess_period(versions_with_updates))
-  }
-}
 
 #' Filter an `epi_archive` object to keep only older versions
 #'
