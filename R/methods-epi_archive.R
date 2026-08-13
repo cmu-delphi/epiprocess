@@ -6,11 +6,11 @@
 #' examples.
 #'
 #' @param x An `epi_archive` object
-#' @param version Time value specifying the max version to permit in the
-#'   snapshot. That is, the snapshot will comprise the unique rows of the
-#'   current archive data that represent the most up-to-date signal values, as
-#'   of the specified `version` (and whose time values are at least
-#'   `min_time_value`.)
+#' @param version Which version of the data should we extract?
+#'     Usually an element of `unique(x$DT$version)`.  More generally,
+#'     can be any size-1 vector convertible to the same
+#'     [ptype][vctrs::vec_ptype] as `x$DT$version` and `<= x$versions_end`.
+#'     We try character-to-Date and [`vctrs::vec_cast`] conversions.
 #' @param min_time_value Time value specifying the min time value to permit in
 #'   the snapshot. Default is `-Inf`, which effectively means that there is no
 #'   minimum considered.
@@ -32,7 +32,7 @@
 #'
 #' range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 #'
-#' epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
+#' epix_as_of(archive_cases_dv_subset, "2020-06-12")
 #'
 #' # --- Advanced: ---
 #'
@@ -75,21 +75,21 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
   )
 
   # Check a few things on version
-  if (!identical(class(version), class(x$DT$version))) {
-    cli_abort(
-      "`version` must have the same `class` vector as `epi_archive$DT$version`."
-    )
-  }
   assert_scalar(version, na.ok = FALSE)
+  version <- vec_cast_patched(version, x$DT$version)
   if (version > x$versions_end) {
     cli_abort("`version` must be at most `epi_archive$versions_end`.")
   }
   assert_scalar(min_time_value, na.ok = FALSE)
   min_time_value_inf <- is.infinite(min_time_value) && min_time_value < 0
-  min_time_value_same_type <- identical(class(min_time_value), class(x$DT$time_value))
-  if (!min_time_value_inf && !min_time_value_same_type) {
-    cli_abort("`min_time_value` must be either -Inf or a time_value of the same type and
-      class as `epi_archive$time_value`.")
+  if (!min_time_value_inf) {
+      min_time_value <- withCallingHandlers(
+          vec_cast_patched(min_time_value, x$DT$time_value),
+          error = function(e) {
+              cli_abort("{.arg min_time_value} must be either {.code -Inf} or
+                          a time_value convertible to the same ptype as {.code x$DT$time_value}.")
+          }
+      )
   }
   assert_logical(all_versions, len = 1)
   if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {

@@ -432,7 +432,7 @@ versions_param_roxygen <- function(optional = TRUE) glue::glue('
       to include all versions in the archive.
 
   In case (a), we accept vectors that can be automatically converted
-  to match the [`vctrs::vec_ptype`] of versions in the archive;
+  to match the [ptype][vctrs::vec_ptype] of versions in the archive;
   we try both character-to-Date and [`vctrs::vec_cast`] conversions.
 ')
 

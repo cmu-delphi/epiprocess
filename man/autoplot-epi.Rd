@@ -103,7 +103,7 @@ include,
 to include all versions in the archive.
 
 In case (a), we accept vectors that can be automatically converted
-to match the \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype}} of versions in the archive;
+to match the \link[vctrs:vec_ptype]{ptype} of versions in the archive;
 we try both character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions.
 
 By default, a separate line will be shown with the data as it would have appeared on
