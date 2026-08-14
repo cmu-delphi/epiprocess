@@ -280,3 +280,21 @@ test_that("as_slide_computation works", {
   h <- as_time_slide_computation(~ .x - .group_key)
   expect_equal(h(6, 3), 3)
 })
+
+test_that("forcing_raises_error works", {
+    expect_silent(result_a <- forcing_raises_error({
+        cat("stdout")
+        message("message")
+        warning("warning")
+        stop("error")
+    }))
+    expect_true(result_a)
+
+    expect_silent(result_b <- forcing_raises_error({
+        cat("stdout")
+        message("message")
+        warning("warning")
+        42
+    }))
+    expect_false(result_b)
+})
