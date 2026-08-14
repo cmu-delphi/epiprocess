@@ -443,29 +443,30 @@ versions_param_roxygen <- function(optional = TRUE) glue::glue('
 #' @return a vector with the same ptype as `archive$DT$version`
 #'
 #' @keywords internal
-versions_standardize <- function(versions, archive, versions_arg = caller_arg(versions), call = caller_call()) {
-    versions_arg # must force this before `versions` is
-    if (is.null(versions)) {
-                                        # all versions
-        versions <- vctrs::vec_unique(archive$DT$version)
-    } else if (is.character(versions) && length(versions) == 1L &&
-               forcing_raises_error(vec_cast_patched(versions, archive$DT$version))) {
-                                        # version spacing
-        min_version <- min(archive$DT$version)
-        versions_end <- archive$versions_end
-        versions <- seq(min_version, versions_end, by = versions)
-    } else {
-        versions <- withCallingHandlers(
-            vec_cast_patched(versions, archive$DT$version),
-            error = function(e) {
-                cli::cli_abort("{.arg {versions_arg}} did not look like
+versions_standardize <- function(versions, archive, versions_arg = caller_arg(versions), call = caller_env()) {
+  versions_arg # must force this before `versions` is
+  if (is.null(versions)) {
+    # all versions
+    versions <- vctrs::vec_unique(archive$DT$version)
+  } else if (is.character(versions) && length(versions) == 1L &&
+    forcing_raises_error(vec_cast_patched(versions, archive$DT$version))) {
+    # version spacing
+    min_version <- min(archive$DT$version)
+    versions_end <- archive$versions_end
+    versions <- seq(min_version, versions_end, by = versions)
+  } else {
+    versions <- withCallingHandlers(
+      vec_cast_patched(versions, archive$DT$version),
+      error = function(e) {
+        cli::cli_abort("{.arg {versions_arg}} did not look like
                           (something that could be automatically converted to) a vector of versions,
                           nor a version spacing specification,
                           nor {.code NULL}.",
-                          class = "epiprocess__autoplot_archive_bad_versions",
-                          call = call, parent = e)
-            }
+          class = "epiprocess__autoplot_archive_bad_versions",
+          call = call, parent = e
         )
-    }
-    versions
+      }
+    )
+  }
+  versions
 }

@@ -71,7 +71,18 @@ to reporting latency. Unlike \code{epi_slide()}, \code{epix_slide()} won't fill 
 any missing \code{time_values} in this window.}
 
 \item{.versions}{Optional; requested versions on which to run the computation.
-{r versions_param_roxygen()}.
+Either
+(a) a vector containing the set of desired versions to
+include,
+(b) a description of the desired spacing, such as \code{"week"},
+\code{"2 weeks"}, \code{"month"}, or another string accepted by
+\code{\link{seq}}'s / \code{\link{seq.Date}}'s \code{by} parameter, or
+(c) \code{NULL} (the default),
+to include all versions in the archive.
+
+In case (a), we accept vectors that can be automatically converted
+to match the \link[vctrs:vec_ptype]{ptype} of versions in the archive;
+we try both character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions..
 
 Each requested \code{.version} also serves as the anchor point from
 which the \code{time_value} window specified by \code{.before} is drawn for

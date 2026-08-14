@@ -1255,10 +1255,10 @@ force_meta <- function(x, geo_type = NULL, time_type = NULL) {
 }
 
 
-
 #' Version of [`vctrs::vec_cast`] that allows chr <-> date
 #'
-#' Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
+#' Doesn't implement other conversions implied by the hierarchy, e.g.,
+#' chr <-> POSIX\{c,l\}t.
 #'
 #' @inheritParams vctrs::vec_cast
 #'
@@ -1310,13 +1310,13 @@ vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", cal
 forcing_raises_error <- function(x) {
   (quiet( # outer parens remove invisible-ity
     rlang::try_fetch(
-    {
-      force(x)
-      FALSE # if we get here, there was no error
-    },
-    message = function(c) invokeRestart("muffleMessage"),
-    warning = function(c) invokeRestart("muffleWarning"),
-    error = function(e) TRUE
+      {
+        force(x)
+        FALSE # if we get here, there was no error
+      },
+      message = function(c) invokeRestart("muffleMessage"),
+      warning = function(c) invokeRestart("muffleWarning"),
+      error = function(e) TRUE
     )
   ))
 }

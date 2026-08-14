@@ -83,13 +83,13 @@ epix_as_of <- function(x, version, min_time_value = -Inf, all_versions = FALSE,
   assert_scalar(min_time_value, na.ok = FALSE)
   min_time_value_inf <- is.infinite(min_time_value) && min_time_value < 0
   if (!min_time_value_inf) {
-      min_time_value <- withCallingHandlers(
-          vec_cast_patched(min_time_value, x$DT$time_value),
-          error = function(e) {
-              cli_abort("{.arg min_time_value} must be either {.code -Inf} or
+    min_time_value <- withCallingHandlers(
+      vec_cast_patched(min_time_value, x$DT$time_value),
+      error = function(e) {
+        cli_abort("{.arg min_time_value} must be either {.code -Inf} or
                           a time_value convertible to the same ptype as {.code x$DT$time_value}.")
-          }
-      )
+      }
+    )
   }
   assert_logical(all_versions, len = 1)
   if (!is.na(x$clobberable_versions_start) && version >= x$clobberable_versions_start) {
@@ -733,7 +733,7 @@ epix_detailed_restricted_mutate <- function(.data, ...) {
 #'   to reporting latency. Unlike `epi_slide()`, `epix_slide()` won't fill in
 #'   any missing `time_values` in this window.
 #' @param .versions Optional; requested versions on which to run the computation.
-#'   {r versions_param_roxygen()}.
+#'   `r versions_param_roxygen()`.
 #'
 #'   Each requested `.version` also serves as the anchor point from
 #'   which the `time_value` window specified by `.before` is drawn for

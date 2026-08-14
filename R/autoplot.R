@@ -613,7 +613,7 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
 #'   By default, a separate line will be shown with the data as it would have appeared on
 #'   every day in the archive. This can sometimes become overwhelming. For
 #'   example, daily data would display a line for what the data would have looked
-#'   like on every single day. 
+#'   like on every single day.
 #' @param .mark_versions Logical. Indicate whether to mark each version with
 #'   a vertical line. Note that displaying many versions can become busy.
 #'
@@ -702,7 +702,8 @@ autoplot.epi_archive <- function(object, ...,
 
   if (length(.versions) == 0L) {
     cli::cli_abort("Not enough versions to make a plot.  Please make sure that `.versions` will include at least one non-final version.",
-                   class = "epiprocess__autoplot_epi_archive__not_enough_versions")
+      class = "epiprocess__autoplot_epi_archive__not_enough_versions"
+    )
   }
 
   snapshots <- purrr::map(

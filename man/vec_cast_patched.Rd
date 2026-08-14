@@ -36,6 +36,7 @@ mentioned in error messages as the source of the error. See the
 \code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \description{
-Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
+Doesn't implement other conversions implied by the hierarchy, e.g.,
+chr <-> POSIX\{c,l\}t.
 }
 \keyword{internal}
