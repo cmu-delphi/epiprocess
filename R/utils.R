@@ -1254,8 +1254,10 @@ force_meta <- function(x, geo_type = NULL, time_type = NULL) {
   x
 }
 
+date_ptype <- vctrs::vec_ptype(vctrs::new_date())
+time_vctrs_vctr_classes <- c("yearmonth", "yearquarter", "yearweek")
 
-#' Version of [`vctrs::vec_cast`] that allows chr <-> date
+#' Variant of [`vctrs::vec_cast`] that allows chr <-> date, disallows is.numeric x <-> some times
 #'
 #' Doesn't implement other conversions implied by the hierarchy, e.g.,
 #' chr <-> POSIX\{c,l\}t.
@@ -1265,34 +1267,60 @@ force_meta <- function(x, geo_type = NULL, time_type = NULL) {
 #' @importFrom vctrs vec_ptype
 #' @keywords internal
 vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
-  x_ptype <- vec_ptype(x)
-  to_ptype <- vec_ptype(to)
-  date_ptype <- vec_ptype(vctrs::new_date())
+  x_ptype <- vec_ptype(x, x_arg = x_arg, call = call)
+  to_ptype <- vec_ptype(to, x_arg = to_arg, call = call)
   if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
     result <-
       withCallingHandlers(
-        as.Date(x),
+        # `as.Date` isn't rigid enough, "successfully" parsing bad
+        # things like 01-01-1900, and accepting somewhat weird things
+        # like 2000-1-1.  readr::parse_date works more like what we
+        # want, though it isn't quite an inverse of
+        # `as.character.Date` (see, e.g., "0100-01-01", "-50-01-01").
+        readr::parse_date(x),
+        warning = function(w) invokeRestart("muffleWarning"),
         error = function(e) {
           cli_abort(
-            c("Can't convert {x_arg} to character class",
-              "i" = "{x_arg} was {x}"
+            c("Cannot convert {.arg {x_arg}} to <date>",
+              "i" = "{.arg {x_arg}} was {x}"
             ),
             parent = e,
+            call = call,
             class = "epiprocess__vec_cast_patched__chr_to_date_failed"
           )
         }
       )
     if (!identical(is.na(x), is.na(result))) {
       cli_abort(
-        c("Can't convert some entries of {x_arg} to character class",
-          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"
+        c("Cannot convert some entries of {.arg {x_arg}} to <date>",
+          "i" = "Problematic entries: {format_chr_with_quotes(x[!is.na(x) & is.na(result)])}"
         ),
+        problematic_entries = x[!is.na(x) & is.na(result)],
+        call = call,
         class = "epiprocess__vec_cast_patched__chr_to_date_failed"
       )
     }
     result
   } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
     as.character(x)
+  } else if (is.numeric(x_ptype) && inherits(to_ptype, time_vctrs_vctr_classes)) {
+    # Refuse to use confusing and contradictory numeric -> yearmonth
+    # vec_cast impl and similar impls, which appear to be default
+    # behavior tied to subclassing vctrs_vctr.
+    to_ptype_string <-
+      if (to_arg == "") {
+        paste0("<", vctrs::vec_ptype_full(to), ">")
+      } else {
+        to_arg
+      }
+    cli_abort(
+      c("Cannot cast {.arg {x_arg}}, which `is.numeric`, to {to_ptype_string}",
+        "i" = "Class of {.arg {x_arg}} was {.code {format_chr_deparse(class(x))}}",
+        "i" = "(There may be a {.code vec_cast} method for this conversion, but we have disabled it.)"
+      ),
+      call = call,
+      class = "epiprocess_vec_cast_patched__numeric_to_time_refused"
+    )
   } else {
     vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
   }

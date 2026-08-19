@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{vec_cast_patched}
 \alias{vec_cast_patched}
-\title{Version of \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} that allows chr <-> date}
+\title{Variant of \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} that allows chr <-> date, disallows is.numeric x <-> some times}
 \usage{
 vec_cast_patched(
   x,
