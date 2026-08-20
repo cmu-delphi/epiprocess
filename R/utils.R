@@ -1307,7 +1307,7 @@ vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", cal
     # Refuse to use confusing and contradictory numeric -> yearmonth
     # vec_cast impl and similar impls, which appear to be default
     # behavior tied to subclassing vctrs_vctr.
-    to_ptype_string <-
+    to_ptype_string <- # nolint: object_usage_linter
       if (to_arg == "") {
         paste0("<", vctrs::vec_ptype_full(to), ">")
       } else {

@@ -421,20 +421,22 @@ set_time_type0.epi_archive <- function(x, value) {
   x
 }
 
-versions_param_roxygen <- function(optional = TRUE) glue::glue('
-  Either
-  (a) a vector containing the set of desired versions to
-      include,
-  (b) a description of the desired spacing, such as `"week"`,
-      `"2 weeks"`, `"month"`, or another string accepted by
-      [`seq`]\'s / [`seq.Date`]\'s `by` parameter, or
-  (c) `NULL`{if (optional) " (the default)" else ""},
-      to include all versions in the archive.
+versions_param_roxygen <- function(optional = TRUE) {
+  glue::glue('
+    Either
+    (a) a vector containing the set of desired versions to
+        include,
+    (b) a description of the desired spacing, such as `"week"`,
+        `"2 weeks"`, `"month"`, or another string accepted by
+        [`seq`]\'s / [`seq.Date`]\'s `by` parameter, or
+    (c) `NULL`{if (optional) " (the default)" else ""},
+        to include all versions in the archive.
 
-  In case (a), we accept vectors that can be automatically converted
-  to match the [ptype][vctrs::vec_ptype] of versions in the archive;
-  we try both character-to-Date and [`vctrs::vec_cast`] conversions.
-')
+    In case (a), we accept vectors that can be automatically converted
+    to match the [ptype][vctrs::vec_ptype] of versions in the archive;
+    we try both character-to-Date and [`vctrs::vec_cast`] conversions.
+  ')
+}
 
 #' Standardize a `versions`/`.versions` argument into a vector of versions
 #'
@@ -448,8 +450,10 @@ versions_standardize <- function(versions, archive, versions_arg = caller_arg(ve
   if (is.null(versions)) {
     # all versions
     versions <- vctrs::vec_unique(archive$DT$version)
-  } else if (is.character(versions) && length(versions) == 1L &&
-    forcing_raises_error(vec_cast_patched(versions, archive$DT$version))) {
+  } else if (
+    is.character(versions) && length(versions) == 1L &&
+      forcing_raises_error(vec_cast_patched(versions, archive$DT$version))
+  ) {
     # version spacing
     min_version <- min(archive$DT$version)
     versions_end <- archive$versions_end

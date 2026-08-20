@@ -701,9 +701,10 @@ autoplot.epi_archive <- function(object, ...,
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
 
   if (length(.versions) == 0L) {
-    cli::cli_abort("Not enough versions to make a plot.  Please make sure that `.versions` will include at least one non-final version.",
-      class = "epiprocess__autoplot_epi_archive__not_enough_versions"
-    )
+    cli::cli_abort(c(
+      "Not enough versions to make a plot.",
+      ">" = "Please make sure that `.versions` will include at least one non-final version."
+    ), class = "epiprocess__autoplot_epi_archive__not_enough_versions")
   }
 
   snapshots <- purrr::map(

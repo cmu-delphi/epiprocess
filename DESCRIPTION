@@ -96,7 +96,8 @@ Copyright: file inst/COPYRIGHTS
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-Collate:
+Config/roxygen2/version: 8.1.0
+Collate: 
     'archive.R'
     'autoplot.R'
     'correlation.R'
@@ -119,4 +120,3 @@ Collate:
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
-Config/roxygen2/version: 8.1.0
