@@ -280,3 +280,49 @@ test_that("as_slide_computation works", {
   h <- as_time_slide_computation(~ .x - .group_key)
   expect_equal(h(6, 3), 3)
 })
+
+test_that("vec_cast_patched works", {
+  expect_identical(vec_cast_patched(10, integer()), 10L)
+  expect_identical(vec_cast_patched(10L, double()), 10)
+  good_date_strings <- c("2020-01-01", NA)
+  # added conversions:
+  expect_identical(vec_cast_patched(good_date_strings, vctrs::new_date()), as.Date(good_date_strings))
+  expect_identical(vec_cast_patched(as.Date(good_date_strings), character()), good_date_strings)
+  # preserved (self-self) vec_cast impls:
+  expect_identical(vec_cast_patched(good_date_strings, character()), good_date_strings)
+  expect_identical(vec_cast_patched(as.Date(good_date_strings), vctrs::new_date()), as.Date(good_date_strings))
+  # balk at date strings that don't match what as.character would give back:
+  bad_date_strings <- c("01/01/2000", "2000-1-1", "01-01-2000", "August 8, 2000", "bogus")
+  error <- NULL
+  expect_snapshot_error(
+    withCallingHandlers(
+      vec_cast_patched(c(good_date_strings, bad_date_strings), vctrs::new_date()),
+      error = function(e) error <<- e
+    ),
+    class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+  )
+  expect_identical(error$problematic_entries, bad_date_strings)
+  # balk at is.numeric x -> time:
+  expect_snapshot_error(
+    vec_cast_patched(100, tsibble::yearmonth()),
+    class = "epiprocess_vec_cast_patched__numeric_to_time_refused"
+  )
+})
+
+test_that("forcing_raises_error works", {
+  expect_silent(result_a <- forcing_raises_error({
+    cat("stdout")
+    message("message")
+    warning("warning")
+    stop("error")
+  }))
+  expect_true(result_a)
+
+  expect_silent(result_b <- forcing_raises_error({
+    cat("stdout")
+    message("message")
+    warning("warning")
+    42
+  }))
+  expect_false(result_b)
+})

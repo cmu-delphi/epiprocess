@@ -92,18 +92,24 @@ facets will be converted into a dropdown menu. This is useful for
 maximizing screen real estate when there are many facets. Default is
 \code{FALSE}.}
 
-\item{.versions}{Select which versions will be displayed. By default,
-a separate line will be shown with the data as it would have appeared on
+\item{.versions}{Optional; determines which versions will be displayed.
+Either
+(a) a vector containing the set of desired versions to
+include,
+(b) a description of the desired spacing, such as \code{"week"},
+\code{"2 weeks"}, \code{"month"}, or another string accepted by
+\code{\link{seq}}'s / \code{\link{seq.Date}}'s \code{by} parameter, or
+(c) \code{NULL} (the default),
+to include all versions in the archive.
+
+In case (a), we accept vectors that can be automatically converted
+to match the \link[vctrs:vec_ptype]{ptype} of versions in the archive;
+we try both character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions.
+
+By default, a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
 example, daily data would display a line for what the data would have looked
-like on every single day. To override this, you can select specific dates,
-by passing a vector of values here. Alternatively, a sequence can be
-automatically created by passing a string like \code{"2 weeks"} or \code{"month"}.
-For time types where the \code{time_value} is a date object, any string that
-is interpretable by \code{\link[base:seq.Date]{base::seq.Date()}} is allowed.
-
-For \code{time_type = "integer"}, an integer larger than 1 will give a subset
-of versions.}
+like on every single day.}
 
 \item{.mark_versions}{Logical. Indicate whether to mark each version with
 a vertical line. Note that displaying many versions can become busy.}

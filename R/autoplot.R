@@ -607,18 +607,13 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
   return(p_plotly)
 }
 
-#' @param .versions Select which versions will be displayed. By default,
-#'   a separate line will be shown with the data as it would have appeared on
+#' @param .versions Optional; determines which versions will be displayed.
+#'   `r versions_param_roxygen()`
+#'
+#'   By default, a separate line will be shown with the data as it would have appeared on
 #'   every day in the archive. This can sometimes become overwhelming. For
 #'   example, daily data would display a line for what the data would have looked
-#'   like on every single day. To override this, you can select specific dates,
-#'   by passing a vector of values here. Alternatively, a sequence can be
-#'   automatically created by passing a string like `"2 weeks"` or `"month"`.
-#'   For time types where the `time_value` is a date object, any string that
-#'   is interpretable by [base::seq.Date()] is allowed.
-#'
-#'   For `time_type = "integer"`, an integer larger than 1 will give a subset
-#'   of versions.
+#'   like on every single day.
 #' @param .mark_versions Logical. Indicate whether to mark each version with
 #'   a vertical line. Note that displaying many versions can become busy.
 #'
@@ -668,34 +663,24 @@ autoplot.epi_archive <- function(object, ...,
     )
   }
 
-  max_version <- max(object$DT$version)
   min_version <- min(object$DT$version)
+  max_version <- max(object$DT$version)
+  versions_end <- object$versions_end
 
-  tt_lookup <- c("day" = "day", "week" = "week", "yearmonth" = "month")
-  .versions <- .versions %||% ifelse(time_type == "integer", 1L, unname(tt_lookup[time_type]))
-  if ((is.character(.versions) || rlang::is_bare_numeric(.versions)) && length(.versions) == 1L) {
-    # Interpret `.versions` as a period (even if archive versions are also bare numeric...)
-    if (is.numeric(.versions)) .versions <- round(abs(.versions))
-    .versions <- seq(min_version, max_version, by = .versions)
-  } else if (inherits(.versions, "Date") || is.numeric(.versions)) {
-    old_n_versions <- length(.versions)
-    .versions <- .versions[min_version <= .versions & .versions <= max_version]
-    if (length(.versions) != old_n_versions) {
-      cli::cli_inform(paste(
-        "Removed entries from `.versions` that weren't in the range of archive",
-        "versions with update rows."
-      ))
-    }
-  } else {
-    cli::cli_abort(
-      "Requested `.versions` don't appear to match the available `time_type`.",
-      class = "epiprocess__autoplot_archive_bad_versions"
-    )
+  .versions <- versions_standardize(.versions, object)
+
+  old_n_versions <- length(.versions)
+  .versions <- .versions[min_version <= .versions & .versions <= versions_end]
+  if (length(.versions) != old_n_versions) {
+    cli::cli_inform(paste(
+      "Removed entries from {.arg .versions} that weren't in the range of archive",
+      "versions recorded."
+    ))
   }
 
   split_out_finalized <- !.interactive
   if (split_out_finalized) {
-    .versions <- .versions[.versions != max_version]
+    .versions <- .versions[.versions < max_version]
   }
 
   finalized <- epix_as_of(object, max_version)
@@ -714,6 +699,13 @@ autoplot.epi_archive <- function(object, ...,
   ) + ggplot2::xlab("Date")
 
   geo_and_other_keys <- key_colnames(object, exclude = c("time_value", "version"))
+
+  if (length(.versions) == 0L) {
+    cli::cli_abort(c(
+      "Not enough versions to make a plot.",
+      ">" = "Please make sure that `.versions` will include at least one non-final version."
+    ), class = "epiprocess__autoplot_epi_archive__not_enough_versions")
+  }
 
   snapshots <- purrr::map(
     .versions,

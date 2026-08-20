@@ -927,10 +927,22 @@ guess_column_name <- function(x, column_name, substitutions) {
 
 ##########
 
-
+#' Force `x` with regular console output silenced; return invisibly
+#'
+#' Does not silence the message stream (which is normally `stderr()`).
+#'
+#' @param x argument to [`force`]
+#' @return result, invisibly
+#'
+#' @keywords internal
 quiet <- function(x) {
-  sink(tempfile())
-  on.exit(sink())
+  old_output_sink_stack_size <- sink.number()
+  on.exit({
+    if (sink.number() > old_output_sink_stack_size) sink()
+    # ^ If it looks like we actually got to divert below, clean up our
+    # diversion.
+  })
+  sink(nullfile())
   invisible(force(x))
 }
 
@@ -1240,4 +1252,99 @@ force_meta <- function(x, geo_type = NULL, time_type = NULL) {
   if (!is.null(time_type)) meta$time_type <- time_type
   attr(x, "metadata") <- meta
   x
+}
+
+date_ptype <- vctrs::vec_ptype(vctrs::new_date())
+time_vctrs_vctr_classes <- c("yearmonth", "yearquarter", "yearweek")
+
+#' Variant of [`vctrs::vec_cast`] that allows chr <-> date, disallows is.numeric x <-> some times
+#'
+#' Doesn't implement other conversions implied by the hierarchy, e.g.,
+#' chr <-> POSIX\{c,l\}t.
+#'
+#' @inheritParams vctrs::vec_cast
+#'
+#' @importFrom vctrs vec_ptype
+#' @keywords internal
+vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_ptype <- vec_ptype(x, x_arg = x_arg, call = call)
+  to_ptype <- vec_ptype(to, x_arg = to_arg, call = call)
+  if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
+    result <-
+      withCallingHandlers(
+        # `as.Date` isn't rigid enough, "successfully" parsing bad
+        # things like 01-01-1900, and accepting somewhat weird things
+        # like 2000-1-1.  readr::parse_date works more like what we
+        # want, though it isn't quite an inverse of
+        # `as.character.Date` (see, e.g., "0100-01-01", "-50-01-01").
+        readr::parse_date(x),
+        warning = function(w) invokeRestart("muffleWarning"),
+        error = function(e) {
+          cli_abort(
+            c("Cannot convert {.arg {x_arg}} to <date>",
+              "i" = "{.arg {x_arg}} was {x}"
+            ),
+            parent = e,
+            call = call,
+            class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+          )
+        }
+      )
+    if (!identical(is.na(x), is.na(result))) {
+      cli_abort(
+        c("Cannot convert some entries of {.arg {x_arg}} to <date>",
+          "i" = "Problematic entries: {format_chr_with_quotes(x[!is.na(x) & is.na(result)])}"
+        ),
+        problematic_entries = x[!is.na(x) & is.na(result)],
+        call = call,
+        class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+      )
+    }
+    result
+  } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
+    as.character(x)
+  } else if (is.numeric(x_ptype) && inherits(to_ptype, time_vctrs_vctr_classes)) {
+    # Refuse to use confusing and contradictory numeric -> yearmonth
+    # vec_cast impl and similar impls, which appear to be default
+    # behavior tied to subclassing vctrs_vctr.
+    to_ptype_string <- # nolint: object_usage_linter
+      if (to_arg == "") {
+        paste0("<", vctrs::vec_ptype_full(to), ">")
+      } else {
+        to_arg
+      }
+    cli_abort(
+      c("Cannot cast {.arg {x_arg}}, which `is.numeric`, to {to_ptype_string}",
+        "i" = "Class of {.arg {x_arg}} was {.code {format_chr_deparse(class(x))}}",
+        "i" = "(There may be a {.code vec_cast} method for this conversion, but we have disabled it.)"
+      ),
+      call = call,
+      class = "epiprocess_vec_cast_patched__numeric_to_time_refused"
+    )
+  } else {
+    vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+
+#' Does attempting to (quietly) force `x` raise an error?
+#'
+#' Does not silence any direct output to the message stream / stderr()
+#' not from messages, warnings, or errors.
+#'
+#' @param x argument to [`force`]
+#' @return Boolean
+#'
+#' @keywords internal
+forcing_raises_error <- function(x) {
+  (quiet( # outer parens remove invisible-ity
+    rlang::try_fetch(
+      {
+        force(x)
+        FALSE # if we get here, there was no error
+      },
+      message = function(c) invokeRestart("muffleMessage"),
+      warning = function(c) invokeRestart("muffleWarning"),
+      error = function(e) TRUE
+    )
+  ))
 }
