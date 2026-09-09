@@ -1,5 +1,17 @@
 # TODO S3 generic function for extracting version-relative shifts
 
+# FIXME think found that anchor_versions was not the right way to go,
+# and instead want ekts as the train keys.  At test time, we do want
+# to use the version instead of the most recent available time value
+# as the anchor/origin, but need to convert the version into a
+# anchor/ref/reference time value (last could be used to match Hub
+# reference_time if we use Saturday as repr wday of weekly time
+# values!); if version finer-grained, then the containing time value;
+# if time finer-grained, then maybe the last contained time value; if
+# not nested, then ... something. Guess this was in
+# nowcasting-helpers2.R; see extract2_tvoffset and
+# version_get_containing_time_value.
+
 #' Get predictor lag train&test data, factoring in data maturity (revisioning)
 #'
 #' Pairs with [`epix_target_evaluation_data`] to facilitate
