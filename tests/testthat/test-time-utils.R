@@ -261,3 +261,46 @@ test_that("difftime_approx_ceiling_time_delta works as expected", {
     regexp = "Unsupported time_type"
   )
 })
+
+test_that("versions_standardize works", {
+  date_archive <- as_epi_archive(tibble(
+    geo_value = 1,
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-02") + 0:27,
+    value = 1:28
+  ))
+  yearmonth_archive <- as_epi_archive(tibble(
+    geo_value = 1,
+    time_value = tsibble::yearmonth(0),
+    version = tsibble::yearmonth(1) + 0:27,
+    value = 1:28
+  ))
+  integer_archive <- as_epi_archive(tibble(
+    geo_value = 1,
+    time_value = 1L,
+    version = 2L + 0:27,
+    value = 1:28
+  ))
+  integerish_archive <- as_epi_archive(tibble(
+    geo_value = 1,
+    time_value = 1, # might make more sense as actual integer() but validation does not like
+    version = 2 + 0:27,
+    value = 1:28
+  ))
+
+  expect_equal(versions_standardize("2020-01-05", date_archive), as.Date("2020-01-05"))
+  expect_equal(versions_standardize(as.Date("2020-01-05"), date_archive), as.Date("2020-01-05"))
+  expect_equal(versions_standardize("day", date_archive), as.Date("2020-01-02") + 0:27)
+  expect_equal(versions_standardize("week", date_archive), as.Date("2020-01-02") + 7L * (0:3))
+  expect_equal(versions_standardize("2 week", date_archive), as.Date("2020-01-02") + 14L * (0:1))
+
+  expect_snapshot_error(versions_standardize(1, yearmonth_archive),
+    class = "epiprocess_vec_cast_patched__numeric_to_time_refused"
+  )
+
+  expect_equal(versions_standardize(2, integer_archive), 2L)
+  expect_equal(versions_standardize(2L, integer_archive), 2L)
+
+  expect_equal(versions_standardize(2, integerish_archive), 2)
+  expect_equal(versions_standardize(2L, integerish_archive), 2)
+})

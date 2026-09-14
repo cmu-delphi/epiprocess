@@ -3,10 +3,30 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
+# epiprocess 0.13.0.9999
+
+## Breaking changes
+
+- `.versions =` arguments have been standardized across
+  `autoplot.epi_archive()` and `epix_slide()`: (a) a vector of
+  versions, (b) a description of desired spacing (e.g., "2 weeks"), or
+  (c) `NULL`, for default behavior. The default, `NULL`, now means all
+  versions with updates; `epix_slide()` will no longer add additional
+  versions based on the imputed reporting cadence and `versions_end`.
+  And `autoplot()` will no longer accept just a number in (b), to
+  avoid ambiguity with case (a) in some types of archives.
+
+## Improvements
+
+- Automatic character-to-Date and `vec_cast()` conversions have been
+  added to various function arguments.
+
 # epiprocess 0.13.0
 
 ## New features
-- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
+- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time`
+  and `report_time` columns, mapping them to `time_value` and
+  `version` / `as_of` respectively.
 - `revision_summary()` now detects bulk reporting adding new time
   values, and excludes bulk reporting for some statistics.
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.

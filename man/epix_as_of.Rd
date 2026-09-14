@@ -15,11 +15,11 @@ epix_as_of(
 \arguments{
 \item{x}{An \code{epi_archive} object}
 
-\item{version}{Time value specifying the max version to permit in the
-snapshot. That is, the snapshot will comprise the unique rows of the
-current archive data that represent the most up-to-date signal values, as
-of the specified \code{version} (and whose time values are at least
-\code{min_time_value}.)}
+\item{version}{Which version of the data should we extract?
+Usually an element of \code{unique(x$DT$version)}.  More generally,
+can be any size-1 vector convertible to the same
+\link[vctrs:vec_ptype]{ptype} as \code{x$DT$version} and \verb{<= x$versions_end}.
+We try character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions.}
 
 \item{min_time_value}{Time value specifying the min time value to permit in
 the snapshot. Default is \code{-Inf}, which effectively means that there is no
@@ -51,7 +51,7 @@ epix_as_of(
 
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 
-epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
+epix_as_of(archive_cases_dv_subset, "2020-06-12")
 
 # --- Advanced: ---
 

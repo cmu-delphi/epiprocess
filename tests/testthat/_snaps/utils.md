@@ -38,3 +38,14 @@
       Caused by error:
       ! object '.x' not found
 
+# vec_cast_patched works
+
+    Cannot convert some entries of `c(good_date_strings, bad_date_strings)` to <date>
+    i Problematic entries: "01/01/2000", "2000-1-1", "01-01-2000", "August 8, 2000", and "bogus"
+
+---
+
+    Cannot cast `100`, which `is.numeric`, to <yearmonth>
+    i Class of `100` was `"numeric"`
+    i (There may be a `vec_cast` method for this conversion, but we have disabled it.)
+
