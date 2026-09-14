@@ -430,11 +430,13 @@ versions_param_roxygen <- function(optional = TRUE) {
         `"2 weeks"`, `"month"`, or another string accepted by
         [`seq`]\'s / [`seq.Date`]\'s `by` parameter, or
     (c) `NULL`{if (optional) " (the default)" else ""},
-        to include all versions in the archive.
+        to include all versions containing updates.
 
     In case (a), we accept vectors that can be automatically converted
     to match the [ptype][vctrs::vec_ptype] of versions in the archive;
     we try both character-to-Date and [`vctrs::vec_cast`] conversions.
+    In case (c), we look at the unique `version`s recorded in the archive\'s
+    DT object.
   ')
 }
 

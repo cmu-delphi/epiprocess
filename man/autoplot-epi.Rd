@@ -100,11 +100,13 @@ include,
 \code{"2 weeks"}, \code{"month"}, or another string accepted by
 \code{\link{seq}}'s / \code{\link{seq.Date}}'s \code{by} parameter, or
 (c) \code{NULL} (the default),
-to include all versions in the archive.
+to include all versions containing updates.
 
 In case (a), we accept vectors that can be automatically converted
 to match the \link[vctrs:vec_ptype]{ptype} of versions in the archive;
 we try both character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions.
+In case (c), we look at the unique \code{version}s recorded in the archive's
+DT object.
 
 By default, a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
