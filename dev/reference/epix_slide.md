@@ -96,12 +96,25 @@ epix_slide(
 
 - .versions:
 
-  Requested versions on which to run the computation. Each requested
-  `.version` also serves as the anchor point from which the `time_value`
-  window specified by `.before` is drawn. If `.versions` is missing, it
-  will be set to a regularly-spaced sequence of values set to cover the
-  range of `version`s in the `DT` plus the `versions_end`; the spacing
-  of values will be guessed (using the GCD of the skips between values).
+  Optional; requested versions on which to run the computation.
+  Either (a) a vector containing the set of desired versions to
+  include, (b) a description of the desired spacing, such as `"week"`,
+  `"2 weeks"`, `"month"`, or another string accepted by
+  [`seq`](https://rdrr.io/r/base/seq.html)'s /
+  [`seq.Date`](https://rdrr.io/r/base/seq.Date.html)'s `by` parameter,
+  or (c) `NULL` (the default), to include all versions containing
+  updates.
+
+  In case (a), we accept vectors that can be automatically converted to
+  match the [ptype](https://vctrs.r-lib.org/reference/vec_ptype.html) of
+  versions in the archive; we try both character-to-Date and
+  [`vctrs::vec_cast`](https://vctrs.r-lib.org/reference/vec_cast.html)
+  conversions. In case (c), we look at the unique `version`s recorded in
+  the archive's DT object..
+
+  Each requested `.version` also serves as the anchor point from which
+  the `time_value` window specified by `.before` is drawn for its
+  computations.
 
 - .new_col_name:
 
@@ -260,7 +273,7 @@ archive_cases_dv_subset %>%
 # to the data version history):
 case_death_rate_archive %>%
   epix_slide(
-    .versions = as.Date(c("2021-10-01", "2021-10-08")),
+    .versions = c("2021-10-01", "2021-10-08"),
     function(x, g, v) {
       epipredict::arx_forecaster(
         x,

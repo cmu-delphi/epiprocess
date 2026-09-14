@@ -47,6 +47,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/f_no_na.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/filter.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/force_meta.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/forcing_raises_error.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_chr_deparse.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_chr_with_quotes.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/format_tibble_row.html</loc></url>
@@ -80,6 +81,7 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/plot_heatmap.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_archive.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/print.epi_df.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/quiet.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reconstruct_light_edf.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/reexports.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/removed_by_compactify.html</loc></url>
@@ -108,7 +110,9 @@
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/validate_signal_format.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/validate_slide_window_arg.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/validate_version_bound.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/vec_cast_patched.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/version_column_names.html</loc></url>
+<url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/versions_standardize.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/wrap_symbolics.html</loc></url>
 <url><loc>https://cmu-delphi.github.io/epiprocess/dev/reference/wrap_varnames.html</loc></url>
 </urlset>

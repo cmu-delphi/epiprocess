@@ -25,11 +25,13 @@ epix_as_of(
 
 - version:
 
-  Time value specifying the max version to permit in the snapshot. That
-  is, the snapshot will comprise the unique rows of the current archive
-  data that represent the most up-to-date signal values, as of the
-  specified `version` (and whose time values are at least
-  `min_time_value`.)
+  Which version of the data should we extract? Usually an element of
+  `unique(x$DT$version)`. More generally, can be any size-1 vector
+  convertible to the same
+  [ptype](https://vctrs.r-lib.org/reference/vec_ptype.html) as
+  `x$DT$version` and `<= x$versions_end`. We try character-to-Date and
+  [`vctrs::vec_cast`](https://vctrs.r-lib.org/reference/vec_cast.html)
+  conversions.
 
 - min_time_value:
 
@@ -86,7 +88,7 @@ epix_as_of(
 range(archive_cases_dv_subset$DT$version) # 2020-06-02 -- 2021-12-01
 #> [1] "2020-06-02" "2021-12-01"
 
-epix_as_of(archive_cases_dv_subset, as.Date("2020-06-12"))
+epix_as_of(archive_cases_dv_subset, "2020-06-12")
 #> An `epi_df` object, 44 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day

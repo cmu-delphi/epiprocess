@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -396,7 +396,15 @@ Epidata API</a>.</p>
 <span><span class="va">flu_data_api</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/pub_flusurv.html" class="external-link">pub_flusurv</a></span><span class="op">(</span></span>
 <span>  locations <span class="op">=</span> <span class="st">"ca"</span>,</span>
 <span>  epiweeks <span class="op">=</span> <span class="fu"><a href="https://cmu-delphi.github.io/epidatr/reference/epirange.html" class="external-link">epirange</a></span><span class="op">(</span><span class="fl">201801</span>, <span class="fl">202001</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: `pub_flusurv()` uses the V4 Epidata API.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Starting in October 2026, V4 is tentatively deprecated in favor of the V5</span></span>
+<span><span class="co">#&gt;   API.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> See `vignette("migration-guide")` (or</span></span>
+<span><span class="co">#&gt;   <span style="color: #0000BB; font-style: italic;">&lt;https://cmu-delphi.github.io/epidatr/articles/migration-guide.html&gt;</span>) for</span></span>
+<span><span class="co">#&gt;   the V5 endpoints and how to move to them. Old data will remain available</span></span>
+<span><span class="co">#&gt;   for at least a year, but new ingestion will end.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span></code></pre></div>
 <p>We’re interested in the age-specific rates:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">flu_data</span> <span class="op">&lt;-</span> <span class="va">flu_data_api</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -455,9 +463,9 @@ the <code>age_group</code> column as an additional group key:</p>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
 <span><span class="co">#&gt; * other_keys = age_group</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-07-20 16:45:11.433519</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-09-14 16:21:50.067411</span></span>
 <span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
-<span><span class="co">#&gt; * latency  = 342 weeks</span></span>
+<span><span class="co">#&gt; * latency  = 350 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 305 × 4</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">age_group</span> <span style="font-weight: bold;">time_value</span>  <span style="font-weight: bold;">rate</span></span></span>
@@ -541,9 +549,9 @@ rate.</p>
 <span><span class="co">#&gt; An `epi_df` object, 61 x 3 with metadata:</span></span>
 <span><span class="co">#&gt; * geo_type  = state</span></span>
 <span><span class="co">#&gt; * time_type = week</span></span>
-<span><span class="co">#&gt; * as_of     = 2026-07-20 16:45:11.433519</span></span>
+<span><span class="co">#&gt; * as_of     = 2026-09-14 16:21:50.067411</span></span>
 <span><span class="co">#&gt; Latency (time between last available observation and epi_df's as_of, by time series):</span></span>
-<span><span class="co">#&gt; * latency  = 342 weeks</span></span>
+<span><span class="co">#&gt; * latency  = 350 weeks</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 61 × 3</span></span></span>
 <span><span class="co">#&gt;   <span style="font-weight: bold;">geo_value</span> <span style="font-weight: bold;">time_value</span> <span style="font-weight: bold;">rate_overall_recalc</span></span></span>

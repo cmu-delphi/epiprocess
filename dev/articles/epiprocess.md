@@ -73,9 +73,9 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-07-20 16:45:36.140688
+#> * as_of     = 2026-09-14 16:22:21.082662
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1631 days
+#> * latency across all time series = 1687 days
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -119,9 +119,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-07-20 16:45:36.140688
+#> * as_of     = 2026-09-14 16:22:21.082662
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1631 days
+#> * latency across all time series = 1687 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -148,9 +148,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-07-20 16:45:36.140688
+#> * as_of     = 2026-09-14 16:22:21.082662
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1631–1632 days
+#> * latency across all time series = 1687–1688 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -178,9 +178,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-07-20 16:45:36.140688
+#> * as_of     = 2026-09-14 16:22:21.082662
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1631 days
+#> * latency across all time series = 1687 days
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
@@ -213,6 +213,14 @@ df <- pub_covidcast(
   select(geo_value, time_value, deaths_daily = value) %>%
   as_epi_df() %>%
   arrange_canonical()
+#> Warning: `pub_covidcast()` uses the V4 Epidata API.
+#> ℹ Starting in October 2026, V4 is tentatively deprecated in favor of the V5
+#>   API.
+#> ℹ See `vignette("migration-guide")` (or
+#>   <https://cmu-delphi.github.io/epidatr/articles/migration-guide.html>) for
+#>   the V5 endpoints and how to move to them. Old data will remain available
+#>   for at least a year, but new ingestion will end.
+#> This warning is displayed once every 8 hours.
 edf <- inner_join(edf, df, by = c("geo_value", "time_value"))
 edf %>%
   group_by(geo_value) %>%

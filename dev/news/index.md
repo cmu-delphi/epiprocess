@@ -1,5 +1,29 @@
 # Changelog
 
+## epiprocess 0.13.0.9999
+
+### Breaking changes
+
+- `.versions =` arguments have been standardized across
+  [`autoplot.epi_archive()`](https://cmu-delphi.github.io/epiprocess/dev/reference/autoplot-epi.md)
+  and
+  [`epix_slide()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.md): (a)
+  a vector of versions, (b) a description of desired spacing (e.g., “2
+  weeks”), or
+  3.  `NULL`, for default behavior. The default, `NULL`, now means all
+      versions with updates;
+      [`epix_slide()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.md)
+      will no longer add additional versions based on the imputed
+      reporting cadence and `versions_end`. And
+      [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+      will no longer accept just a number in (b), to avoid ambiguity
+      with case (a) in some types of archives.
+
+### Improvements
+
+- Automatic character-to-Date and `vec_cast()` conversions have been
+  added to various function arguments.
+
 ## epiprocess 0.13.0
 
 ### New features

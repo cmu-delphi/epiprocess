@@ -34,6 +34,14 @@ df <- pub_covidcast(
   time_values = epirange(20220901, 20230101)
 ) %>%
   as_epi_df()
+#> Warning: `pub_covidcast()` uses the V4 Epidata API.
+#> ℹ Starting in October 2026, V4 is tentatively deprecated in favor of the V5
+#>   API.
+#> ℹ See `vignette("migration-guide")` (or
+#>   <https://cmu-delphi.github.io/epidatr/articles/migration-guide.html>) for
+#>   the V5 endpoints and how to move to them. Old data will remain available
+#>   for at least a year, but new ingestion will end.
+#> This warning is displayed once every 8 hours.
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column
 #>   instead, pass `signal_format = "pivot_wide"` instead.

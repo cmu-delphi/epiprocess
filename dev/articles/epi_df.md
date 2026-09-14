@@ -353,6 +353,14 @@ flu_data_api <- pub_flusurv(
   locations = "ca",
   epiweeks = epirange(201801, 202001)
 )
+#> Warning: `pub_flusurv()` uses the V4 Epidata API.
+#> ℹ Starting in October 2026, V4 is tentatively deprecated in favor of the V5
+#>   API.
+#> ℹ See `vignette("migration-guide")` (or
+#>   <https://cmu-delphi.github.io/epidatr/articles/migration-guide.html>) for
+#>   the V5 endpoints and how to move to them. Old data will remain available
+#>   for at least a year, but new ingestion will end.
+#> This warning is displayed once every 8 hours.
 ```
 
 We’re interested in the age-specific rates:
@@ -419,9 +427,9 @@ flu_data
 #> * geo_type  = state
 #> * time_type = week
 #> * other_keys = age_group
-#> * as_of     = 2026-07-20 16:45:11.433519
+#> * as_of     = 2026-09-14 16:21:50.067411
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 342 weeks
+#> * latency  = 350 weeks
 #> 
 #> # A tibble: 305 × 4
 #>   geo_value age_group time_value  rate
@@ -518,9 +526,9 @@ rate_overall_recalc_edf
 #> An `epi_df` object, 61 x 3 with metadata:
 #> * geo_type  = state
 #> * time_type = week
-#> * as_of     = 2026-07-20 16:45:11.433519
+#> * as_of     = 2026-09-14 16:21:50.067411
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency  = 342 weeks
+#> * latency  = 350 weeks
 #> 
 #> # A tibble: 61 × 3
 #>   geo_value time_value rate_overall_recalc

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiprocess</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.13.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,21 @@
       <small>Source: <a href="https://github.com/cmu-delphi/epiprocess/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.13.0.9999" id="epiprocess-01309999">epiprocess 0.13.0.9999<a class="anchor" aria-label="anchor" href="#epiprocess-01309999"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-13-0-9999">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-13-0-9999"></a></h3>
+<ul><li>
+<code>.versions =</code> arguments have been standardized across <code><a href="../reference/autoplot-epi.html">autoplot.epi_archive()</a></code> and <code><a href="../reference/epix_slide.html">epix_slide()</a></code>: (a) a vector of versions, (b) a description of desired spacing (e.g., “2 weeks”), or
+<ol start="3" style="list-style-type: lower-alpha"><li>
+<code>NULL</code>, for default behavior. The default, <code>NULL</code>, now means all versions with updates; <code><a href="../reference/epix_slide.html">epix_slide()</a></code> will no longer add additional versions based on the imputed reporting cadence and <code>versions_end</code>. And <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> will no longer accept just a number in (b), to avoid ambiguity with case (a) in some types of archives.</li>
+</ol></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-13-0-9999">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-13-0-9999"></a></h3>
+<ul><li>Automatic character-to-Date and <code>vec_cast()</code> conversions have been added to various function arguments.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.13.0" id="epiprocess-0130">epiprocess 0.13.0<a class="anchor" aria-label="anchor" href="#epiprocess-0130"></a></h2>
 <div class="section level3">
