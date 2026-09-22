@@ -64,7 +64,7 @@ names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
 
 \item{.f}{Function; together with \code{...} specifies the computation to slide.
 \code{.f} must be one of \code{data.table}'s rolling functions
-(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:froll]{data.table::roll}) or one
+(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:roll]{data.table::roll}) or one
 of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
 etc. See \link[slider:summary-slide]{slider::summary-slide}).
 

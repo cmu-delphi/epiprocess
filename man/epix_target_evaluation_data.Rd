@@ -43,7 +43,7 @@ is to help line up with the appropriate predictor data from
 available version of each target values, regardless of
 \code{anchor_versions}.}
 
-\item{out_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
+\item{out_name}{Optional \code{\link[glue:glue_data]{glue::glue_data}} pattern string;
 what/how should we name the target in the output?  It can just be
 the output column name desired, provided it contains no curly
 braces. Or you can use \code{glue} features and the following

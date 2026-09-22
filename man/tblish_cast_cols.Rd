@@ -9,7 +9,7 @@ tblish_cast_cols(x, cols_to)
 \arguments{
 \item{x}{\code{tbl}-ish object; see \code{\link{obj_is_tblish}}}
 
-\item{cols_to}{named list of \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype}}s; can be list subclass,
+\item{cols_to}{named list of \code{\link[vctrs:vec_ptype]{vec_ptype}}s; can be list subclass,
 such as \code{vec_ptype} of a tibble}
 }
 \value{

@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Logan Brooks \email{lcbrooks+github@andrew.cmu.edu}
   \item Nat DeFries
   \item Daniel McDonald
   \item Evan Ray

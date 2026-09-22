@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{cli_cat}
 \alias{cli_cat}
-\title{Like \code{\link[cli:cli_abort]{cli::cli_inform}}, but nicely mixable with \code{print} and \code{cat} in Rmd & qmd}
+\title{Like \code{\link[cli:cli_inform]{cli::cli_inform}}, but nicely mixable with \code{print} and \code{cat} in Rmd & qmd}
 \usage{
 cli_cat(message, .envir = parent.frame())
 }

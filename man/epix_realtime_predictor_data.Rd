@@ -34,7 +34,7 @@ all versions with updates in \code{archive$DT} plus any versions that
 look like they would be part of the normal reporting schedule but
 didn't change any values.}
 
-\item{out_name}{Optional \code{\link[glue:glue]{glue::glue_data}} pattern string;
+\item{out_name}{Optional \code{\link[glue:glue_data]{glue::glue_data}} pattern string;
 what/how should we name the lagged predictor in the output?  It
 can just be the output column name desired, provided it contains
 no curly braces. Or you can use \code{glue} features and the following

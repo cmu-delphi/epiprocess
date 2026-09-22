@@ -449,42 +449,41 @@ version_get_containing_time_value.POSIXct <- function(version, dat) {
   }
 }
 
-#' Validate that `version_lag` is an unambiguous, length-1, `version-time_value` possibility
+#' Validate that adding `version_lags` is unambiguous and moves us from time values to versions
 #'
 #' @keywords internal
-validate_nice_version_lag <- function(version_lag, x, version_lag_arg = rlang::caller_arg(version_lag), call = rlang::caller_env()) {
-  assert_vector(version_lag, len = 1L, .var.name = version_lag_arg)
+validate_nice_version_lags <- function(version_lags, x, len = NULL, version_lags_arg = rlang::caller_arg(version_lags), call = rlang::caller_env()) {
+  assert_vector(version_lags, len = len, .var.name = version_lags_arg)
   x_time_type <- time_type(x)
   x_version_obj <- version_obj(x)
   # x time_value class: bare integerish, Date, yearmonth, custom
   # x_time_type: day, week, yearmonth, integer, custom
   # x_version_obj: bare integerish, Date, yearmonth, POSIXct
-  # version_lag: bare integerish, difftime
-  if (inherits(version_lag, "difftime")) {
+  # version_lags: bare integerish, difftime
+  if (inherits(version_lags, "difftime")) {
     if (inherits(x_version_obj, c("Date", "yearmonth", "POSIXct"))) { # (any)
-      # TODO check if weekly versions and existing real lags are very uniform & version_lag not among?
-      invisible(version_lag)
+      # TODO check if weekly versions and existing real lags are very uniform & version_lags not among?
+      invisible(version_lags)
     } else {
       cli_abort("difftime version lags can only be used with Date, yearmonth, or POSIXct versions,
                  not versions of class {format_chr_deparse(class(x_version_obj))}")
     }
-  } else if (rlang::is_bare_integerish(version_lag)) {
+  } else if (rlang::is_bare_integerish(version_lags)) {
     if (inherits(x_version_obj, "Date") &&
           (x_time_type == "week" || any(diff(as.numeric(x_version_obj)) == 7))
         ) {
       cli_abort("Since versions appeared weekly in some/all of the data,
-                 {.var {version_lag_arg}} must be a difftime, not bare integerish,
+                 {.var {version_lags_arg}} must be a difftime, not bare integerish,
                  in order to clarify whether it is in terms of days or weeks.")
-    }
-    if (inherits(x_version_obj, c("Date", "yearmonth", "numeric", "integer"))) {
-      invisible(version_lag)
+    } else if (inherits(x_version_obj, c("Date", "yearmonth", "numeric", "integer"))) {
+      invisible(version_lags)
     } else {
-      cli_abort("Bare integerish {.var {version_lag_arg}} cannot be used with versions of class
+      cli_abort("Bare integerish {.var {version_lags_arg}} cannot be used with versions of class
                  {format_chr_deparse(class(x_version_obj))}.")
     }
   } else {
-    cli_abort("{.var {version_lag_arg}} must be difftime or bare integerish,
-               not an object of class {format_chr_deparse(class(version_lag))}")
+    cli_abort("{.var {version_lags_arg}} must be difftime or bare integerish,
+               not an object of class {format_chr_deparse(class(version_lags))}")
   }
 }
 
@@ -591,7 +590,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   # version_type <- guess_time_type(x$DT$version)
   # assert_vector(voffset, len = 1L)
   # voffset <- time_delta_standardize(voffset, version_type, "fast")
-  validate_nice_version_lag(voffset, x)
+  validate_nice_version_lags(voffset, x, len = 1L)
   # We want default vtol to be reasonably large to in order to adapt
   # to normal variance in pipeline schedules as well as transient
   # pipeline issues and holiday-shifted schedules, which seem pretty
