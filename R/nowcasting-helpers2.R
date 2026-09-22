@@ -615,7 +615,7 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
     as.list(lookup_ektvs)[ekv_vars], on = ekv_vars, roll = "nearest",
     list(real_version = x.version, vdiff = x.version - i.version)
   ]
-  # ^ `as.list` is needed to make `x.version` and `i.version` work
+  # ^ `as.list` seemed needed to make `x.version` and `i.version` work; can't replicate now
 
   lookup_ektvs$version <- real_versions_info$real_version
   result <- x$DT[
