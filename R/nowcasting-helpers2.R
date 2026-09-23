@@ -1,8 +1,8 @@
 
-# extract2_horizon <- function(x, ekvs, var, horizon, ...) UseMethod("extract2_horizon")
+# extract_horizon <- function(x, ekvs, var, horizon, ...) UseMethod("extract_horizon")
 
 # #' @export
-# extract2_horizon.epi_archive <- function(x, ekvs, var, horizon, ...) {
+# extract_horizon.epi_archive <- function(x, ekvs, var, horizon, ...) {
 #   assert_true(obj_is_tblish(ekvs))
 #   ekvs <- tblish_cast_cols(ekvs, x$DT[, key(x$DT)]) # FIXME minus the time_value
 #   assert_string(var) # XXX vs. tidyselect?
@@ -23,7 +23,7 @@
 #         # other complicated reasoning below.
 #         cli_abort(c("`time_value`s are weekly, but `version`s are not; this is currently not supported",
 #                     ">" = "please thin out the versions to a weekly cadence, or use daily time values if possible"),
-#                   class = "epiprocess__extract2_horizon__weekly_time_nonweekly_version")
+#                   class = "epiprocess__extract_horizon__weekly_time_nonweekly_version")
 #       }
 #       alignment_horizon_days_dbl <- as.double(x$DT$time_value[[1L]] - x$DT$version[[1L]]) %% 7
 #       if (units(horizon) == "days" && as.double(horizon) %% 7 != alignment_horizon_days_dbl) {
@@ -39,18 +39,18 @@
 #                            {format(x$DT$version[[1L]], "%a")} will yield a
 #                            {format(x$DT$time_value[[1L]], "%a")}'
 #                     ),
-#                   class = "epiprocess__extract2_horizon__horizon_days_misaligned")
+#                   class = "epiprocess__extract_horizon__horizon_days_misaligned")
 #       } else if (units(horizon) == "weeks" && alignment_horizon_days_dbl != 0) {
 #         cli_abort(c("`horizon` is in terms of weeks, but `time_value`s and `version`s
 #                      fall on differing weekdays; not sure how to align them",
 #                     ">" = "provide `horizon` in terms of days instead"),
-#                   class = "epiprocess__extract2_horizon__horizon_weeks_misaligned")
+#                   class = "epiprocess__extract_horizon__horizon_weeks_misaligned")
 #       } else {
 #         valid_units <- if (alignment_horizon_days_dbl == 0L) c("days", "weeks") else "days"
 #         if (! units(horizon) %in% valid_units || ! rlang::is_integerish(as.double(horizon))) {
 #           cli_abort('`horizon` must be in terms of integer number of
 #                      {cli_vec(valid_units, style = list("vec-last" = " or "))}',
-#                   class = "epiprocess__extract2_horizon__horizon_bad_units_or_not_integer")
+#                   class = "epiprocess__extract_horizon__horizon_bad_units_or_not_integer")
 #         }
 #       }
 #     }
@@ -575,10 +575,10 @@ vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
 # XXX might be unclear in usage which time voffset is relative to.  also, with extract2, perhaps even less need to combine in toffset.
 #
 # XXX function name also doesn't suggest that it may be using nearby...
-extract2_tvoffset <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) UseMethod("extract2_tvoffset")
+extract_tvoffset <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) UseMethod("extract_tvoffset")
 
 #' @export
-extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) {
+extract_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = NULL, ...) {
   # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
   assert_class(ekts, "tbl_df")
   ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])
@@ -632,10 +632,10 @@ extract2_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol =
   result
 }
 
-# extract2_version_lag <- function(x, ekts, var, version_lag, vtol = NULL, ...) UseMethod("extract2_version_lag")
+# extract_version_lag <- function(x, ekts, var, version_lag, vtol = NULL, ...) UseMethod("extract_version_lag")
 
 # #' @export
-# extract2_version_lag.epi_archive <- function(x, ekts, var, version_lag, vtol = NULL, ...) {
+# extract_version_lag.epi_archive <- function(x, ekts, var, version_lag, vtol = NULL, ...) {
 #   # TODO allow this to be by wday/etc.?  Or make a group_modify.epi_archive?
 #   assert_class(ekts, "tbl_df")
 #   ekts <- tblish_cast_cols(ekts, x$DT[0L, key_colnames(x, exclude = "version"), with = FALSE])

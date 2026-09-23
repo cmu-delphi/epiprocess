@@ -9,7 +9,7 @@
 # values!); if version finer-grained, then the containing time value;
 # if time finer-grained, then maybe the last contained time value; if
 # not nested, then ... something. Guess this was in
-# nowcasting-helpers2.R; see extract2_tvoffset and
+# nowcasting-helpers2.R; see extract_tvoffset and
 # version_get_containing_time_value.
 
 #' Get predictor lag train&test data, factoring in data maturity (revisioning)
