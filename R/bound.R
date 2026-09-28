@@ -65,4 +65,4 @@ in_bound <- function(x, bound) {
   }
 }
 
-# TODO consider making this vectorized, a rcrd.
+# TODO consider making this vectorized, a rcrd. or try to make it fail being put into a 2-row data frame clearly.
