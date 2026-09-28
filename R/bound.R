@@ -55,3 +55,14 @@ as_exclusive_if_not_bound <- function(x) {
     new_bound0(x, FALSE)
   }
 }
+
+in_bound <- function(x, bound) {
+  assert_class(bound, "epiprocess_bound")
+  if (bound[["inclusive"]]) {
+    x <= bound[["threshold"]]
+  } else {
+    x < bound[["threshold"]]
+  }
+}
+
+# TODO consider making this vectorized, a rcrd.
