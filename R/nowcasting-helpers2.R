@@ -521,34 +521,35 @@ vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
     # "rather than" stratify on nice daily-weekly with
     # always-same-wday versions, then it's going to actually be
     # stratifying.
-    approx_ceiling_half_tstride_in_vspace <-
-      # TODO refactor to helper?
-      switch(x$time_type,
-             day =, week = , yearmonth = {
-               approx_half_tstride_difftime <-
-                 unit_time_delta(x$time_type) %>%
-                 time_delta_to_approx_difftime(x$time_type) %>%
-                 `/`(2)
-               if (inherits(x$DT$version, "POSIXct")) {
-                 approx_half_tstride_difftime
-               } else if (inherits(x$DT$version, "Date")) {
-                 approx_half_tstride_difftime %>%
-                   difftime_approx_ceiling_time_delta("day") %>%
-                   time_delta_standardize("day")
-               } else if (inherits(x$DT$version, "yearmonth")) {
-                 approx_half_tstride_difftime %>%
-                   difftime_approx_ceiling_time_delta("yearmonth") %>%
-                   time_delta_standardize("yearmonth")
-               } else {
-                 cli_abort("Unsupported time_type x version class:
-                            {format_chr_deparse(x$time_type)} x {format_chr_deparse(class(x$DT$version))}")
-               }
-             },
-             integer = {
-               1L
-             },
-             cli_abort("Unsupported time_type {format_chr_deparse(x$time_type)}"))
-    vtol <- exclusive(min(c(low_vstride, approx_ceiling_half_tstride_in_vspace)))
+    # approx_ceiling_half_tstride_in_vspace <-
+    #   # TODO refactor to helper?
+    #   switch(x$time_type,
+    #          day =, week = , yearmonth = {
+    #            approx_half_tstride_difftime <-
+    #              unit_time_delta(x$time_type) %>%
+    #              time_delta_to_approx_difftime(x$time_type) %>%
+    #              `/`(2)
+    #            if (inherits(x$DT$version, "POSIXct")) {
+    #              approx_half_tstride_difftime
+    #            } else if (inherits(x$DT$version, "Date")) {
+    #              approx_half_tstride_difftime %>%
+    #                difftime_approx_ceiling_time_delta("day") %>%
+    #                time_delta_standardize("day")
+    #            } else if (inherits(x$DT$version, "yearmonth")) {
+    #              approx_half_tstride_difftime %>%
+    #                difftime_approx_ceiling_time_delta("yearmonth") %>%
+    #                time_delta_standardize("yearmonth")
+    #            } else {
+    #              cli_abort("Unsupported time_type x version class:
+    #                         {format_chr_deparse(x$time_type)} x {format_chr_deparse(class(x$DT$version))}")
+    #            }
+    #          },
+    #          integer = {
+    #            1L
+    #          },
+    #          cli_abort("Unsupported time_type {format_chr_deparse(x$time_type)}"))
+    # vtol <- exclusive(min(c(low_vstride, approx_ceiling_half_tstride_in_vspace)))
+    vtol <- exclusive(low_vstride)
   } else {
     vtol <- as_inclusive_if_not_bound(vtol)
     if (inherits(vtol$threshold, "difftime")) {
