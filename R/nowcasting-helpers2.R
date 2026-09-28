@@ -514,6 +514,13 @@ vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
     # what time it refers to, so something like preventing t1 + lag +
     # vtol from crossing t2 + lag - vtol.  So choose vtol < (t2 -
     # t1)/2 = unit_time_delta(time_type)/2 <==> vtol < ceiling of RHS.
+    #
+    # ... or do we?  if we don't wday stratify, but on daily time,
+    # varying-wdays weekly versions, then it will still line up with
+    # the wrong wday data, and if we choose to model wday effects
+    # "rather than" stratify on nice daily-weekly with
+    # always-same-wday versions, then it's going to actually be
+    # stratifying.
     approx_ceiling_half_tstride_in_vspace <-
       # TODO refactor to helper?
       switch(x$time_type,
