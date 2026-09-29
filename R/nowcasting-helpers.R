@@ -285,6 +285,8 @@ epix_target_evaluation_data <- function(archive, varname, relative_time,
     select(-time_value)
 }
 
+# TODO consider alternative using reference_date-relative evaluation snapshots (same across horizons); differing lags but not mixing across any mass edits
+
 # TODO alternative approaches, like imputation, maybe weighting
 
 # We can apply this separately for each nowcast_date to ensure that we consider
