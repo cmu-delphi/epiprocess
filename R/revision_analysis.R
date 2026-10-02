@@ -290,7 +290,8 @@ revision_analysis <- function(epi_arch,
   if (!return_only_tibble) {
     revision_behavior <- structure(list( # nolint: object_usage_linter
       revision_behavior = revision_behavior,
-      initial_reporting = initial_reporting,
+      initial_reporting = initial_reporting %>%
+        mutate(across(c(min_initial_lag, max_initial_lag), function(col) n_steps_to_time_delta(col, time_type))),
       max_nonbulk_initial_lag = n_steps_to_time_delta( # nolint: object_usage_linter
         max_nonbulk_initial_lag, time_type,
         require_integer = FALSE
