@@ -609,7 +609,8 @@ as_epi_archive <- function(
     if (!all(utc_display_datetimes == utc_midnights)) {
       cli::cli_abort(
         c("Datetime (POSIXct) `version`s are not yet supported.",
-          ">" = "Consider coarsening the versions into dates, keeping only the last version of each measurement within a day."
+          ">" = "Consider coarsening the versions into dates,
+                 keeping only the last version of each measurement within a day."
         ),
         class = "epiprocess__as_epi_archive__datetime_version"
       )

@@ -257,7 +257,10 @@ test_that("Version dates as fake UTC midnight datetimes are converted.", {
   )
   expect_equal(
     protoarchive %>%
-      mutate(version = as.POSIXct(version, tz = "UTC") %>% as.POSIXct(tz = "America/New_York")) %>%
+      mutate(
+        version = as.POSIXct(version, tz = "UTC") %>%
+          as.POSIXct(tz = "America/New_York")
+      ) %>%
       as_epi_archive(),
     protoarchive %>% as_epi_archive()
   )
