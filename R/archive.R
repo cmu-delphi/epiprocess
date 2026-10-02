@@ -607,9 +607,12 @@ as_epi_archive <- function(
     utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(x$version) impl changing
     utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
     if (!all(utc_display_datetimes == utc_midnights)) {
-      cli::cli_abort(c("Datetime (POSIXct) `version`s are not yet supported.",
-                       ">" = "Consider coarsening the versions into dates, keeping only the last version of each measurement within a day."),
-                     class = "epiprocess__as_epi_archive__datetime_version")
+      cli::cli_abort(
+        c("Datetime (POSIXct) `version`s are not yet supported.",
+          ">" = "Consider coarsening the versions into dates, keeping only the last version of each measurement within a day."
+        ),
+        class = "epiprocess__as_epi_archive__datetime_version"
+      )
     } else {
       x$version <- utc_dates
     }
