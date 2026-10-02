@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.12.0
+Version: 0.13.0.9999
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -16,6 +16,7 @@ Authors@R: c(
     person("Dmitry", "Shemetov", role = "aut"),
     person("Ryan", "Tibshirani", role = "aut"),
     person("David", "Weber", , "davidweb@andrew.cmu.edu", role = "ctb"),
+    person("Javier", "Martinez-Rodriguez", role = "ctb"),
     person("Lionel", "Henry", role = "ctb",
            comment = "Author of included rlang fragments"),
     person("Hadley", "Wickham", role = "ctb",
@@ -51,9 +52,12 @@ Imports:
     magrittr,
     methods,
     pkgconfig,
+    plotly,
     purrr,
+    readr,
     rlang,
     slider,
+    stats,
     tibble,
     tidyr,
     tidyselect (>= 1.2.0),
@@ -73,7 +77,6 @@ Suggests:
     knitr,
     lubridate,
     outbreaks,
-    readr,
     rmarkdown,
     testthat,
     trendfilter,
@@ -103,12 +106,14 @@ Collate:
     'epi_df.R'
     'epi_df_forbidden_methods.R'
     'epiprocess-package.R'
+    'extra_plots.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
     'inline-roxygen.R'
     'key_colnames.R'
+    'linelist.R'
     'methods-epi_df.R'
     'nowcasting-helpers.R'
     'nowcasting-helpers2.R'

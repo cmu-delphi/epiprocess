@@ -119,10 +119,11 @@
 #'     log_scale = TRUE, na_rm = TRUE
 #'   ))
 growth_rate <- function(
-    y, x = seq_along(y), x0 = x,
-    method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
-    h = 7, log_scale = FALSE, na_rm = FALSE,
-    params = growth_rate_params()) {
+  y, x = seq_along(y), x0 = x,
+  method = c("rel_change", "linear_reg", "smooth_spline", "trend_filter"),
+  h = 7, log_scale = FALSE, na_rm = FALSE,
+  params = growth_rate_params()
+) {
   # Check x, y, x0
   if (length(x) != length(y)) cli_abort("`x` and `y` must have the same length.")
   method <- rlang::arg_match(method)
@@ -303,21 +304,22 @@ growth_rate <- function(
 #' @importFrom checkmate assert_number
 #' @export
 growth_rate_params <- function(
-    df = NULL,
-    lambda = NULL,
-    cv = FALSE,
-    spar = NULL,
-    all.knots = FALSE, # nolint
-    df.offset = 0, # nolint
-    penalty = 1,
-    k = 3L,
-    family = c("gaussian", "logistic", "poisson"),
-    nlambda = 50L,
-    lambda_max = NULL,
-    lambda_min = NULL,
-    lambda_min_ratio = 1e-5,
-    error_measure = c("deviance", "mse", "mae"),
-    nfolds = 3L) {
+  df = NULL,
+  lambda = NULL,
+  cv = FALSE,
+  spar = NULL,
+  all.knots = FALSE, # nolint
+  df.offset = 0, # nolint
+  penalty = 1,
+  k = 3L,
+  family = c("gaussian", "logistic", "poisson"),
+  nlambda = 50L,
+  lambda_max = NULL,
+  lambda_min = NULL,
+  lambda_min_ratio = 1e-5,
+  error_measure = c("deviance", "mse", "mae"),
+  nfolds = 3L
+) {
   if (is.character(df)) {
     df <- rlang::arg_match0(df, c("min", "1se"))
   } else {

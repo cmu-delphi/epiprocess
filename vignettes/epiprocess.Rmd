@@ -188,6 +188,13 @@ dv
 
 See `vignette("epi_archive")` for a more in-depth guide to `epi_archive` objects.
 
+## Advanced Plotting
+
+The `{epiprocess}` package provides advanced visualization capabilities for both
+ `epi_df` and `epi_archive` objects, including interactive plotting and 
+ multi-variable heatmaps. For a detailed overview and examples, see 
+ `vignette("advanced_plotting")`.
+
 ## Data attribution
 
 This document contains a dataset that is a modified part of the [COVID-19 Data

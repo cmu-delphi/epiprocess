@@ -9,11 +9,14 @@
 revision_analysis(
   epi_arch,
   ...,
-  drop_nas = TRUE,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
+  compactify_drop_initial_nas = TRUE,
+  drop_nas = FALSE,
   return_only_tibble = FALSE
 )
 
@@ -29,51 +32,81 @@ revision_analysis(
 revision_summary(
   epi_arch,
   ...,
-  drop_nas = TRUE,
   min_waiting_period = as.difftime(60, units = "days"),
   within_latest = 0.2,
+  bulk_reporting_level = 0.8,
+  bulk_reporting_multiplier = 1.2,
   compactify = TRUE,
   compactify_abs_tol = 0,
+  compactify_drop_initial_nas = TRUE,
+  drop_nas = FALSE,
   return_only_tibble = FALSE
 )
 }
 \arguments{
 \item{epi_arch}{an epi_archive to be analyzed}
 
-\item{...}{<\code{\link[dplyr:dplyr_tidy_select]{tidyselect}}>, used to choose the column to
-summarize. If empty and there is only one value/measurement column (i.e.,
-not in \code{\link{key_colnames}}) in the archive, it will automatically select it.
-If supplied, \code{...} must select exactly one column.}
+\item{...}{<\code{\link[dplyr:dplyr_tidy_select]{tidyselect}}>, used to
+choose the column to summarize. If empty and there is only one
+value/measurement column (i.e., not in \code{\link{key_colnames}}) in the
+archive, it will automatically select it.  If supplied, \code{...}
+must select exactly one column.}
 
-\item{drop_nas}{bool, drop any \code{NA} values from the archive? After dropping
-\code{NA}'s compactify is run again if \code{compactify} is \code{TRUE} to make
-sure there are no duplicate values from occasions when the signal is
-revised to \code{NA}, and then back to its immediately-preceding value.}
+\item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a
+cutoff: any time_values that have not had at least
+\code{min_waiting_period} to stabilize as of the \code{versions_end} are
+removed. \code{min_waiting_period} should characterize the typical
+time during which most significant revisions occur. The default
+of 60 days corresponds to a typical near-final value for case
+counts as reported in the context of insurance. To avoid this
+filtering, either set to \code{NULL} or 0. A \code{difftime} will be
+rounded up to the appropriate \code{time_type} if necessary (that is 5
+days will be rounded to 1 week if the data is weekly).}
 
-\item{min_waiting_period}{\code{difftime}, integer or \code{NULL}. Sets a cutoff: any
-time_values that have not had at least \code{min_waiting_period} to stabilize as
-of the \code{versions_end} are removed. \code{min_waiting_period} should characterize
-the typical time during which most significant revisions occur. The default
-of 60 days corresponds to a typical near-final value for case counts as
-reported in the context of insurance. To avoid this filtering, either set
-to \code{NULL} or 0. A \code{difftime} will be rounded up to the appropriate \code{time_type} if
-necessary (that is 5 days will be rounded to 1 week if the data is weekly).}
+\item{within_latest}{double between 0 and 1. Determines the
+threshold used for the \code{lag_to}}
 
-\item{within_latest}{double between 0 and 1. Determines the threshold
-used for the \code{lag_to}}
+\item{bulk_reporting_level, bulk_reporting_multiplier}{numeric; the
+former between 0 and 1, typically close to but less than one, and
+the latter \verb{>= 1}; defaults of 0.8 and 1.2,
+respectively. Determines how to detect bulk reporting.  Consider
+the distribution of "max initial lags" across geodemographic
+group x version pairs that add initial observations for new time
+values; a bulk reporting lag threshold is determined by taking
+the \code{bulk_reporting_level}-th quantile of this distribution,
+multiplying by \code{bulk_reporting_multiplier}, and rounding to an
+integer number of time intervals.  To avoid flagging anything as
+bulk reporting, set \code{bulk_reporting_level = 1}.}
 
-\item{compactify}{bool. If \code{TRUE}, we will compactify after the signal
-requested in \code{...} has been selected on its own and the \code{drop_nas} step.
-This helps, for example, to give similar results when called on
-\link[=epix_merge]{merged} and single-signal archives, since merged archives
-record an update when any of the other signals change, not just the
-requested signal. The default is \code{TRUE}.}
+\item{compactify}{bool. If \code{TRUE}, we will compactify after the
+signal requested in \code{...} has been selected on its own and the
+\code{drop_nas} step.  This helps, for example, to give similar
+results when called on \link[=epix_merge]{merged} and single-signal
+archives, since merged archives record an update when any of the
+other signals change, not just the requested signal. The default
+is \code{TRUE}.}
 
-\item{compactify_abs_tol}{length-1 double, used if \code{compactify} is \code{TRUE}, it
-determines the threshold for when two doubles are considered identical.}
+\item{compactify_abs_tol}{length-1 double, used if \code{compactify} is
+\code{TRUE}, it determines the threshold for when two doubles are
+considered identical.}
 
-\item{return_only_tibble}{boolean to return only the simple \code{tibble} of
-computational results rather than the complete S3 object.}
+\item{compactify_drop_initial_nas}{bool; should we drop initial
+estimates of NA during the compactification step?  Default is
+TRUE, because these NAs are likely present due to
+\code{\link[=epix_merge]{epix_merge()}}ing with a more timely indicator, and the
+upstream source probably didn't actually report explicit NAs as
+provisional estimates.}
+
+\item{drop_nas}{bool, do we drop all \code{NA} values (not just initial
+estimates of \code{NA}) from the archive data structure prior to
+(optional) compactification?  This both strips (i) initial
+estimates of NA and (ii) explicit revisions from a non-NA
+estimate to NA.  Equivalent to \code{compactify_drop_initial_nas} if
+\code{compactify} is \code{TRUE}. Default is FALSE, favoring \verb{compactify = TRUE, compactify_drop_initial_nas = TRUE}.}
+
+\item{return_only_tibble}{boolean to return only the simple
+\code{tibble} of computational results rather than the complete S3
+object.}
 
 \item{x}{a \code{revision_analysis} object}
 
@@ -96,18 +129,20 @@ appropriate for the scale of the dataset.}
 don't actually change very much. Default is .1, or 10\% of the final value}
 }
 \value{
-An S3 object with class \code{revision_behavior}. This function is typically
+An S3 object with class \code{revision_analysis}. This function is typically
 called for the purposes of inspecting the printed output. The
 results of the computations are available in
 \code{revision_analysis(...)$revision_behavior}. If you only want to access
 the internal computations, use \code{return_only_tibble = TRUE}.
 }
 \description{
-\code{revision_summary} removes all missing values (if requested), and then
-computes some basic statistics about the revision behavior of an archive,
-returning a tibble summarizing the revisions per time_value+epi_key
-features. If \code{print_inform} is true, it prints a concise summary. The
-columns returned are:
+\code{revision_summary} removes all missing values (if requested), and
+then computes some basic statistics about the revision behavior
+of an archive, returning a tibble summarizing the revisions per
+time_value+epi_key features (limited to those that have data
+available past the min waiting period to compare against, and are
+not detected as added in a bulk report). The columns returned
+are:
 \enumerate{
 \item \code{n_revisions}: the total number of revisions for that entry
 \item \code{min_lag}: the minimum time to any value (if \code{drop_nas=FALSE}, this
@@ -139,6 +174,11 @@ produce incorrect results for some calculations, since week numbering
 contains jumps at year boundaries.
 }
 \examples{
+
+# Print revision summary:
+revision_analysis(archive_cases_dv_subset, percent_cli)
+
+# Print some underlying data:
 revision_example <- revision_analysis(archive_cases_dv_subset, percent_cli)
 revision_example$revision_behavior \%>\% arrange(desc(spread))
 

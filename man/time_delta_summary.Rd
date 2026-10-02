@@ -4,7 +4,7 @@
 \alias{time_delta_summary}
 \title{Like \code{summary} but working across all "time deltas", including difftimes}
 \usage{
-time_delta_summary(time_delta, time_type)
+time_delta_summary(time_delta, time_type = NULL)
 }
 \description{
 Also standardizes units of difftimes to the natural unit for the given

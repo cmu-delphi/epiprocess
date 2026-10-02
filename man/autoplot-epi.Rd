@@ -15,7 +15,10 @@
   .facet_by = c(".response", "other_keys", "all_keys", "geo_value", "all", "none"),
   .base_color = "#3A448F",
   .facet_filter = NULL,
-  .max_facets = deprecated()
+  .max_facets = deprecated(),
+  .max_keys = 10,
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{autoplot}{epi_archive}(
@@ -24,7 +27,10 @@
   .base_color = "black",
   .versions = NULL,
   .mark_versions = FALSE,
-  .facet_filter = NULL
+  .facet_filter = NULL,
+  .max_keys = 6,
+  .interactive = FALSE,
+  .facet_to_dropdown = FALSE
 )
 
 \method{plot}{epi_df}(x, ...)
@@ -69,36 +75,73 @@ by using \code{.response_name}. See the examples below.}
 
 \item{.max_facets}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}}
 
-\item{.versions}{Select which versions will be displayed. By default,
-a separate line will be shown with the data as it would have appeared on
+\item{.max_keys}{Maximum number of key combinations to display. If the data
+contains more key combinations than this limit, a random sample of size
+\code{.max_keys} is displayed, and a warning is issued. Set to \code{Inf} to
+display all keys. Subsampling is not performed if \code{.interactive = TRUE}
+(though a similar limit may be applied to initial legend visibility) when
+\code{.facet_to_dropdown = FALSE}.}
+
+\item{.interactive}{Logical. If \code{TRUE}, returns an interactive
+\code{\link[plotly:ggplotly]{plotly::ggplotly()}} widget instead of a static \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+This is especially useful for exploring datasets with many keys. Default is
+\code{FALSE}.}
+
+\item{.facet_to_dropdown}{Logical. If \code{TRUE}, and \code{.interactive = TRUE}, any
+facets will be converted into a dropdown menu. This is useful for
+maximizing screen real estate when there are many facets. Default is
+\code{FALSE}.}
+
+\item{.versions}{Optional; determines which versions will be displayed.
+Either
+(a) a vector containing the set of desired versions to
+include,
+(b) a description of the desired spacing, such as \code{"week"},
+\code{"2 weeks"}, \code{"month"}, or another string accepted by
+\code{\link{seq}}'s / \code{\link{seq.Date}}'s \code{by} parameter, or
+(c) \code{NULL} (the default),
+to include all versions containing updates.
+
+In case (a), we accept vectors that can be automatically converted
+to match the \link[vctrs:vec_ptype]{ptype} of versions in the archive;
+we try both character-to-Date and \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} conversions.
+In case (c), we look at the unique \code{version}s recorded in the archive's
+DT object.
+
+By default, a separate line will be shown with the data as it would have appeared on
 every day in the archive. This can sometimes become overwhelming. For
 example, daily data would display a line for what the data would have looked
-like on every single day. To override this, you can select specific dates,
-by passing a vector of values here. Alternatively, a sequence can be
-automatically created by passing a string like \code{"2 weeks"} or \code{"month"}.
-For time types where the \code{time_value} is a date object, any string that
-is interpretable by \code{\link[base:seq.Date]{base::seq.Date()}} is allowed.
-
-For \code{time_type = "integer"}, an integer larger than 1 will give a subset
-of versions.}
+like on every single day.}
 
 \item{.mark_versions}{Logical. Indicate whether to mark each version with
 a vertical line. Note that displaying many versions can become busy.}
 }
 \value{
-A \link[ggplot2:ggplot]{ggplot2::ggplot} object
+A \code{\link[ggplot2:ggplot]{ggplot2::ggplot}} object, OR \code{\link[plotly:plotly]{plotly::plotly}} object if \code{.interactive = TRUE}
 }
 \description{
 Automatically plot an epi_df or epi_archive
 }
 \examples{
+
 # -- Use it on an `epi_df`
-autoplot(cases_deaths_subset, cases, death_rate_7d_av)
-autoplot(cases_deaths_subset, case_rate_7d_av, .facet_by = "geo_value")
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av)
+
+# Launch interactive version in web browser:
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+  .interactive = TRUE
+)
+
+# Use dropdowns instead of facets for interactive plots
+autoplot(cases_deaths_subset, case_rate_7d_av, death_rate_7d_av,
+  .interactive = TRUE, .facet_to_dropdown = TRUE
+)
+
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",
   .facet_by = "geo_value"
 )
+
 autoplot(cases_deaths_subset, case_rate_7d_av,
   .color_by = "none",
   .base_color = "red", .facet_by = "geo_value"
@@ -116,6 +159,7 @@ autoplot(cases_deaths_subset, cases, death_rate_7d_av,
     (.response_name == "death_rate_7d_av" &
       geo_value \%in\% c("ca", "fl", "ga", "ny"))
 )
+
 # Just an alias for convenience
 plot(cases_deaths_subset, cases, death_rate_7d_av,
   .facet_by = "all",

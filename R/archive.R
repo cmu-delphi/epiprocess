@@ -120,11 +120,11 @@ next_after.POSIXct <- function(x) {
   unchanged <- result_dbl == x_dbl
   result_dbl[unchanged] <- result_dbl[unchanged] + 2^-1074 # subnormal step
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps*x_abs # for x == -2^k
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps * x_abs # for x == -2^k
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs
   unchanged <- result_dbl == x_dbl
-  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps*x_abs*2 # hedge against rounding weirdness
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs * 2 # hedge against rounding weirdness
   stop("FIXME TODO finish")
 }
 
@@ -290,12 +290,13 @@ next_after.POSIXct <- function(x) {
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    x,
-    geo_type,
-    time_type,
-    other_keys,
-    clobberable_versions_start,
-    versions_end) {
+  x,
+  geo_type,
+  time_type,
+  other_keys,
+  clobberable_versions_start,
+  versions_end
+) {
   assert_data_frame(x)
   assert_string(geo_type)
   assert_string(time_type)
@@ -502,7 +503,9 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_ar
     rep(TRUE, nrow(arranged_updates_df))
 
   if (init_nas_are_locf) {
-    value_is_missing <- vctrs::vec_detect_missing(vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df)))
+    value_is_missing <- vctrs::vec_detect_missing(
+      vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df))
+    )
     fifelse(ekt_is_locf, value_is_locf, value_is_missing)
   } else {
     ekt_is_locf & value_is_locf
@@ -555,6 +558,7 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #' `as_epi_archive` converts a data frame, data table, or tibble into an
 #' `epi_archive` object.
 #'
+#' @inheritParams as_epi_df
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
@@ -567,15 +571,20 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
 #'
 #' @export
 as_epi_archive <- function(
-    x,
-    geo_type = deprecated(),
-    time_type = deprecated(),
-    other_keys = character(),
-    compactify = TRUE,
-    compactify_abs_tol = 0,
-    clobberable_versions_start = NA,
-    .versions_end = max_version_with_row_in(x), ...,
-    versions_end = .versions_end) {
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(),
+  compactify = TRUE,
+  compactify_abs_tol = 0,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
+  ...,
+  versions_end = .versions_end
+) {
+  signal_format <- rlang::arg_match(signal_format)
   assert_data_frame(x)
   x <- rename(x, ...)
   x <- guess_column_name(x, "time_value", time_column_names())
@@ -592,10 +601,19 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
-  result <- validate_epi_archive(new_epi_archive(
+  result <- new_epi_archive(
     x, geo_type, time_type, other_keys,
     clobberable_versions_start, versions_end
-  ))
+  )
+
+  result <- process_signal_archive(
+    result,
+    signal_format = signal_format,
+    signal_var = signal_var,
+    other_keys = other_keys
+  )
+
+  result <- validate_epi_archive(result)
 
   # Compactification:
   if (!list(compactify) %in% list(TRUE, FALSE, "message")) {
@@ -691,7 +709,8 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
         if (vec_equal(max_update_version, x$versions_end)) {
           "Version range: {min(x$DT$version)} -- {max_update_version}"
         } else {
-          "Version range: {min(x$DT$version)} -- {x$versions_end}, but no row updates recorded after {max_update_version}"
+          "Version range: {min(x$DT$version)} -- {x$versions_end},
+           but no row updates recorded after {max_update_version}"
         }
       },
       "i" = if (!is.na(x$clobberable_versions_start)) {
@@ -877,6 +896,97 @@ clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
 }
+
+#' Process signal column in epi archive
+#'
+#' Handles signal detection and transformation based on `signal_format`.
+#'
+#' @return A list with `x` (the transformed archive) and `other_keys`.
+#' @keywords internal
+#' @noRd
+#' @return The transformed `epi_archive`.
+#' @keywords internal
+#' @noRd
+process_signal_archive <- function(
+  archive,
+  signal_format,
+  signal_var,
+  other_keys,
+  value_var = "value"
+) {
+  res <- validate_signal_format(
+    archive$DT,
+    signal_format,
+    signal_var,
+    other_keys,
+    value_var
+  )
+
+  if (res$format == "as_is") {
+    return(archive)
+  }
+
+  if (res$format == "add_key") {
+    cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
+    archive$other_keys <- res$other_keys
+    data.table::setkeyv(
+      archive$DT,
+      c("geo_value", "time_value", archive$other_keys, "version")
+    )
+    return(archive)
+  }
+
+  # pivot_wide
+  archive$other_keys <- unique(c(archive$other_keys, res$signal_var))
+  archive <- epix_pivot_wider(
+    archive,
+    names_from = res$signal_var,
+    values_from = value_var
+  )
+  archive
+}
+#' Pivot an archive from long to wide
+#'
+#' @keywords internal
+epix_pivot_wider <- function(x, names_from, values_from) {
+  assert_class(x, "epi_archive")
+  assert_string(names_from)
+  assert_string(values_from)
+
+  # Use vctrs::vec_split to split the data table by the names_from column.
+  # This returns an object with 'key' and 'val'.
+  data <- tibble::as_tibble(as.data.frame(x$DT))
+  split_data <- vctrs::vec_split(data, data[[names_from]])
+
+  archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {
+    sig_name <- as.character(sig_name)
+    df <- df %>%
+      dplyr::select(
+        tidyselect::all_of(
+          c(
+            "geo_value", setdiff(x$other_keys, names_from),
+            "time_value", "version"
+          )
+        ),
+        !!rlang::sym(values_from)
+      ) %>%
+      dplyr::rename(
+        !!sig_name := !!rlang::sym(values_from)
+      )
+
+    new_epi_archive(
+      df,
+      geo_type = x$geo_type,
+      time_type = x$time_type,
+      other_keys = setdiff(x$other_keys, names_from),
+      clobberable_versions_start = x$clobberable_versions_start,
+      versions_end = x$versions_end
+    )
+  })
+
+  purrr::reduce(archives, epix_merge)
+}
+
 
 #' Test for `epi_archive` format
 #'

@@ -125,10 +125,11 @@ print.grouped_epi_archive <- function(x, ..., class = TRUE) {
 #' @importFrom dplyr group_by
 #' @export
 group_by.grouped_epi_archive <- function(
-    .data,
-    ...,
-    .add = FALSE,
-    .drop = dplyr::group_by_drop_default(.data)) {
+  .data,
+  ...,
+  .add = FALSE,
+  .drop = dplyr::group_by_drop_default(.data)
+) {
   assert_logical(.add, len = 1)
   if (!.add) {
     cli_abort('`group_by` on a `grouped_epi_archive` with `.add=FALSE` is forbidden
@@ -206,18 +207,18 @@ ungroup.grouped_epi_archive <- function(x, ...) {
 #' @importFrom data.table key address rbindlist setDF copy
 #' @importFrom tibble as_tibble new_tibble validate_tibble
 #' @importFrom dplyr group_by groups
-#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms
-#'  env missing_arg
+#' @importFrom rlang !! !!! enquo quo_is_missing enquos is_quosure sym syms env missing_arg
 #'
 #' @export
 epix_slide.grouped_epi_archive <- function(
-    .x,
-    .f,
-    ...,
-    .before = Inf,
-    .versions = NULL,
-    .new_col_name = NULL,
-    .all_versions = FALSE) {
+  .x,
+  .f,
+  ...,
+  .before = Inf,
+  .versions = NULL,
+  .new_col_name = NULL,
+  .all_versions = FALSE
+) {
   # Perform some deprecated argument checks without using `<param> =
   # deprecated()` in the function signature, because they are from
   # early development versions and much more likely to be clutter than
@@ -267,20 +268,7 @@ epix_slide.grouped_epi_archive <- function(
   }
 
   # Argument validation
-  if (is.null(.versions)) {
-    .versions <- epix_slide_versions_default(.x$private$ungrouped)
-  } else {
-    assert_numeric(.versions, min.len = 1L, null.ok = FALSE, any.missing = FALSE)
-    if (any(.versions > .x$private$ungrouped$versions_end)) {
-      cli_abort("All `.versions` must be less than or equal to the latest version in the archive.")
-    }
-    if (anyDuplicated(.versions) != 0L) {
-      cli_abort("All `.versions` must be unique.")
-    }
-    # Sort, for consistency with `epi_slide`, although the current
-    # implementation doesn't take advantage of it.
-    .versions <- sort(.versions)
-  }
+  .versions <- versions_standardize(.versions, .x$private$ungrouped)
 
   validate_slide_window_arg(.before, .x$private$ungrouped$time_type, lower = 0) # nolint: object_usage_linter
 

@@ -358,8 +358,7 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #'
 #' @template ref-time-value-label
 #'
-#' @importFrom rlang is_function new_function f_env is_environment missing_arg
-#'  f_rhs is_formula caller_arg caller_env
+#' @importFrom rlang is_function new_function f_env is_environment missing_arg f_rhs is_formula caller_arg caller_env
 #' @keywords internal
 as_slide_computation <- function(.f, ...,
                                  .f_arg = caller_arg(.f), .call = caller_env(),
@@ -678,13 +677,14 @@ time_column_names <- function() {
   substitutions <- c(
     "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
     "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
-    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value",
+    "reference_time", "reference_date", "ref_time", "ref_date", "event_date", "onset_date"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("time_value", length(substitutions))
   substitutions
 }
-#
+
 #' potential geo_value columns
 #' @description
 #' the full list of potential substitutions for the `geo_value` column name:
@@ -695,7 +695,8 @@ geo_column_names <- function() {
   substitutions <- c(
     "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
     "county", "hrr", "msa", "state", "province", "nation", "states",
-    "provinces", "counties", "geo_Value"
+    "provinces", "counties", "geo_Value", "region", "regions", "country", "countries",
+    "state_code", "fips_code", "zip_code", "location_id", "location_code"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("geo_value", length(substitutions))
@@ -710,11 +711,172 @@ geo_column_names <- function() {
 #' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
-    "version", "issue", "release"
+    "version", "issue", "issues", "release",
+    "version_recorded", "report_date", "recorded_date",
+    "issue_date", "release_date", "as_of", "revision",
+    "report_time", "update_date", "update_time", "publish_date",
+    "publish_time", "published_date", "published_time",
+    "upload_date", "upload_time", "as_of_date", "as_of_time", "asof"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("version", length(substitutions))
   substitutions
+}
+
+#' potential version_deleted columns
+#' @description
+#' the full list of potential substitutions for the `version_deleted` column name:
+#' `r deletion_column_names()`
+#' @export
+#' @keywords internal
+deletion_column_names <- function() {
+  substitutions <- c(
+    "version_deleted", "delete_date", "removal_date", "deleted_date",
+    "deletion_date", "removed_date", "superseded_date", "invalidated_date"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version_deleted", length(substitutions))
+  substitutions
+}
+
+#' potential is_deletion columns
+#' @description
+#' the full list of potential substitutions for the `is_deletion` column name:
+#' `r is_deletion_column_names()`
+#' @export
+#' @keywords internal
+is_deletion_column_names <- function() {
+  substitutions <- c(
+    "is_deletion", "is_removal", "is_deleted", "deletion_flag", "is_void", "is_invalid"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("is_deletion", length(substitutions))
+  substitutions
+}
+
+#' potential id columns
+#' @description
+#' the full list of potential substitutions for the `id` column name:
+#' `r id_column_names()`
+#' @export
+#' @keywords internal
+id_column_names <- function() {
+  substitutions <- c(
+    "id", "case_id", "event_id", "uid", "uuid", "row_id", "record_id",
+    "case_no", "record_no", "patient_id", "subject_id"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("id", length(substitutions))
+  substitutions
+}
+
+#' potential signal columns
+#' @description
+#' list of potential signal identifier columns (unexported)
+#' @keywords internal
+signal_column_names <- function() {
+  c(
+    "signal", "signal_name", "indicator_name", "indicator"
+  )
+}
+
+#' Validate signal format and signal_var
+#' @keywords internal
+validate_signal_format <- function(x, signal_format, signal_var, other_keys, value_var = "value") {
+  if (signal_format == "as_is") {
+    return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
+  }
+
+  # Validation of provided signal_var
+  if (!is.null(signal_var)) {
+    if (length(signal_var) > 1) {
+      cli::cli_abort("`signal_var` must be a single column name.",
+        class = "epiprocess__signal_var_not_scalar"
+      )
+    }
+    if (!(signal_var %in% names(x))) {
+      cli::cli_abort("Column {.var {signal_var}} not found in `x`.",
+        class = "epiprocess__signal_var_not_found"
+      )
+    }
+    forbidden <- c("geo_value", other_keys, "time_value", "version")
+    if (signal_var %in% forbidden) {
+      cli::cli_abort(
+        "`signal_var` ({.val {signal_var}}) cannot be one of the keys:
+         {.var {forbidden}}.",
+        class = "epiprocess__signal_var_is_key"
+      )
+    }
+  }
+
+  # Guessing signal_var if missing
+  candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+  candidates <- setdiff(candidates, other_keys)
+  if (is.null(signal_var) && length(candidates) == 1) {
+    signal_var <- candidates
+  }
+
+  # Auto-detection behavior
+  if (signal_format == "auto") {
+    if (!is.null(signal_var) && value_var %in% names(x)) {
+      # Input looks like long format.
+      unique_signals <- unique(x[[signal_var]])
+      if (length(unique_signals) > 1) {
+        # Our processing was built expecting wide format, so convert:
+        cli::cli_inform(c(
+          "Pivoting {.var {value_var}} to wide format using {.var {signal_var}}
+           values as column names: {.var {unique_signals}}.",
+          ">" = "To keep long format ({.var {signal_var}} added to `other_keys`),
+                 pass {.code signal_format = \"add_key\"}.",
+          ">" = "To skip signal processing, pass {.code signal_format = \"as_is\"}."
+        ), class = "epiprocess__auto_pivot_inform")
+        signal_format <- "pivot_wide"
+      } else {
+        # It's convenient to be able to just use `value` if there's
+        # only one signal, so let's not auto-convert in this case:
+        cli::cli_inform(c(
+          'Keeping this data in "long" format,
+           with {.var {signal_var}} and {.var {value_var}} columns.',
+          ">" = 'To convert to wide format with a(n) {.var {unique_signals}} column instead,
+                 pass {.code signal_format = "pivot_wide"} instead.',
+          ">" = 'Silence with {.code signal_format = "add_key"}'
+        ))
+        signal_format <- "add_key"
+      }
+    } else {
+      # Input doesn't look like long format; no extra processing needed:
+      return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
+    }
+  }
+
+  # Validation for explicit/resolved formats
+  if (is.null(signal_var)) {
+    if (length(candidates) > 1) {
+      cli::cli_abort(c(
+        "Multiple signal identifier candidates found: {.var {candidates}}.",
+        ">" = "Please specify which one to use via the `signal_var` argument."
+      ), class = "epiprocess__multiple_signal_candidates")
+    }
+    cli::cli_abort(
+      "`signal_var` must be specified when `signal_format = '{signal_format}'`
+       and it cannot be guessed.",
+      class = "epiprocess__unspecified_signal_var"
+    )
+  }
+
+  if (signal_format == "add_key") {
+    other_keys <- unique(c(other_keys, signal_var))
+    return(list(format = "add_key", signal_var = signal_var, other_keys = other_keys))
+  }
+
+  # Must be "pivot_wide" now
+  if (!(value_var %in% names(x))) {
+    cli::cli_abort("Pivoting to wide requires a {.var {value_var}} column.",
+      class = "epiprocess__wide_pivot_requires_value_col"
+    )
+  }
+
+  return(list(format = "pivot_wide", signal_var = signal_var, other_keys = other_keys))
 }
 
 #' rename potential time_value columns
@@ -722,17 +884,21 @@ version_column_names <- function() {
 #' @description
 #' potentially renames
 #' @param x the tibble to potentially rename
+#' @param column_name str; both the column name to complain about
+#'     lacking, and the basis for the `*_column_name()` function to
+#'     suggest looking at
 #' @param substitutions a named vector. the potential substitions, with every name `time_value`
 #' @keywords internal
 #' @importFrom cli cli_inform cli_abort
 #' @importFrom dplyr rename
+#' @importFrom tidyselect any_of
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
     if (!any(names(x) %in% substitutions)) {
       cli_abort(
-        "There is no {column_name} column or similar name.
-         See e.g. [`time_column_name()`] for a complete list",
+        'There is no {.var {column_name}} column or similar name.
+         See {.code epiprocess:::{sub("_value", "", column_name)}_column_names()} for a complete list',
         class = "epiprocess__guess_column__multiple_substitution_error"
       )
     }
@@ -761,10 +927,22 @@ guess_column_name <- function(x, column_name, substitutions) {
 
 ##########
 
-
+#' Force `x` with regular console output silenced; return invisibly
+#'
+#' Does not silence the message stream (which is normally `stderr()`).
+#'
+#' @param x argument to [`force`]
+#' @return result, invisibly
+#'
+#' @keywords internal
 quiet <- function(x) {
-  sink(tempfile())
-  on.exit(sink())
+  old_output_sink_stack_size <- sink.number()
+  on.exit({
+    if (sink.number() > old_output_sink_stack_size) sink()
+    # ^ If it looks like we actually got to divert below, clean up our
+    # diversion.
+  })
+  sink(nullfile())
   invisible(force(x))
 }
 
@@ -939,51 +1117,6 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
   }
 }
 
-# XXX probably should add the missing parts of the coercion hierarchy
-# below in preparation for datetime versions.  Though chr <->
-# POSIX{c,l}t may also need to accommodate actual datetime
-# formats... but would want to make sure this is actually
-# unambiguous and locale-independent.
-
-#' Version of [`vctrs::vec_cast`] that allows chr <-> date
-#'
-#' Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
-#'
-#' @inheritParams vctrs::vec_cast
-vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
-  x_ptype <- vec_ptype(x)
-  to_ptype <- vec_ptype(to)
-  date_ptype <- vec_ptype(vctrs::new_date())
-  if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
-    result <-
-      withCallingHandlers(
-        as.Date(x),
-        error = function(e) {
-          cli_abort(
-            c("Can't convert {x_arg} to character class",
-              "i" = "{x_arg} was {x}"
-            ),
-            parent = e,
-            class = "epiprocess__vec_cast_patched__chr_to_date_failed"
-          )
-        }
-      )
-    if (!identical(is.na(x), is.na(result))) {
-      cli_abort(
-        c("Can't convert some entries of {x_arg} to character class",
-          "i" = "Problematic entries: {x[!is.na(x) & is.na(result)]}"
-        ),
-        class = "epiprocess__vec_cast_patched__chr_to_date_failed"
-      )
-    }
-    result
-  } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
-    as.character(x)
-  } else {
-    vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
-  }
-}
-
 #' Like [`cli::cli_inform`], but nicely mixable with `print` and `cat` in Rmd & qmd
 #'
 #' See https://github.com/cmu-delphi/epipredict/issues/277 for an
@@ -1021,4 +1154,114 @@ dplyr_col_modify.single_assignment_df <- function(data, cols) {
                but {.var {overlapping_names}} already exist{?s/} in the data frame")
   }
   NextMethod()
+}
+
+#' Manually override `geo_type` and/or `time_type` metadata
+#'
+#' @param x an `epi_df`
+#' @param geo_type optional; new `geo_type` string
+#' @param time_type optional; new `time_type` string
+#' @return `x` with updated metadata
+#' @keywords internal
+force_meta <- function(x, geo_type = NULL, time_type = NULL) {
+  meta <- attr(x, "metadata")
+  if (!is.null(geo_type)) meta$geo_type <- geo_type
+  if (!is.null(time_type)) meta$time_type <- time_type
+  attr(x, "metadata") <- meta
+  x
+}
+
+date_ptype <- vctrs::vec_ptype(vctrs::new_date())
+time_vctrs_vctr_classes <- c("yearmonth", "yearquarter", "yearweek")
+
+#' Variant of [`vctrs::vec_cast`] that allows chr <-> date, disallows is.numeric x <-> some times
+#'
+#' Doesn't implement other conversions implied by the hierarchy, e.g.,
+#' chr <-> POSIX\{c,l\}t.
+#'
+#' @inheritParams vctrs::vec_cast
+#'
+#' @importFrom vctrs vec_ptype
+#' @keywords internal
+vec_cast_patched <- function(x, to, ..., x_arg = caller_arg(x), to_arg = "", call = caller_env()) {
+  x_ptype <- vec_ptype(x, x_arg = x_arg, call = call)
+  to_ptype <- vec_ptype(to, x_arg = to_arg, call = call)
+  if (identical(x_ptype, character()) && identical(to_ptype, date_ptype)) {
+    result <-
+      withCallingHandlers(
+        # `as.Date` isn't rigid enough, "successfully" parsing bad
+        # things like 01-01-1900, and accepting somewhat weird things
+        # like 2000-1-1.  readr::parse_date works more like what we
+        # want, though it isn't quite an inverse of
+        # `as.character.Date` (see, e.g., "0100-01-01", "-50-01-01").
+        readr::parse_date(x),
+        warning = function(w) invokeRestart("muffleWarning"),
+        error = function(e) {
+          cli_abort(
+            c("Cannot convert {.arg {x_arg}} to <date>",
+              "i" = "{.arg {x_arg}} was {x}"
+            ),
+            parent = e,
+            call = call,
+            class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+          )
+        }
+      )
+    if (!identical(is.na(x), is.na(result))) {
+      cli_abort(
+        c("Cannot convert some entries of {.arg {x_arg}} to <date>",
+          "i" = "Problematic entries: {format_chr_with_quotes(x[!is.na(x) & is.na(result)])}"
+        ),
+        problematic_entries = x[!is.na(x) & is.na(result)],
+        call = call,
+        class = "epiprocess__vec_cast_patched__chr_to_date_failed"
+      )
+    }
+    result
+  } else if (identical(x_ptype, date_ptype) && identical(to_ptype, character())) {
+    as.character(x)
+  } else if (is.numeric(x_ptype) && inherits(to_ptype, time_vctrs_vctr_classes)) {
+    # Refuse to use confusing and contradictory numeric -> yearmonth
+    # vec_cast impl and similar impls, which appear to be default
+    # behavior tied to subclassing vctrs_vctr.
+    to_ptype_string <- # nolint: object_usage_linter
+      if (to_arg == "") {
+        paste0("<", vctrs::vec_ptype_full(to), ">")
+      } else {
+        to_arg
+      }
+    cli_abort(
+      c("Cannot cast {.arg {x_arg}}, which `is.numeric`, to {to_ptype_string}",
+        "i" = "Class of {.arg {x_arg}} was {.code {format_chr_deparse(class(x))}}",
+        "i" = "(There may be a {.code vec_cast} method for this conversion, but we have disabled it.)"
+      ),
+      call = call,
+      class = "epiprocess_vec_cast_patched__numeric_to_time_refused"
+    )
+  } else {
+    vec_cast(x, to, ..., x_arg = x_arg, to_arg = to_arg, call = call)
+  }
+}
+
+#' Does attempting to (quietly) force `x` raise an error?
+#'
+#' Does not silence any direct output to the message stream / stderr()
+#' not from messages, warnings, or errors.
+#'
+#' @param x argument to [`force`]
+#' @return Boolean
+#'
+#' @keywords internal
+forcing_raises_error <- function(x) {
+  (quiet( # outer parens remove invisible-ity
+    rlang::try_fetch(
+      {
+        force(x)
+        FALSE # if we get here, there was no error
+      },
+      message = function(c) invokeRestart("muffleMessage"),
+      warning = function(c) invokeRestart("muffleWarning"),
+      error = function(e) TRUE
+    )
+  ))
 }

@@ -4,7 +4,7 @@
 \alias{time_minus_time_in_n_steps}
 \title{Difference between two time value vectors in terms of number of time "steps"}
 \usage{
-time_minus_time_in_n_steps(x, y, time_type)
+time_minus_time_in_n_steps(x, y, time_type, require_integer = TRUE)
 }
 \arguments{
 \item{x}{a time_value (vector) of time type \code{time_type}}

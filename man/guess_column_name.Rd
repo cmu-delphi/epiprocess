@@ -9,6 +9,10 @@ guess_column_name(x, column_name, substitutions)
 \arguments{
 \item{x}{the tibble to potentially rename}
 
+\item{column_name}{str; both the column name to complain about
+lacking, and the basis for the \verb{*_column_name()} function to
+suggest looking at}
+
 \item{substitutions}{a named vector. the potential substitions, with every name \code{time_value}}
 }
 \description{

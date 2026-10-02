@@ -32,17 +32,20 @@ S3method(autoplot,epi_df)
 S3method(clone,epi_archive)
 S3method(clone,grouped_epi_archive)
 S3method(complete,epi_df)
+S3method(cross_join,epi_df)
 S3method(dplyr_col_modify,col_modify_recorder_df)
 S3method(dplyr_col_modify,epi_df)
 S3method(dplyr_col_modify,single_assignment_df)
 S3method(dplyr_reconstruct,epi_df)
 S3method(dplyr_row_slice,epi_df)
+S3method(drop_na,epi_df)
 S3method(epix_slide,epi_archive)
 S3method(epix_slide,grouped_epi_archive)
 S3method(epix_truncate_versions_after,epi_archive)
 S3method(epix_truncate_versions_after,grouped_epi_archive)
 S3method(extract_tvoffset,epi_archive)
 S3method(filter,epi_archive)
+S3method(full_join,epi_df)
 S3method(group_by,epi_archive)
 S3method(group_by,epi_df)
 S3method(group_by,grouped_epi_archive)
@@ -53,10 +56,12 @@ S3method(groups,grouped_epi_archive)
 S3method(guess_period,Date)
 S3method(guess_period,POSIXt)
 S3method(guess_period,default)
+S3method(inner_join,epi_df)
 S3method(key_colnames,data.frame)
 S3method(key_colnames,epi_archive)
 S3method(key_colnames,epi_df)
 S3method(key_colnames,tbl_ts)
+S3method(left_join,epi_df)
 S3method(mean,epi_df)
 S3method(next_after,Date)
 S3method(next_after,POSIXct)
@@ -65,6 +70,8 @@ S3method(obj_is_tblish,data.frame)
 S3method(obj_is_tblish,default)
 S3method(obj_is_tblish,dtplyr_step)
 S3method(obj_is_tblish,tbl)
+S3method(pivot_longer,epi_df)
+S3method(pivot_wider,epi_df)
 S3method(plot,epi_archive)
 S3method(plot,epi_df)
 S3method(print,epi_archive)
@@ -73,6 +80,7 @@ S3method(print,grouped_epi_archive)
 S3method(print,growth_rate_params)
 S3method(print,pipeline_segment)
 S3method(print,revision_analysis)
+S3method(right_join,epi_df)
 S3method(set_time_type0,epi_archive)
 S3method(set_time_type0,epi_df)
 S3method(str,pipeline_segment)
@@ -100,6 +108,7 @@ S3method(version_get_containing_time_value,yearmonth)
 S3method(version_obj,epi_archive)
 S3method(version_obj,epi_df)
 export("%>%")
+export(anti_join)
 export(arrange)
 export(arrange_canonical)
 export(as_epi_archive)
@@ -108,10 +117,13 @@ export(as_tsibble)
 export(autoplot)
 export(clone)
 export(complete)
+export(cross_join)
+export(deletion_column_names)
 export(deprecated_quo_is_present)
 export(detect_outlr)
 export(detect_outlr_rm)
 export(detect_outlr_stl)
+export(drop_na)
 export(epi_cor)
 export(epi_slide)
 export(epi_slide_mean)
@@ -128,6 +140,7 @@ export(epix_slide)
 export(epix_target_evaluation_data)
 export(epix_truncate_versions_after)
 export(filter)
+export(full_join)
 export(full_seq)
 export(geo_column_names)
 export(group_by)
@@ -136,17 +149,27 @@ export(group_modify)
 export(growth_rate)
 export(growth_rate_params)
 export(guess_period)
+export(id_column_names)
+export(inner_join)
+export(is_deletion_column_names)
 export(is_epi_archive)
 export(is_epi_df)
 export(is_grouped_epi_archive)
 export(key_colnames)
+export(left_join)
+export(linelist_to_archive)
 export(mutate)
 export(new_epi_archive)
 export(new_epi_df)
+export(pivot_longer)
+export(pivot_wider)
+export(plot_heatmap)
 export(relocate)
 export(rename)
 export(revision_analysis)
 export(revision_summary)
+export(right_join)
+export(semi_join)
 export(set_versions_end)
 export(slice)
 export(sum_groups_epi_df)
@@ -201,6 +224,8 @@ importFrom(cli,
 )
 importFrom(data.table,
   ":=",
+  .N,
+  .SD,
   address,
   as.data.table,
   between,
@@ -222,13 +247,17 @@ importFrom(dplyr,
   "%>%",
   across,
   all_of,
+  anti_join,
   arrange,
+  bind_rows,
   c_across,
+  cross_join,
   dplyr_col_modify,
   dplyr_reconstruct,
   dplyr_row_slice,
   everything,
   filter,
+  full_join,
   group_by,
   group_by_drop_default,
   group_map,
@@ -239,20 +268,39 @@ importFrom(dplyr,
   if_all,
   if_any,
   if_else,
+  inner_join,
   is_grouped_df,
   lag,
+  left_join,
   mutate,
   pick,
   pull,
   relocate,
   rename,
+  right_join,
   select,
+  semi_join,
   slice,
+  summarise,
   summarize,
   tibble,
+  transmute,
   ungroup
 )
-importFrom(ggplot2,autoplot)
+importFrom(ggplot2,
+  .data,
+  aes,
+  autoplot,
+  coord_cartesian,
+  facet_wrap,
+  geom_tile,
+  ggplot,
+  labs,
+  scale_fill_viridis_c,
+  theme_bw,
+  theme_get,
+  theme_gray
+)
 importFrom(glue,glue)
 importFrom(lifecycle,deprecated)
 importFrom(magrittr,"%>%")
@@ -268,6 +316,7 @@ importFrom(rlang,
   .data,
   .env,
   arg_match,
+  as_label,
   caller_arg,
   caller_env,
   check_dots_empty,
@@ -276,9 +325,11 @@ importFrom(rlang,
   enquo,
   enquos,
   env,
+  eval_tidy,
   expr_label,
   f_env,
   f_rhs,
+  inject,
   is_bare_integerish,
   is_bare_numeric,
   is_environment,
@@ -305,7 +356,9 @@ importFrom(slider,
 )
 importFrom(stats,
   cor,
-  median
+  median,
+  na.omit,
+  quantile
 )
 importFrom(tibble,
   as_tibble,
@@ -314,10 +367,14 @@ importFrom(tibble,
 )
 importFrom(tidyr,
   complete,
+  drop_na,
   full_seq,
+  pivot_longer,
+  pivot_wider,
   unnest
 )
 importFrom(tidyselect,
+  all_of,
   any_of,
   eval_select,
   starts_with
@@ -326,6 +383,7 @@ importFrom(tools,toTitleCase)
 importFrom(tsibble,as_tsibble)
 importFrom(utils,
   capture.output,
+  head,
   str,
   tail
 )
@@ -334,6 +392,7 @@ importFrom(vctrs,
   new_data_frame,
   vec_any_missing,
   vec_as_location2,
+  vec_c,
   vec_cast,
   vec_data,
   vec_detect_missing,
@@ -348,8 +407,10 @@ importFrom(vctrs,
   vec_rep,
   vec_set_difference,
   vec_set_intersect,
+  vec_set_union,
   vec_size,
   vec_slice,
-  vec_sort
+  vec_sort,
+  vec_unique
 )
 importFrom(zeallot,"%<-%")

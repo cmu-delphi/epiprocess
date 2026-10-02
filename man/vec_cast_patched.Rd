@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{vec_cast_patched}
 \alias{vec_cast_patched}
-\title{Version of \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} that allows chr <-> date}
+\title{Variant of \code{\link[vctrs:vec_cast]{vctrs::vec_cast}} that allows chr <-> date, disallows is.numeric x <-> some times}
 \usage{
 vec_cast_patched(
   x,
@@ -36,5 +36,7 @@ mentioned in error messages as the source of the error. See the
 \code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
 }
 \description{
-Doesn't implement other conversions implied by the hierarchy, e.g., chr <-> POSIX{c,l}t.
+Doesn't implement other conversions implied by the hierarchy, e.g.,
+chr <-> POSIX\{c,l\}t.
 }
+\keyword{internal}
