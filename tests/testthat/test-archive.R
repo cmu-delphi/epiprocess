@@ -207,14 +207,6 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
       age_group = ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl2), class = "epiprocess__time_value_version_mismatch")
-  tbl3 <- tibble::tribble(
-    ~geo_value, ~age_group, ~time_value, ~version, ~value,
-    "us", "adult", as.Date("2000-01-01"), as.POSIXct("2000-01-01"), 121,
-  ) %>%
-    mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
-    )
-  expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
 })
 
 test_that("is_locf works as expected", {
@@ -250,4 +242,30 @@ test_that("as_epi_archive guesses reference_time and report_time correctly", {
   expect_equal(ea2$DT$geo_value, df2$country)
   expect_equal(ea2$DT$time_value, df2$ref_time)
   expect_equal(ea2$DT$version, df2$publish_date)
+})
+
+test_that("Version dates as fake UTC midnight datetimes are converted.", {
+  protoarchive <- tibble(
+    geo_value = 1,
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-01") + 1:5,
+    value = 1:5
+  )
+  expect_equal(
+    protoarchive %>% mutate(version = as.POSIXct(version, tz = "UTC")) %>% as_epi_archive(),
+    protoarchive %>% as_epi_archive()
+  )
+  expect_equal(
+    protoarchive %>%
+      mutate(version = as.POSIXct(version, tz = "UTC") %>% as.POSIXct(tz = "America/New_York")) %>%
+      as_epi_archive(),
+    protoarchive %>% as_epi_archive()
+  )
+  expect_snapshot_error(
+    protoarchive %>%
+      mutate(version = as.POSIXct(version, tz = "UTC")) %>%
+      mutate(version = version + as.difftime(1, units = "hours")) %>%
+      as_epi_archive(),
+    class = "epiprocess__as_epi_archive__datetime_version"
+  )
 })

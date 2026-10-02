@@ -601,6 +601,20 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
+  # Are the versions dates, but represented as fake midnight-UTC datetimes?  Convert.
+  if (inherits(x$version, "POSIXct")) {
+    utc_display_datetimes <- as.POSIXct(x$version, tz = "UTC")
+    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(x$version) impl changing
+    utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
+    if (!all(utc_display_datetimes == utc_midnights)) {
+      cli::cli_abort(c("Datetime (POSIXct) `version`s are not yet supported.",
+                       ">" = "Consider coarsening the versions into dates, keeping only the last version of each measurement within a day."),
+                     class = "epiprocess__as_epi_archive__datetime_version")
+    } else {
+      x$version <- utc_dates
+    }
+  }
+
   result <- new_epi_archive(
     x, geo_type, time_type, other_keys,
     clobberable_versions_start, versions_end
