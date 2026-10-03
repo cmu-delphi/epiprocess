@@ -272,14 +272,6 @@ time_value_obj.epi_archive <- function(x) {
   x$DT$time_value
 }
 
-session_tz <- function() {
-  tz <- Sys.getenv("TZ")
-  if (tz == "") {
-    tz <- Sys.timezone()
-  }
-  tz
-}
-
 version_obj <- function(x) UseMethod("version_obj")
 
 #' @export
