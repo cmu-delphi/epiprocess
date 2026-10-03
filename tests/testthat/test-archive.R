@@ -265,17 +265,20 @@ test_that("POSIXct versions are converted to Dates", {
     protoarchive %>% as_epi_archive()
   )
   # Test real late ET datetime -> ET date, plus multiple observations per ekt-versiondate:
-  expect_snapshot({
-    result <-
-      protoarchive %>%
-      mutate(version = version[c(1, 1, 1, 3, 3)] %>%
-               as.POSIXct(tz = "UTC") %>%
-               # midnight UTC -> late night ET
-               `+`(as.difftime(27, units = "hours")) %>%
-               as.POSIXct(tz = "America/New_York") %>%
-               `+`(as.difftime(c(1:3, 1:2), units = "mins"))) %>%
-      as_epi_archive()
-  }, cnd_class = TRUE)
+  expect_snapshot(
+    {
+      result <-
+        protoarchive %>%
+        mutate(version = version[c(1, 1, 1, 3, 3)] %>%
+          as.POSIXct(tz = "UTC") %>%
+          # midnight UTC -> late night ET
+          `+`(as.difftime(27, units = "hours")) %>%
+          as.POSIXct(tz = "America/New_York") %>%
+          `+`(as.difftime(c(1:3, 1:2), units = "mins"))) %>%
+        as_epi_archive()
+    },
+    cnd_class = TRUE
+  )
   expect_equal(
     result,
     as_epi_archive(tibble(

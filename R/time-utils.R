@@ -494,12 +494,13 @@ session_tz <- function() {
   if (tz == "") {
     tz <- Sys.timezone()
   }
-  if (! tz %in% OlsonNames()) {
+  if (!tz %in% OlsonNames()) {
     cli_abort(c('Unrecognized time zone provided in environment variable "TZ": "{tz}"',
-                "i" = 'OlsonNames() contains the recognized valid time zone names;
-                       these look like "America/New_York", not "ET"/"EST"/"EDT".',
-                ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "America/New_York")} etc.,
-                       or use the operating system\'s time zone with {.code Sys.unsetenv("TZ")}.'))
+      "i" = 'OlsonNames() contains the recognized valid time zone names;
+             these look like "America/New_York", not "ET"/"EST"/"EDT".',
+      ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "America/New_York")} etc.,
+             or use the operating system\'s time zone with {.code Sys.unsetenv("TZ")}.'
+    ))
   }
   tz
 }
@@ -510,9 +511,10 @@ ct_check_tz <- function(x, x_arg = caller_arg(x)) {
     TRUE
   } else {
     cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.code x_arg}.',
-                "i" = 'OlsonNames() contains the recognized valid time zone names;
-                       these look like "America/New_York", not "ET"/"EST"/"EDT".',
-                ">" = 'Set the display time zone with {as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
-                       or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'))
+      "i" = 'OlsonNames() contains the recognized valid time zone names;
+             these look like "America/New_York", not "ET"/"EST"/"EDT".',
+      ">" = 'Set the display time zone with {as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
+             or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'
+    ))
   }
 }

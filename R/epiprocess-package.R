@@ -25,6 +25,7 @@
 #' @importFrom data.table setDT
 #' @importFrom data.table setkeyv
 #' @importFrom dplyr arrange
+#' @importFrom dplyr desc
 #' @importFrom dplyr grouped_df
 #' @importFrom dplyr is_grouped_df
 #' @importFrom dplyr select

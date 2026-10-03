@@ -613,17 +613,18 @@ as_epi_archive <- function(
       version_display_tz <- attr(x$version, "tzone")
       if (is.null(version_display_tz)) {
         date_calc_tz <- session_tz()
-        date_calc_tz_source <- "R session time zone"
+        date_calc_tz_source <- "R session time zone" # nolint: object_usage_linter
       } else {
         ct_check_tz(x$version)
         date_calc_tz <- version_display_tz
-        date_calc_tz_source <- "x$version's display time zone"
+        date_calc_tz_source <- "x$version's display time zone" # nolint: object_usage_linter
       }
 
       cli_inform(
         c('POSIXct `version`s are not yet supported;
            converting to Dates in {date_calc_tz_source}, "{date_calc_tz}".',
-          "i" = "Only keeping the last version of each measurement if there are multiple within a day."),
+          "i" = "Only keeping the last version of each measurement if there are multiple within a day."
+        ),
         class = "epiprocess__as_epi_archive__datetime_version"
       )
 
