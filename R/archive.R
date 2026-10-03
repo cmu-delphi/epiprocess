@@ -602,12 +602,20 @@ as_epi_archive <- function(
   time_type <- guess_time_type(x$time_value)
 
   if (inherits(x$version, "POSIXct")) {
-    utc_display_datetimes <- as.POSIXct(x$version, tz = "UTC")
-    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(x$version) impl changing
+    vec_assert(clobberable_versions_start, size = 1L)
+    vec_assert(versions_end, size = 1L)
+    # convert metadata POSIXct to same timezone, or Dates to POSIXct with timezone matching x$version:
+    clobberable_versions_start <- vec_cast(clobberable_versions_start, x$version)
+    versions_end <- vec_cast(versions_end, x$version)
+    #
+    utc_display_datetimes <- c(as.POSIXct(x$version, tz = "UTC"), clobberable_versions_start, versions_end)
+    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(POSIXct) impl changing
     utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
-    if (all(utc_display_datetimes == utc_midnights)) {
+    if (all(vec_equal(utc_display_datetimes, utc_midnights, na_equal = TRUE))) {
       # Treat x$version as a vector of dates masquerading as datetimes.  Silently convert:
-      x$version <- utc_dates
+      x$version <- utc_dates[seq_len(nrow(x))]
+      clobberable_versions_start <- utc_dates[nrow(x) + 1L]
+      versions_end <- utc_dates[nrow(x) + 2L]
     } else {
       # Treat x$version as a vector of all actual datetimes.
       version_display_tz <- attr(x$version, "tzone")
@@ -636,9 +644,12 @@ as_epi_archive <- function(
       }
       x <- x %>%
         arrange(pick(all_of(ekt_names)), desc(version)) %>%
-        mutate(version = as.Date(format(as.POSIXct(version, date_calc_tz), "%Y-%m-%d"))) %>%
+        mutate(version = ct_to_date(version, date_calc_tz)) %>%
         vec_slice(vec_duplicate_id(.[ukey_names]) == seq_len(nrow(.)))
+      clobberable_versions_start <- ct_to_date(clobberable_versions_start, date_calc_tz)
+      versions_end <- ct_to_date(versions_end, date_calc_tz)
     }
+    if (is.na(clobberable_versions_start)) clobberable_versions_start <- NA
   }
 
   result <- new_epi_archive(

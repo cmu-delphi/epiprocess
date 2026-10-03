@@ -269,12 +269,14 @@ test_that("POSIXct versions are converted to Dates", {
     {
       result <-
         protoarchive %>%
-        mutate(version = version[c(1, 1, 1, 3, 3)] %>%
-          as.POSIXct(tz = "UTC") %>%
-          # midnight UTC -> late night ET
-          `+`(as.difftime(27, units = "hours")) %>%
-          as.POSIXct(tz = "America/New_York") %>%
-          `+`(as.difftime(c(1:3, 1:2), units = "mins"))) %>%
+        mutate(
+          version = version[c(1, 1, 1, 3, 3)] %>%
+            as.POSIXct(tz = "UTC") %>%
+            # midnight UTC -> late night ET
+            `+`(as.difftime(27, units = "hours")) %>%
+            as.POSIXct(tz = "America/New_York") %>%
+            `+`(as.difftime(c(1:3, 1:2), units = "mins"))
+        ) %>%
         as_epi_archive()
     },
     cnd_class = TRUE
@@ -289,20 +291,28 @@ test_that("POSIXct versions are converted to Dates", {
       value = c(3, 5)
     ))
   )
-  # Check that our ekt-versiondate slicing respects the ekt part:
+  # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
   expect_message(expect_equal(
-    as_epi_archive(tibble(
-      geo_value = c(1, 2, 2),
-      time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-      version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
-      value = 1:3
-    )),
-    as_epi_archive(tibble(
-      geo_value = c(1, 2, 2),
-      time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-      version = as.Date("2020-01-08"),
-      value = 1:3
-    )),
+    as_epi_archive(
+      tibble(
+        geo_value = c(1, 2, 2),
+        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+        version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
+        value = 1:3
+      ),
+      clobberable_versions_start = as.Date("2020-01-08"),
+      versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "America/New_York") %>% as.POSIXct(tz = "UTC")
+    ),
+    as_epi_archive(
+      tibble(
+        geo_value = c(1, 2, 2),
+        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+        version = as.Date("2020-01-08"),
+        value = 1:3
+      ),
+      clobberable_versions_start = as.Date("2020-01-08"),
+      versions_end = as.Date("2020-01-09")
+    )
   ), class = "epiprocess__as_epi_archive__datetime_version")
   # Test pre-datetime -> date ukey check:
   expect_snapshot_error(

@@ -34,6 +34,7 @@
 #' @importFrom rlang %||%
 #' @importFrom rlang is_bare_integerish
 #' @importFrom tools toTitleCase
+#' @importFrom vctrs vec_assert
 #' @importFrom vctrs vec_cast
 #' @importFrom vctrs vec_data
 #' @importFrom vctrs vec_duplicate_id

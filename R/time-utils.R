@@ -518,3 +518,7 @@ ct_check_tz <- function(x, x_arg = caller_arg(x)) {
     ))
   }
 }
+
+ct_to_date <- function(x, date_calc_tz) {
+  as.Date(format(as.POSIXct(x, date_calc_tz), "%Y-%m-%d"))
+}

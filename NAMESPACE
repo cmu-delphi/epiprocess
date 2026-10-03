@@ -353,6 +353,7 @@ importFrom(utils,
 )
 importFrom(vctrs,
   "vec_slice<-",
+  vec_assert,
   vec_c,
   vec_cast,
   vec_data,
