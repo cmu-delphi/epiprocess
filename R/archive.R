@@ -601,21 +601,42 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
-  # Are the versions dates, but represented as fake midnight-UTC datetimes?  Convert.
   if (inherits(x$version, "POSIXct")) {
     utc_display_datetimes <- as.POSIXct(x$version, tz = "UTC")
     utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(x$version) impl changing
     utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
-    if (!all(utc_display_datetimes == utc_midnights)) {
-      cli::cli_abort(
-        c("Datetime (POSIXct) `version`s are not yet supported.",
-          ">" = "Consider coarsening the versions into dates,
-                 keeping only the last version of each measurement within a day."
-        ),
+    if (all(utc_display_datetimes == utc_midnights)) {
+      # Treat x$version as a vector of dates masquerading as datetimes.  Silently convert:
+      x$version <- utc_dates
+    } else {
+      # Treat x$version as a vector of all actual datetimes.
+      version_display_tz <- attr(x$version, "tzone")
+      if (is.null(version_display_tz)) {
+        date_calc_tz <- session_tz()
+        date_calc_tz_source <- "R session time zone"
+      } else {
+        ct_check_tz(x$version)
+        date_calc_tz <- version_display_tz
+        date_calc_tz_source <- "x$version's display time zone"
+      }
+
+      cli_inform(
+        c('POSIXct `version`s are not yet supported;
+           converting to Dates in {date_calc_tz_source}, "{date_calc_tz}".',
+          "i" = "Only keeping the last version of each measurement if there are multiple within a day."),
         class = "epiprocess__as_epi_archive__datetime_version"
       )
-    } else {
-      x$version <- utc_dates
+
+      ekt_names <- c("geo_value", other_keys, "time_value")
+      ukey_names <- c(ekt_names, "version")
+      assert(check_ukey_unique(x, ukey_names))
+      if (is.data.table(x)) {
+        x <- as_tibble(as.data.frame(x))
+      }
+      x <- x %>%
+        arrange(pick(all_of(ekt_names)), desc(version)) %>%
+        mutate(version = as.Date(format(as.POSIXct(version, date_calc_tz), "%Y-%m-%d"))) %>%
+        vec_slice(vec_duplicate_id(.[ukey_names]) == seq_len(nrow(.)))
     }
   }
 

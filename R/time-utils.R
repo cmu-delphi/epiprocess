@@ -476,3 +476,43 @@ versions_standardize <- function(versions, archive, versions_arg = caller_arg(ve
   }
   versions
 }
+
+#' An attempt at a more "accurate"/relevant [`Sys.timezone()`]
+#'
+#' The documentation for [`Sys.timezone()`] states that it tries to
+#' detect the "initial" value of the "TZ" environment variable, but
+#' `print` seems to use the current value, so the latter seems more
+#' relevant.  It also mentions invalid time zones maybe being treated
+#' as UTC, and maybe being warned about, and `print` on one platform
+#' seems to follow as-UTC, no warning, plus sometimes displaying and
+#' sometimes not displaying the invalid time zone; we don't want to
+#' encounter these situations, so try to abort before they happen.
+#'
+#' @keywords internal
+session_tz <- function() {
+  tz <- Sys.getenv("TZ")
+  if (tz == "") {
+    tz <- Sys.timezone()
+  }
+  if (! tz %in% OlsonNames()) {
+    cli_abort(c('Unrecognized time zone provided in environment variable "TZ": "{tz}"',
+                "i" = 'OlsonNames() contains the recognized valid time zone names;
+                       these look like "America/New_York", not "ET"/"EST"/"EDT".',
+                ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "America/New_York")} etc.,
+                       or use the operating system\'s time zone with {.code Sys.unsetenv("TZ")}.'))
+  }
+  tz
+}
+
+ct_check_tz <- function(x, x_arg = caller_arg(x)) {
+  tz <- attr(x, "tzone", exact = TRUE)
+  if (is.null(tz) || tz %in% OlsonNames()) {
+    TRUE
+  } else {
+    cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.code x_arg}.',
+                "i" = 'OlsonNames() contains the recognized valid time zone names;
+                       these look like "America/New_York", not "ET"/"EST"/"EDT".',
+                ">" = 'Set the display time zone with {as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
+                       or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'))
+  }
+}

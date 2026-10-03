@@ -35,6 +35,7 @@
 #' @importFrom tools toTitleCase
 #' @importFrom vctrs vec_cast
 #' @importFrom vctrs vec_data
+#' @importFrom vctrs vec_duplicate_id
 #' @importFrom vctrs vec_equal
 #' @importFrom vctrs vec_in
 #' @importFrom vctrs vec_order
