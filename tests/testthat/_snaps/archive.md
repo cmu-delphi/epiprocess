@@ -3,3 +3,24 @@
     Code
       res <- dumb_ex %>% as_epi_archive()
 
+# POSIXct versions are converted to Dates
+
+    Code
+      result <- protoarchive %>% mutate(version = version[c(1, 1, 1, 3, 3)] %>%
+        as.POSIXct(tz = "UTC") %>% +as.difftime(27, units = "hours") %>% as.POSIXct(
+        tz = "America/New_York") %>% +as.difftime(c(1:3, 1:2), units = "mins")) %>%
+        as_epi_archive()
+    Message <epiprocess__as_epi_archive__datetime_version>
+      POSIXct `version`s are not yet supported; converting to Dates in x$version's display time zone, "America/New_York".
+      i Only keeping the last version of each measurement if there are multiple within a day.
+
+---
+
+    Assertion on 'x' failed: There cannot be more than one row with the same combination of geo_value, time_value, and version.  Problematic rows:
+    # A tibble: 2 x 4
+      geo_value time_value version             value
+          <dbl> <date>     <dttm>              <int>
+    1         2 2020-01-01 2020-01-08 08:30:00     2
+    2         2 2020-01-01 2020-01-08 08:30:00     3
+    .
+

@@ -207,14 +207,6 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
       age_group = ordered(age_group, c("pediatric", "adult")),
     )
   expect_error(as_epi_archive(tbl2), class = "epiprocess__time_value_version_mismatch")
-  tbl3 <- tibble::tribble(
-    ~geo_value, ~age_group, ~time_value, ~version, ~value,
-    "us", "adult", as.Date("2000-01-01"), as.POSIXct("2000-01-01"), 121,
-  ) %>%
-    mutate(
-      age_group = ordered(age_group, c("pediatric", "adult")),
-    )
-  expect_error(as_epi_archive(tbl3), class = "epiprocess__time_value_version_mismatch")
 })
 
 test_that("is_locf works as expected", {
@@ -250,4 +242,85 @@ test_that("as_epi_archive guesses reference_time and report_time correctly", {
   expect_equal(ea2$DT$geo_value, df2$country)
   expect_equal(ea2$DT$time_value, df2$ref_time)
   expect_equal(ea2$DT$version, df2$publish_date)
+})
+
+test_that("POSIXct versions are converted to Dates", {
+  protoarchive <- tibble(
+    geo_value = 1,
+    time_value = as.Date("2020-01-01"),
+    version = as.Date("2020-01-01") + 1:5,
+    value = 1:5
+  )
+  expect_equal(
+    protoarchive %>% mutate(version = as.POSIXct(version, tz = "UTC")) %>% as_epi_archive(),
+    protoarchive %>% as_epi_archive()
+  )
+  expect_equal(
+    protoarchive %>%
+      mutate(
+        version = as.POSIXct(version, tz = "UTC") %>%
+          as.POSIXct(tz = "America/New_York")
+      ) %>%
+      as_epi_archive(),
+    protoarchive %>% as_epi_archive()
+  )
+  # Test real late ET datetime -> ET date, plus multiple observations per ekt-versiondate:
+  expect_snapshot(
+    {
+      result <-
+        protoarchive %>%
+        mutate(
+          version = version[c(1, 1, 1, 3, 3)] %>%
+            as.POSIXct(tz = "UTC") %>%
+            # midnight UTC -> late night ET
+            `+`(as.difftime(27, units = "hours")) %>%
+            as.POSIXct(tz = "America/New_York") %>%
+            `+`(as.difftime(c(1:3, 1:2), units = "mins"))
+        ) %>%
+        as_epi_archive()
+    },
+    cnd_class = TRUE
+  )
+  expect_equal(
+    result,
+    as_epi_archive(tibble(
+      geo_value = 1,
+      time_value = as.Date("2020-01-01"),
+      # late night ET = the containing ET date, not the UTC date (which is the following date)
+      version = as.Date("2020-01-01") + c(1, 3),
+      value = c(3, 5)
+    ))
+  )
+  # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
+  expect_message(expect_equal(
+    as_epi_archive(
+      tibble(
+        geo_value = c(1, 2, 2),
+        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+        version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
+        value = 1:3
+      ),
+      clobberable_versions_start = as.Date("2020-01-08"),
+      versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "America/New_York") %>% as.POSIXct(tz = "UTC")
+    ),
+    as_epi_archive(
+      tibble(
+        geo_value = c(1, 2, 2),
+        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+        version = as.Date("2020-01-08"),
+        value = 1:3
+      ),
+      clobberable_versions_start = as.Date("2020-01-08"),
+      versions_end = as.Date("2020-01-09")
+    )
+  ), class = "epiprocess__as_epi_archive__datetime_version")
+  # Test pre-datetime -> date ukey check:
+  expect_snapshot_error(
+    as_epi_archive(tibble(
+      geo_value = c(1, 2, 2),
+      time_value = as.Date("2020-01-01"), # changed to make duplicate ektv
+      version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
+      value = 1:3
+    ))
+  )
 })
