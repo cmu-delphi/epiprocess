@@ -35,12 +35,13 @@ df <- pub_covidcast(
 ) %>%
   as_epi_df()
 #> Warning: `pub_covidcast()` uses the V4 Epidata API.
-#> ℹ Starting in October 2026, V4 is tentatively deprecated in favor of the V5
-#>   API.
+#> ℹ As of September 22, 2026, V4 no longer receives new data. It still serves
+#>   the historical data it already has, but for current data you must use the
+#>   V5 endpoints (`epidata_snapshot()`, `epidata_archive()`, `epidata_meta()`)
+#>   with an up-to-date epidatr (and epiprocess, if you use it).
 #> ℹ See `vignette("migration-guide")` (or
 #>   <https://cmu-delphi.github.io/epidatr/articles/migration-guide.html>) for
-#>   the V5 endpoints and how to move to them. Old data will remain available
-#>   for at least a year, but new ingestion will end.
+#>   the endpoint, argument, and column mapping.
 #> This warning is displayed once every 8 hours.
 #> Keeping this data in "long" format, with `signal` and `value` columns.
 #> → To convert to wide format with a(n) `confirmed_admissions_covid_1d` column

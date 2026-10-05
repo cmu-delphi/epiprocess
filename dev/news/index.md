@@ -23,6 +23,10 @@
 
 - Automatic character-to-Date and `vec_cast()` conversions have been
   added to various function arguments.
+- `as_epi_archive` detects version dates represented as midnight-UTC
+  `POSIXct`, and converts them to `Date`. (Improves compatibility with
+  epidatr 1.4.0’s
+  [`epidata_archive()`](https://cmu-delphi.github.io/epidatr/reference/cast_api_queries.html).)
 
 ## epiprocess 0.13.0
 
