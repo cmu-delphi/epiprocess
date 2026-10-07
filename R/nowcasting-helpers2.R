@@ -509,10 +509,12 @@ vtol_preprocess <- function(vtol, x, x_var_conf_ekvs) {
     #
     # ... or do we?  if we don't wday stratify, but on daily time,
     # varying-wdays weekly versions, then it will still line up with
-    # the wrong wday data, and if we choose to model wday effects
-    # "rather than" stratify on nice daily-weekly with
-    # always-same-wday versions, then it's going to actually be
-    # stratifying.
+    # the wrong wday data, and if we choose to model wday effects in
+    # formula/etc. rather than wday stratify, on nice daily-weekly
+    # with always-same-wday versions, then it's going to actually be
+    # stratifying.  For consistency with revision_summary(), need to
+    # apply default auto wday stratify there as well, or add
+    # initial-version-adding-informed approach here and there.
     # approx_ceiling_half_tstride_in_vspace <-
     #   # TODO refactor to helper?
     #   switch(x$time_type,
@@ -750,3 +752,7 @@ extract_tvoffset.epi_archive <- function(x, ekts, var, toffset, voffset, vtol = 
 
 # Feature inclusion... what to do about features that are only helpful
 # in a subset of epikeys, and unusably noisy in others?
+
+# TODO default wday stratification in revision_summary()
+
+# TODO something better actually judging semistable lag in revision_summary()
