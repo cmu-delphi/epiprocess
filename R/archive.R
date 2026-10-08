@@ -619,7 +619,7 @@ as_epi_archive <- function(
     } else {
       # Treat x$version as a vector of all actual datetimes.
       version_display_tz <- attr(x$version, "tzone")
-      if (is.null(version_display_tz)) {
+      if (is.null(version_display_tz) || identical(version_display_tz, "")) {
         date_calc_tz <- session_tz()
         date_calc_tz_source <- "R session time zone" # nolint: object_usage_linter
       } else {
