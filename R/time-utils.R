@@ -510,10 +510,10 @@ ct_check_tz <- function(x, x_arg = caller_arg(x)) {
   if (is.null(tz) || tz %in% OlsonNames()) {
     TRUE
   } else {
-    cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.code x_arg}.',
+    cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.arg {x_arg}}.',
       "i" = 'OlsonNames() contains the recognized valid time zone names;
              these look like "America/New_York", not "ET"/"EST"/"EDT".',
-      ">" = 'Set the display time zone with {as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
+      ">" = 'Set the display time zone with {.code as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
              or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'
     ))
   }
