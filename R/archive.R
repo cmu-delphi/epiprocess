@@ -609,9 +609,13 @@ as_epi_archive <- function(
     versions_end <- vec_cast(versions_end, x$version)
     #
     utc_display_datetimes <- c(as.POSIXct(x$version, tz = "UTC"), clobberable_versions_start, versions_end)
-    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(POSIXct) impl changing
+    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(<any-tz POSIXct>) impl changing
     utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
-    if (all(vec_equal(utc_display_datetimes, utc_midnights, na_equal = TRUE))) {
+    utc_noons <- as.POSIXct(utc_dates, tz = "UTC") + as.difftime(12, units = "hours")
+    if (
+      all(vec_equal(utc_display_datetimes, utc_midnights, na_equal = TRUE)) ||
+        all(vec_equal(utc_display_datetimes, utc_noons, na_equal = TRUE))
+    ) {
       # Treat x$version as a vector of dates masquerading as datetimes.  Silently convert:
       x$version <- utc_dates[seq_len(nrow(x))]
       clobberable_versions_start <- utc_dates[nrow(x) + 1L]
@@ -638,10 +642,10 @@ as_epi_archive <- function(
 
       ekt_names <- c("geo_value", other_keys, "time_value")
       ukey_names <- c(ekt_names, "version")
-      assert(check_ukey_unique(x, ukey_names))
       if (is.data.table(x)) {
         x <- as_tibble(as.data.frame(x))
       }
+      assert(check_ukey_unique(x, ukey_names))
       x <- x %>%
         arrange(pick(all_of(ekt_names)), desc(version)) %>%
         mutate(version = ct_to_date(version, date_calc_tz)) %>%

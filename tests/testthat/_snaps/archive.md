@@ -6,12 +6,42 @@
 # POSIXct versions are converted to Dates
 
     Code
-      result <- protoarchive %>% mutate(version = version[c(1, 1, 1, 3, 3)] %>%
-        as.POSIXct(tz = "UTC") %>% +as.difftime(27, units = "hours") %>% as.POSIXct(
-        tz = "America/New_York") %>% +as.difftime(c(1:3, 1:2), units = "mins")) %>%
-        as_epi_archive()
+      et_result <- late_et_display_et %>% as_epi_archive()
     Message <epiprocess__as_epi_archive__datetime_version>
       POSIXct `version`s are not yet supported; converting to Dates in x$version's display time zone, "America/New_York".
+      i Only keeping the last version of each measurement if there are multiple within a day.
+
+---
+
+    Code
+      withr::with_envvar(list(TZ = "America/New_York"), {
+        utc_result1 <- late_et_display_et %>% mutate(version = as.POSIXct(version,
+          tz = "UTC")) %>% as_epi_archive()
+      })
+    Message <epiprocess__as_epi_archive__datetime_version>
+      POSIXct `version`s are not yet supported; converting to Dates in x$version's display time zone, "UTC".
+      i Only keeping the last version of each measurement if there are multiple within a day.
+
+---
+
+    Code
+      withr::with_envvar(list(TZ = "UTC"), {
+        utc_result2 <- late_et_display_et %>% mutate(version = as.POSIXct(version,
+          tz = "")) %>% as_epi_archive()
+      })
+    Message <epiprocess__as_epi_archive__datetime_version>
+      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "UTC".
+      i Only keeping the last version of each measurement if there are multiple within a day.
+
+---
+
+    Code
+      withr::with_envvar(list(TZ = "UTC"), {
+        utc_result3 <- late_et_display_et %>% mutate(version = as.POSIXct(version,
+          tz = NULL)) %>% as_epi_archive()
+      })
+    Message <epiprocess__as_epi_archive__datetime_version>
+      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "UTC".
       i Only keeping the last version of each measurement if there are multiple within a day.
 
 ---
