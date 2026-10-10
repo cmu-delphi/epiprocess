@@ -251,122 +251,147 @@ test_that("POSIXct versions are converted to Dates", {
     version = as.Date("2020-01-01") + 1:5,
     value = 1:5
   )
-  expect_equal(
-    protoarchive %>% mutate(version = as.POSIXct(version, tz = "UTC")) %>% as_epi_archive(),
-    protoarchive %>% as_epi_archive()
-  )
-  expect_equal(
-    protoarchive %>%
-      mutate(version = as.POSIXct(version, tz = "UTC") + as.difftime(12, units = "hours")) %>%
-      as_epi_archive(),
-    protoarchive %>% as_epi_archive()
-  )
-  expect_equal(
-    protoarchive %>%
-      mutate(
-        version = as.POSIXct(version, tz = "UTC") %>%
-          as.POSIXct(tz = "America/New_York")
-      ) %>%
-      as_epi_archive(),
-    protoarchive %>% as_epi_archive()
-  )
-  # Test real late ET datetime -> ET date, plus multiple observations per ekt-versiondate:
-  late_et_display_et <-
-    protoarchive %>%
-    mutate(
-      version = version[c(1, 1, 1, 3, 3)] %>%
-        as.POSIXct(tz = "UTC") %>%
-        # midnight UTC -> late night ET
-        `+`(as.difftime(27, units = "hours")) %>%
-        as.POSIXct(tz = "America/New_York") %>%
-        `+`(as.difftime(c(1:3, 1:2), units = "mins"))
+  withr::with_envvar(list("TZ" = "US/Eastern"), {
+    # Silent UTC midnight and UTC noon conversions (despite being
+    # located outside of UTC):
+    #
+    #   UTC midnight
+    expect_equal(
+      protoarchive %>% mutate(version = as.POSIXct(version, tz = "UTC")) %>% as_epi_archive(),
+      protoarchive %>% as_epi_archive()
     )
-  expect_snapshot(
-    {
-      et_result <- late_et_display_et %>%
-        as_epi_archive()
-    },
-    cnd_class = TRUE
-  )
-  expect_equal(
-    et_result,
-    as_epi_archive(tibble(
-      geo_value = 1,
-      time_value = as.Date("2020-01-01"),
-      # late night ET = the containing ET date, not the UTC date (which is the following date)
-      version = as.Date("2020-01-01") + c(1, 3),
-      value = c(3, 5)
-    ))
-  )
-  expect_snapshot(
-    {
-      withr::with_envvar(list("TZ" = "America/New_York"), { # <-- lower prio
-        utc_result1 <- late_et_display_et %>%
-          mutate(version = as.POSIXct(version, tz = "UTC")) %>%
+    #   UTC noon
+    expect_equal(
+      protoarchive %>%
+        mutate(version = as.POSIXct(version, tz = "UTC") + as.difftime(12, units = "hours")) %>%
+        as_epi_archive(),
+      protoarchive %>% as_epi_archive()
+    )
+    #   even if POSIXct display tz maps to non-noon/midnight
+    expect_equal(
+      protoarchive %>%
+        mutate(
+          version = as.POSIXct(version, tz = "UTC") %>%
+            as.POSIXct(tz = "US/Eastern")
+        ) %>%
+        as_epi_archive(),
+      protoarchive %>% as_epi_archive()
+    )
+    # Test real late ET datetime -> ET date, plus multiple
+    # observations per ekt-versiondate:
+    late_et_display_et <-
+      protoarchive %>%
+      mutate(
+        version = version[c(1, 1, 1, 3, 3)] %>%
+          as.POSIXct(tz = "UTC") %>%
+          # midnight UTC -> late night ET
+          `+`(as.difftime(27, units = "hours")) %>%
+          as.POSIXct(tz = "US/Eastern") %>%
+          `+`(as.difftime(c(1:3, 1:2), units = "mins"))
+      )
+    expect_snapshot(
+      {
+        et_result <- late_et_display_et %>%
           as_epi_archive()
-      })
-    },
-    cnd_class = TRUE
-  )
-  expect_snapshot(
-    {
-      withr::with_envvar(list("TZ" = "UTC"), {
-        utc_result2 <- late_et_display_et %>%
+      },
+      cnd_class = TRUE
+    )
+    expect_equal(
+      et_result,
+      as_epi_archive(tibble(
+        geo_value = 1,
+        time_value = as.Date("2020-01-01"),
+        # late night ET = the containing ET date, not the UTC date (which is the following date)
+        version = as.Date("2020-01-01") + c(1, 3),
+        value = c(3, 5)
+      ))
+    )
+    expect_snapshot(
+      {
+        et_result2 <- late_et_display_et %>%
+          mutate(version = as.POSIXct(version, tz = "UTC")) %>% # POSIXct display tz ignored
+          as_epi_archive()
+      },
+      cnd_class = TRUE
+    )
+    expect_equal(et_result2, et_result)
+  })
+  # Test conversions with various POSIXct display TZs and UTC session:
+  withr::with_envvar(list("TZ" = "UTC", "CONFIRM_UTC" = "TRUE"), {
+    expect_snapshot(
+      {
+        utc_result1 <- late_et_display_et %>%
           mutate(version = as.POSIXct(version, tz = "")) %>%
           as_epi_archive()
-      })
-    },
-    cnd_class = TRUE
-  )
-  expect_snapshot(
-    {
-      withr::with_envvar(list("TZ" = "UTC"), {
-        utc_result3 <- late_et_display_et %>%
+      },
+      cnd_class = TRUE
+    )
+    expect_snapshot(
+      {
+        utc_result2 <- late_et_display_et %>%
           mutate(version = as.POSIXct(version, tz = NULL)) %>%
           as_epi_archive()
-      })
-    },
-    cnd_class = TRUE
+      },
+      cnd_class = TRUE
+    )
+    expect_snapshot(
+      {
+        utc_result3 <- late_et_display_et %>%
+          as_epi_archive()
+      },
+      cnd_class = TRUE
+    )
+    expect_equal(
+      utc_result1$DT %>% as.data.frame() %>% as_tibble(),
+      et_result$DT %>% as.data.frame() %>% as_tibble() %>% mutate(version = version + 1L)
+    )
+    expect_equal(utc_result2, utc_result1)
+    expect_equal(utc_result3, utc_result1)
+  })
+  withr::with_envvar(list("TZ" = "US/Eastern"), {
+    # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
+    expect_message(expect_equal(
+      as_epi_archive(
+        tibble(
+          geo_value = c(1, 2, 2),
+          time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+          version = as.POSIXct("2020-01-08 08:30:00", tz = "US/Eastern"),
+          value = 1:3
+        ),
+        clobberable_versions_start = as.Date("2020-01-08"),
+        versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "US/Eastern") %>% as.POSIXct(tz = "UTC")
+      ),
+      as_epi_archive(
+        tibble(
+          geo_value = c(1, 2, 2),
+          time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
+          version = as.Date("2020-01-08"),
+          value = 1:3
+        ),
+        clobberable_versions_start = as.Date("2020-01-08"),
+        versions_end = as.Date("2020-01-09")
+      )
+    ), class = "epiprocess__as_epi_archive__datetime_version")
+    # Test pre-datetime -> date ukey check:
+    expect_snapshot_error(
+      expect_message(
+        as_epi_archive(data.table::data.table(
+          geo_value = c(1, 2, 2),
+          time_value = as.Date("2020-01-01"), # changed to make duplicate ektv
+          version = as.POSIXct("2020-01-08 08:30:00", tz = "US/Eastern"),
+          value = 1:3
+        )),
+        class = "epiprocess__as_epi_archive__datetime_version"
+      )
+    )
+  })
+  # Test potential-cloud-service detection and overrides:
+  expect_snapshot_error(
+    withr::with_envvar(list("TZ" = "UTC"), session_tz()),
+    class = "epiprocess__session_tz__unconfirmed_utc"
   )
   expect_equal(
-    utc_result1$DT %>% as.data.frame() %>% as_tibble(),
-    et_result$DT %>% as.data.frame() %>% as_tibble() %>% mutate(version = version + 1L)
-  )
-  expect_equal(utc_result2, utc_result1)
-  expect_equal(utc_result3, utc_result1)
-  # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
-  expect_message(expect_equal(
-    as_epi_archive(
-      tibble(
-        geo_value = c(1, 2, 2),
-        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-        version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
-        value = 1:3
-      ),
-      clobberable_versions_start = as.Date("2020-01-08"),
-      versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "America/New_York") %>% as.POSIXct(tz = "UTC")
-    ),
-    as_epi_archive(
-      tibble(
-        geo_value = c(1, 2, 2),
-        time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-        version = as.Date("2020-01-08"),
-        value = 1:3
-      ),
-      clobberable_versions_start = as.Date("2020-01-08"),
-      versions_end = as.Date("2020-01-09")
-    )
-  ), class = "epiprocess__as_epi_archive__datetime_version")
-  # Test pre-datetime -> date ukey check:
-  expect_snapshot_error(
-    expect_message(
-      as_epi_archive(data.table::data.table(
-        geo_value = c(1, 2, 2),
-        time_value = as.Date("2020-01-01"), # changed to make duplicate ektv
-        version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
-        value = 1:3
-      )),
-      class = "epiprocess__as_epi_archive__datetime_version"
-    )
+    withr::with_envvar(list("TZ" = "UTC", "CONFIRM_UTC" = "TRUE"), session_tz()),
+    "UTC"
   )
 })

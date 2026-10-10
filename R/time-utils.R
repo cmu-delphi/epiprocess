@@ -487,6 +487,9 @@ versions_standardize <- function(versions, archive, versions_arg = caller_arg(ve
 #' seems to follow as-UTC, no warning, plus sometimes displaying and
 #' sometimes not displaying the invalid time zone; we don't want to
 #' encounter these situations, so try to abort before they happen.
+#' Also, adds a gate for session timezones of "UTC" used by some CI
+#' and cloud computing services, requiring users to confirm that "UTC"
+#' is actually relevant to them.
 #'
 #' @keywords internal
 session_tz <- function() {
@@ -494,13 +497,36 @@ session_tz <- function() {
   if (tz == "") {
     tz <- Sys.timezone()
   }
+  tz <- sub("^:", "", tz) # colon prefix -> tz filepath; OlsonNames() is already just filepaths
   if (!tz %in% OlsonNames()) {
     cli_abort(c('Unrecognized time zone provided in environment variable "TZ": "{tz}"',
       "i" = 'OlsonNames() contains the recognized valid time zone names;
-             these look like "America/New_York", not "ET"/"EST"/"EDT".',
-      ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "America/New_York")} etc.,
+             these often look like "US/Eastern" or "America/New_York" rather than "ET"/"EST"/"EDT".',
+      ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "US/Eastern")} etc.,
              or use the operating system\'s time zone with {.code Sys.unsetenv("TZ")}.'
     ))
+  }
+  if (tz %in% c("UTC", "Etc/UTC", "posix/UTC")) {
+    if (!identical(Sys.getenv("CONFIRM_UTC"), "TRUE")) {
+      cli_abort(c(
+        "Cannot guess which time zone you are in / working with,
+         so we do not know how to convert datetimes to dates.",
+        "i" = "R session timezone is UTC, but maybe this is only
+               because we're running on  AWS, GitHub Actions, or
+               some other cloud service.",
+        ">" = 'If you are located in / dealing with indicators
+               measuring epidemic activity in a non-UTC timezone,
+               please set the TZ environment variable to that timezone
+               or a nearby one, e.g., {.code Sys.setenv(TZ = "US/Eastern")},
+               and retry.',
+        "i" = "To make this selection permanent, run
+               {.code usethis::edit_r_environ()} and add a line
+               with e.g. {.code TZ=US/Eastern} (no quotes) and save.",
+        ">" = 'If you are located in / dealing with data that is
+               actually about locations using UTC, please use
+               {.code Sys.setenv(CONFIRM_UTC="TRUE")} instead.'
+      ), class = "epiprocess__session_tz__unconfirmed_utc")
+    }
   }
   tz
 }
@@ -512,8 +538,8 @@ ct_check_tz <- function(x, x_arg = caller_arg(x)) {
   } else {
     cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.arg {x_arg}}.',
       "i" = 'OlsonNames() contains the recognized valid time zone names;
-             these look like "America/New_York", not "ET"/"EST"/"EDT".',
-      ">" = 'Set the display time zone with {.code as.POSIXct(<valid object>, tz = "America/New_York")} etc.,
+             these look like "US/Eastern", not "ET"/"EST"/"EDT".',
+      ">" = 'Set the display time zone with {.code as.POSIXct(<valid object>, tz = "US/Eastern")} etc.,
              or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'
     ))
   }

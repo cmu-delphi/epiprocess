@@ -622,15 +622,8 @@ as_epi_archive <- function(
       versions_end <- utc_dates[nrow(x) + 2L]
     } else {
       # Treat x$version as a vector of all actual datetimes.
-      version_display_tz <- attr(x$version, "tzone")
-      if (is.null(version_display_tz) || identical(version_display_tz, "")) {
-        date_calc_tz <- session_tz()
-        date_calc_tz_source <- "R session time zone" # nolint: object_usage_linter
-      } else {
-        ct_check_tz(x$version)
-        date_calc_tz <- version_display_tz
-        date_calc_tz_source <- "x$version's display time zone" # nolint: object_usage_linter
-      }
+      date_calc_tz <- session_tz()
+      date_calc_tz_source <- "R session time zone" # nolint: object_usage_linter
 
       cli_inform(
         c('POSIXct `version`s are not yet supported;

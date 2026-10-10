@@ -15,5 +15,8 @@ as UTC, and maybe being warned about, and \code{print} on one platform
 seems to follow as-UTC, no warning, plus sometimes displaying and
 sometimes not displaying the invalid time zone; we don't want to
 encounter these situations, so try to abort before they happen.
+Also, adds a gate for session timezones of "UTC" used by some CI
+and cloud computing services, requiring users to confirm that "UTC"
+is actually relevant to them.
 }
 \keyword{internal}
