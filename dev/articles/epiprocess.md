@@ -73,9 +73,9 @@ edf
 #> An `epi_df` object, 2,808 x 4 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-10-05 10:54:43.767315
+#> * as_of     = 2026-10-13 10:32:11.436316
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1708 days
+#> * latency across all time series = 1716 days
 #> 
 #> # A tibble: 2,808 × 4
 #> # Groups:   geo_value [4]
@@ -119,9 +119,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-10-05 10:54:43.767315
+#> * as_of     = 2026-10-13 10:32:11.436316
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1708 days
+#> * latency across all time series = 1716 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -148,9 +148,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-10-05 10:54:43.767315
+#> * as_of     = 2026-10-13 10:32:11.436316
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1708–1709 days
+#> * latency across all time series = 1716–1717 days
 #> 
 #> # A tibble: 2,808 × 5
 #> # Groups:   geo_value [4]
@@ -178,9 +178,9 @@ edf %>%
 #> An `epi_df` object, 2,808 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
-#> * as_of     = 2026-10-05 10:54:43.767315
+#> * as_of     = 2026-10-13 10:32:11.436316
 #> Latency (time between last available observation and epi_df's as_of, by time series):
-#> * latency across all time series = 1708 days
+#> * latency across all time series = 1716 days
 #> 
 #> # A tibble: 2,808 × 5
 #>   geo_value time_value cases_cumulative cases_daily outlier_info$rm_lower
