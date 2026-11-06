@@ -56,9 +56,6 @@
 #' vec_approx_equal(tbl1, tbl2, na_equal = TRUE, abs_tol = 1e-8)
 #'
 #'
-#'
-#'
-#'
 #' # Type comparison within lists is stricter, matching vctrs:
 #' vctrs::vec_equal(list(1:2), list(as.numeric(1:2)))
 #' vec_approx_equal(list(1:2), list(as.numeric(1:2)), FALSE, abs_tol = 0)

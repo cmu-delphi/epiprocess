@@ -32,11 +32,12 @@
 #'
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(
-    inp_updates,
-    in_colnames,
-    f_dots_baked, f_from_package,
-    before_n_steps, after_n_steps, time_type,
-    out_colnames) {
+  inp_updates,
+  in_colnames,
+  f_dots_baked, f_from_package,
+  before_n_steps, after_n_steps, time_type,
+  out_colnames
+) {
   inp_updates_by_version <- inp_updates %>%
     nest(.by = version, .key = "subtbl") %>%
     arrange(version)

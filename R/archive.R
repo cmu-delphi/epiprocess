@@ -294,12 +294,12 @@ next_after.POSIXct <- function(x) {
 #' @order 3
 #' @export
 new_epi_archive <- function(
-    data_table,
-    geo_type,
-    time_type,
-    other_keys,
-    clobberable_versions_start,
-    versions_end
+  data_table,
+  geo_type,
+  time_type,
+  other_keys,
+  clobberable_versions_start,
+  versions_end
 ) {
   assert_class(data_table, "data.table")
   assert_string(geo_type)

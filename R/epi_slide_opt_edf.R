@@ -465,10 +465,10 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
 #'
 #' @export
 epi_slide_opt <- function(
-    .x, .col_names, .f, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE
+  .x, .col_names, .f, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
 ) {
   UseMethod("epi_slide_opt")
 }
@@ -636,10 +636,10 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 #'
 #' @export
 epi_slide_mean <- function(
-    .x, .col_names, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE
+  .x, .col_names, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
 ) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -697,10 +697,10 @@ epi_slide_mean <- function(
 #'
 #' @export
 epi_slide_sum <- function(
-    .x, .col_names, ...,
-    .window_size = NULL, .align = c("right", "center", "left"),
-    .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE
+  .x, .col_names, ...,
+  .window_size = NULL, .align = c("right", "center", "left"),
+  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
+  .ref_time_values = NULL, .all_rows = FALSE
 ) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
@@ -784,9 +784,9 @@ full_date_seq <- function(x, before, after, time_type) {
     }
   } else {
     by <- switch(time_type,
-                 day = "days",
-                 week = "weeks",
-                 )
+      day = "days",
+      week = "weeks",
+    )
 
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
     if (before != 0 && !anyInfinite(before)) {
