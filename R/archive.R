@@ -935,7 +935,7 @@ process_signal_archive <- function(
     archive$other_keys <- res$other_keys
     data.table::setkeyv(
       archive$DT,
-      c("geo_value", "time_value", archive$other_keys, "version")
+      c("geo_value", archive$other_keys, "time_value", "version")
     )
     return(archive)
   }
