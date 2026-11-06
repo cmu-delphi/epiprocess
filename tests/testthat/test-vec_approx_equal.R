@@ -34,6 +34,8 @@ test_that("vec_approx_equal is compatible with vec_equal on some edge cases", {
   # Match `vec_equal` behavior on namedness, including within elements:
   unnamed_list <- list(5)
   named_list <- list(a = 5)
+  seminamed_list <- `names<-`(list(5), "")
+  # unnamed <-> named, and wrapped versions:
   expect_identical(
     vec_approx_equal(unnamed_list, named_list, na_equal = TRUE, abs_tol = 1e-8),
     vec_equal(unnamed_list, named_list, na_equal = TRUE)
@@ -41,6 +43,24 @@ test_that("vec_approx_equal is compatible with vec_equal on some edge cases", {
   expect_identical(
     vec_approx_equal(list(unnamed_list), list(named_list), na_equal = TRUE, abs_tol = 1e-8),
     vec_equal(list(unnamed_list), list(named_list), na_equal = TRUE)
+  )
+  # unnamed <-> seminamed, and wrapped versions:
+  expect_identical(
+    vec_approx_equal(unnamed_list, seminamed_list, na_equal = TRUE, abs_tol = 1e-8),
+    vec_equal(unnamed_list, seminamed_list, na_equal = TRUE)
+  )
+  expect_identical(
+    vec_approx_equal(list(unnamed_list), list(seminamed_list), na_equal = TRUE, abs_tol = 1e-8),
+    vec_equal(list(unnamed_list), list(seminamed_list), na_equal = TRUE)
+  )
+  # named <-> seminamed, and wrapped versions:
+  expect_identical(
+    vec_approx_equal(named_list, seminamed_list, na_equal = TRUE, abs_tol = 1e-8),
+    vec_equal(named_list, seminamed_list, na_equal = TRUE)
+  )
+  expect_identical(
+    vec_approx_equal(list(named_list), list(seminamed_list), na_equal = TRUE, abs_tol = 1e-8),
+    vec_equal(list(named_list), list(seminamed_list), na_equal = TRUE)
   )
 
   # Match `vec_equal` behavior on (p)types, including within elements:

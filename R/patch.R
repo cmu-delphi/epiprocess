@@ -112,7 +112,6 @@ vec_approx_equal <- function(vec1, vec2, na_equal, .ptype = NULL, ..., abs_tol, 
 #' @keywords internal
 vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2 = NULL) {
   if (is_bare_numeric(vec1) && abs_tol != 0) {
-    # Matching vec_equal, we ignore names and other attributes.
     if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
     if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
     if (na_equal) {
@@ -152,11 +151,9 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
       entry1 <- vec1[[i]]
       entry2 <- vec2[[i]]
       vec_size(entry1) == vec_size(entry2) &&
-        # Trying to follow vec_equal: strict on ptypes aside from vec_namedness:
-        identical(
-          vec_set_names(vec_ptype(entry1), NULL),
-          vec_set_names(vec_ptype(entry2), NULL)
-        ) &&
+        # Trying to follow current vec_equal: strict on ptypes, (names & other) attrs:
+        identical(vec_ptype(entry1), vec_ptype(entry2)) &&
+        identical(attributes(entry1), attributes(entry2)) &&
         all(vec_approx_equal0(entry1, entry2, na_equal, abs_tol))
     }, logical(1L))
   } else {
