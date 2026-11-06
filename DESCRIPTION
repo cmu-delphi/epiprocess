@@ -1,7 +1,7 @@
 Type: Package
 Package: epiprocess
 Title: Tools for basic signal processing in epidemiology
-Version: 0.11.1
+Version: 0.13.0
 Authors@R: c(
     person("Jacob", "Bien", role = "ctb"),
     person("Logan", "Brooks", , "lcbrooks+github@andrew.cmu.edu", role = c("aut", "cre")),
@@ -16,6 +16,7 @@ Authors@R: c(
     person("Dmitry", "Shemetov", role = "aut"),
     person("Ryan", "Tibshirani", role = "aut"),
     person("David", "Weber", , "davidweb@andrew.cmu.edu", role = "ctb"),
+    person("Javier", "Martinez-Rodriguez", role = "ctb"),
     person("Lionel", "Henry", role = "ctb",
            comment = "Author of included rlang fragments"),
     person("Hadley", "Wickham", role = "ctb",
@@ -35,7 +36,8 @@ Description: This package introduces common data structures for working
     package is designed to be used in conjunction with `epipredict` for
     building and evaluating epidemiological models.
 License: MIT + file LICENSE
-URL: https://cmu-delphi.github.io/epiprocess/
+URL: https://github.com/cmu-delphi/epiprocess,
+    https://cmu-delphi.github.io/epiprocess/
 Depends:
     epidatasets,
     R (>= 3.6)
@@ -46,13 +48,16 @@ Imports:
     dplyr (>= 1.1.0),
     ggplot2,
     glue,
-    lifecycle (>= 1.0.1),
+    lifecycle,
     lubridate,
     magrittr,
+    methods,
     pkgconfig,
+    plotly,
     purrr,
     rlang,
     slider,
+    stats,
     tibble,
     tidyr,
     tidyselect (>= 1.2.0),
@@ -91,7 +96,6 @@ Copyright: file inst/COPYRIGHTS
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Collate:
     'archive.R'
     'autoplot.R'
@@ -101,11 +105,14 @@ Collate:
     'epi_slide_opt_archive.R'
     'epi_slide_opt_edf.R'
     'epiprocess-package.R'
+    'extra_plots.R'
     'group_by_epi_df_methods.R'
     'methods-epi_archive.R'
     'grouped_epi_archive.R'
     'growth_rate.R'
+    'inline-roxygen.R'
     'key_colnames.R'
+    'linelist.R'
     'methods-epi_df.R'
     'outliers.R'
     'patch.R'
@@ -115,3 +122,4 @@ Collate:
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
+Config/roxygen2/version: 8.1.0

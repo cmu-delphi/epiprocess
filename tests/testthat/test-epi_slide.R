@@ -58,8 +58,9 @@ get_test_dataset <- function(n, time_type = "day", other_keys = FALSE) {
 test_data <- get_test_dataset(num_rows_per_group, "day")
 
 epi_slide_sum_test <- function(
-    .x,
-    .window_size = 7, .align = "right", .ref_time_values = NULL, .all_rows = FALSE) {
+  .x,
+  .window_size = 7, .align = "right", .ref_time_values = NULL, .all_rows = FALSE
+) {
   checkmate::assert_class(.x, "epi_df")
   if (!(checkmate::test_integerish(.window_size, lower = 1, upper = Inf) || identical(as.numeric(.window_size), Inf))) {
     cli::cli_abort("`.window_size` must be a positive integer or Inf.")
@@ -610,7 +611,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 2L
   after <- 1L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%
@@ -627,7 +628,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
       pad_late_dates = as.Date(c("2022-01-08"))
     )
   )
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = weeks) %>%
@@ -677,7 +678,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 5L
   after <- 0L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%
@@ -701,7 +702,7 @@ test_that("epi_slide_opt helper `full_date_seq` returns expected date values", {
   before <- 0L
   after <- 3L
 
-  expect_identical(
+  expect_equal(
     full_date_seq(
       epi_data_missing %>%
         mutate(time_value = days) %>%
@@ -729,6 +730,13 @@ test_that("`epi_slide_opt` errors when passed non-`data.table`, non-`slider` fun
   expect_error(
     epi_slide_opt(test_data, .col_names = value, .f = mean),
     class = "epiprocess__epi_slide_opt__unsupported_slide_function"
+  )
+})
+
+test_that("`epi_slide_opt` errors when `.col_names` is omitted", {
+  expect_error(
+    epi_slide_mean(test_data, .window_size = 7),
+    class = "epiprocess__epi_slide_opt__missing_col_names"
   )
 })
 

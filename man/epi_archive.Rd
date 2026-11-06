@@ -18,6 +18,8 @@ as_epi_archive(
   compactify_abs_tol = 0,
   clobberable_versions_start = NA,
   .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
   ...,
   versions_end = .versions_end
 )
@@ -62,31 +64,45 @@ undergo tiny nonmeaningful revisions and the archive object with the
 default setting is too large.}
 
 \item{clobberable_versions_start}{Optional; \code{length}-1; either a value of the
-same \code{class} and \code{typeof} as \code{x$version}, or an \code{NA} of any \code{class} and
-\code{typeof}: specifically, either (a) the earliest version that could be
-subject to "clobbering" (being overwritten with different update data, but
-using the \emph{same} version tag as the old update data), or (b) \code{NA}, to
-indicate that no versions are clobberable. There are a variety of reasons
-why versions could be clobberable under routine circumstances, such as (a)
-today's version of one/all of the columns being published after initially
-being filled with \code{NA} or LOCF, (b) a buggy version of today's data being
-published but then fixed and republished later in the day, or (c) data
-pipeline delays (e.g., publisher uploading, periodic scraping, database
-syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-later in the day (or even on a different day) than expected; potential
-causes vary between different data pipelines. The default value is \code{NA},
-which doesn't consider any versions to be clobberable. Another setting that
-may be appropriate for some pipelines is \code{max_version_with_row_in(x)}.}
+same \code{class} as \code{x$version}, or an \code{NA} of any \code{class}: specifically,
+either (a) the earliest version that could be subject to "clobbering"
+(being overwritten with different update data, but using the \emph{same} version
+tag as the old update data), or (b) \code{NA}, to indicate that no versions are
+clobberable. There are a variety of reasons why versions could be
+clobberable under routine circumstances, such as (a) today's version of
+one/all of the columns being published after initially being filled with
+\code{NA} or LOCF, (b) a buggy version of today's data being published but then
+fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+publisher uploading, periodic scraping, database syncing, periodic
+fetching, etc.) that make events (a) or (b) reflected later in the day (or
+even on a different day) than expected; potential causes vary between
+different data pipelines. The default value is \code{NA}, which doesn't consider
+any versions to be clobberable. Another setting that may be appropriate for
+some pipelines is \code{max_version_with_row_in(x)}.}
 
 \item{.versions_end}{location based versions_end, used to avoid prefix
 \code{version = issue} from being assigned to \code{versions_end} instead of being
 used to rename columns.}
 
+\item{signal_format}{Format of the signal data. If \code{"auto"} (default),
+the function will try to detect if the data is in long format and pivot
+to wide if necessary. This happens only if a unique signal identifier
+column (see \code{signal_var}) and a \code{value} column are both present,
+and the signal column contains more than one unique value. \code{"add_key"}
+treats the signal as a metadata key by adding it to \code{other_keys}.
+\code{"pivot_wide"} tries to pivot to wide. \code{"as_is"} skips all signal
+processing.}
+
+\item{signal_var}{The name of the column that contains the signal
+identifiers. If \code{NULL}, the function will try to guess this column
+(see \code{signal_column_names()} for a list of column names that will be
+checked).}
+
 \item{...}{used for specifying column names, as in \code{\link[dplyr:rename]{dplyr::rename}}. For
 example \code{version = release_date}}
 
-\item{versions_end}{Optional; length-1, same \code{class} and \code{typeof} as
-\code{x$version}: what is the last version we have observed? The default is
+\item{versions_end}{Optional; length-1, same \code{class} as \code{x$version}: what is
+the last version we have observed? The default is
 \code{max_version_with_row_in(x)}, but values greater than this could also be
 valid, and would indicate that we observed additional versions of the data
 beyond \code{max(x$version)}, but they all contained empty updates. (The default
@@ -94,7 +110,7 @@ value of \code{clobberable_versions_start} does not fully trust these empty
 updates, and assumes that any version \verb{>= max(x$version)} could be
 clobbered.) If \code{nrow(x) == 0}, then this argument is mandatory.}
 
-\item{data_table}{a \code{data.table} with \code{\link[data.table:setkey]{data.table::key()}} equal to
+\item{data_table}{a \code{data.table} with \code{\link[data.table:key]{data.table::key()}} equal to
 \code{c("geo_value", other_keys, "time_value", "version")}. For \code{data.table}
 users: this sets up an alias of \code{data_table}; if you plan to keep on
 working with \code{data_table} or working directly with the archive's \verb{$DT}
@@ -135,6 +151,9 @@ only performs some fast, basic checks on the inputs. \code{validate_epi_archive}
 can perform more costly validation checks on its output. But most users
 should use \code{as_epi_archive}, which performs all necessary checks and has some
 additional features.
+
+Does not validate \code{geo_type} or \code{time_type} against \code{geo_value} and
+\code{time_value} columns. These are assumed to have been set to compatibly.
 }
 \details{
 An \code{epi_archive} contains a \code{data.table} object \code{DT} (from the

@@ -358,8 +358,7 @@ assert_sufficient_f_args <- function(.f, ..., .ref_time_value_label) {
 #'
 #' @template ref-time-value-label
 #'
-#' @importFrom rlang is_function new_function f_env is_environment missing_arg
-#'  f_rhs is_formula caller_arg caller_env
+#' @importFrom rlang is_function new_function f_env is_environment missing_arg f_rhs is_formula caller_arg caller_env
 #' @keywords internal
 as_slide_computation <- function(.f, ...,
                                  .f_arg = caller_arg(.f), .call = caller_env(),
@@ -678,13 +677,14 @@ time_column_names <- function() {
   substitutions <- c(
     "time_value", "date", "time", "datetime", "dateTime", "date_time", "target_date",
     "week", "epiweek", "month", "mon", "year", "yearmon", "yearmonth",
-    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value"
+    "yearMon", "yearMonth", "dates", "time_values", "target_dates", "time_Value",
+    "reference_time", "reference_date", "ref_time", "ref_date", "event_date", "onset_date"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("time_value", length(substitutions))
   substitutions
 }
-#
+
 #' potential geo_value columns
 #' @description
 #' the full list of potential substitutions for the `geo_value` column name:
@@ -695,7 +695,8 @@ geo_column_names <- function() {
   substitutions <- c(
     "geo_value", "geo_values", "geo_id", "geos", "location", "jurisdiction", "fips", "zip",
     "county", "hrr", "msa", "state", "province", "nation", "states",
-    "provinces", "counties", "geo_Value"
+    "provinces", "counties", "geo_Value", "region", "regions", "country", "countries",
+    "state_code", "fips_code", "zip_code", "location_id", "location_code"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("geo_value", length(substitutions))
@@ -710,11 +711,172 @@ geo_column_names <- function() {
 #' @keywords internal
 version_column_names <- function() {
   substitutions <- c(
-    "version", "issue", "release"
+    "version", "issue", "issues", "release",
+    "version_recorded", "report_date", "recorded_date",
+    "issue_date", "release_date", "as_of", "revision",
+    "report_time", "update_date", "update_time", "publish_date",
+    "publish_time", "published_date", "published_time",
+    "upload_date", "upload_time", "as_of_date", "as_of_time", "asof"
   )
   substitutions <- upcase_snake_case(substitutions)
   names(substitutions) <- rep("version", length(substitutions))
   substitutions
+}
+
+#' potential version_deleted columns
+#' @description
+#' the full list of potential substitutions for the `version_deleted` column name:
+#' `r deletion_column_names()`
+#' @export
+#' @keywords internal
+deletion_column_names <- function() {
+  substitutions <- c(
+    "version_deleted", "delete_date", "removal_date", "deleted_date",
+    "deletion_date", "removed_date", "superseded_date", "invalidated_date"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("version_deleted", length(substitutions))
+  substitutions
+}
+
+#' potential is_deletion columns
+#' @description
+#' the full list of potential substitutions for the `is_deletion` column name:
+#' `r is_deletion_column_names()`
+#' @export
+#' @keywords internal
+is_deletion_column_names <- function() {
+  substitutions <- c(
+    "is_deletion", "is_removal", "is_deleted", "deletion_flag", "is_void", "is_invalid"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("is_deletion", length(substitutions))
+  substitutions
+}
+
+#' potential id columns
+#' @description
+#' the full list of potential substitutions for the `id` column name:
+#' `r id_column_names()`
+#' @export
+#' @keywords internal
+id_column_names <- function() {
+  substitutions <- c(
+    "id", "case_id", "event_id", "uid", "uuid", "row_id", "record_id",
+    "case_no", "record_no", "patient_id", "subject_id"
+  )
+  substitutions <- upcase_snake_case(substitutions)
+  names(substitutions) <- rep("id", length(substitutions))
+  substitutions
+}
+
+#' potential signal columns
+#' @description
+#' list of potential signal identifier columns (unexported)
+#' @keywords internal
+signal_column_names <- function() {
+  c(
+    "signal", "signal_name", "indicator_name", "indicator"
+  )
+}
+
+#' Validate signal format and signal_var
+#' @keywords internal
+validate_signal_format <- function(x, signal_format, signal_var, other_keys, value_var = "value") {
+  if (signal_format == "as_is") {
+    return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
+  }
+
+  # Validation of provided signal_var
+  if (!is.null(signal_var)) {
+    if (length(signal_var) > 1) {
+      cli::cli_abort("`signal_var` must be a single column name.",
+        class = "epiprocess__signal_var_not_scalar"
+      )
+    }
+    if (!(signal_var %in% names(x))) {
+      cli::cli_abort("Column {.var {signal_var}} not found in `x`.",
+        class = "epiprocess__signal_var_not_found"
+      )
+    }
+    forbidden <- c("geo_value", other_keys, "time_value", "version")
+    if (signal_var %in% forbidden) {
+      cli::cli_abort(
+        "`signal_var` ({.val {signal_var}}) cannot be one of the keys:
+         {.var {forbidden}}.",
+        class = "epiprocess__signal_var_is_key"
+      )
+    }
+  }
+
+  # Guessing signal_var if missing
+  candidates <- vctrs::vec_set_intersect(names(x), signal_column_names())
+  candidates <- setdiff(candidates, other_keys)
+  if (is.null(signal_var) && length(candidates) == 1) {
+    signal_var <- candidates
+  }
+
+  # Auto-detection behavior
+  if (signal_format == "auto") {
+    if (!is.null(signal_var) && value_var %in% names(x)) {
+      # Input looks like long format.
+      unique_signals <- unique(x[[signal_var]])
+      if (length(unique_signals) > 1) {
+        # Our processing was built expecting wide format, so convert:
+        cli::cli_inform(c(
+          "Pivoting {.var {value_var}} to wide format using {.var {signal_var}}
+           values as column names: {.var {unique_signals}}.",
+          ">" = "To keep long format ({.var {signal_var}} added to `other_keys`),
+                 pass {.code signal_format = \"add_key\"}.",
+          ">" = "To skip signal processing, pass {.code signal_format = \"as_is\"}."
+        ), class = "epiprocess__auto_pivot_inform")
+        signal_format <- "pivot_wide"
+      } else {
+        # It's convenient to be able to just use `value` if there's
+        # only one signal, so let's not auto-convert in this case:
+        cli::cli_inform(c(
+          'Keeping this data in "long" format,
+           with {.var {signal_var}} and {.var {value_var}} columns.',
+          ">" = 'To convert to wide format with a(n) {.var {unique_signals}} column instead,
+                 pass {.code signal_format = "pivot_wide"} instead.',
+          ">" = 'Silence with {.code signal_format = "add_key"}'
+        ))
+        signal_format <- "add_key"
+      }
+    } else {
+      # Input doesn't look like long format; no extra processing needed:
+      return(list(format = "as_is", signal_var = signal_var, other_keys = other_keys))
+    }
+  }
+
+  # Validation for explicit/resolved formats
+  if (is.null(signal_var)) {
+    if (length(candidates) > 1) {
+      cli::cli_abort(c(
+        "Multiple signal identifier candidates found: {.var {candidates}}.",
+        ">" = "Please specify which one to use via the `signal_var` argument."
+      ), class = "epiprocess__multiple_signal_candidates")
+    }
+    cli::cli_abort(
+      "`signal_var` must be specified when `signal_format = '{signal_format}'`
+       and it cannot be guessed.",
+      class = "epiprocess__unspecified_signal_var"
+    )
+  }
+
+  if (signal_format == "add_key") {
+    other_keys <- unique(c(other_keys, signal_var))
+    return(list(format = "add_key", signal_var = signal_var, other_keys = other_keys))
+  }
+
+  # Must be "pivot_wide" now
+  if (!(value_var %in% names(x))) {
+    cli::cli_abort("Pivoting to wide requires a {.var {value_var}} column.",
+      class = "epiprocess__wide_pivot_requires_value_col"
+    )
+  }
+
+  return(list(format = "pivot_wide", signal_var = signal_var, other_keys = other_keys))
 }
 
 #' rename potential time_value columns
@@ -722,17 +884,21 @@ version_column_names <- function() {
 #' @description
 #' potentially renames
 #' @param x the tibble to potentially rename
+#' @param column_name str; both the column name to complain about
+#'     lacking, and the basis for the `*_column_name()` function to
+#'     suggest looking at
 #' @param substitutions a named vector. the potential substitions, with every name `time_value`
 #' @keywords internal
 #' @importFrom cli cli_inform cli_abort
 #' @importFrom dplyr rename
+#' @importFrom tidyselect any_of
 guess_column_name <- function(x, column_name, substitutions) {
   if (!(column_name %in% names(x))) {
     # if none of the names are in substitutions, and `column_name` isn't a column, we're missing a relevant column
     if (!any(names(x) %in% substitutions)) {
       cli_abort(
-        "There is no {column_name} column or similar name.
-         See e.g. [`time_column_name()`] for a complete list",
+        'There is no {.var {column_name}} column or similar name.
+         See {.code epiprocess:::{sub("_value", "", column_name)}_column_names()} for a complete list',
         class = "epiprocess__guess_column__multiple_substitution_error"
       )
     }
@@ -897,7 +1063,7 @@ deprecated_quo_is_present <- function(quo) {
 #'   double unless `b` is the GCD and an integer, in which case it is expected
 #'   be an integer.
 #'
-#' @noRd
+#' @keywords internal
 gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   assert_numeric(a, len = 1L)
   assert_numeric(b, len = 1L)
@@ -941,7 +1107,7 @@ gcd2num <- function(a, b, rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
 #' @return Same [`vctrs::vec_ptype`] as `dividends`, `length` 1: the gcd. (Or an
 #'   error.)
 #'
-#' @noRd
+#' @keywords internal
 gcd_num <- function(dividends, ..., rrtol = 1e-6, pqlim = 1e6, irtol = 1e-6) {
   if (!is.numeric(dividends) || length(dividends) == 0L) {
     cli_abort("`dividends` must satisfy `is.numeric`, and have `length` > 0")
@@ -1059,4 +1225,19 @@ check_ukey_unique <- function(x, ukey_names, end_cli_message = character()) {
       paste(collapse = "\n", lines)
     }
   }
+}
+
+#' Manually override `geo_type` and/or `time_type` metadata
+#'
+#' @param x an `epi_df`
+#' @param geo_type optional; new `geo_type` string
+#' @param time_type optional; new `time_type` string
+#' @return `x` with updated metadata
+#' @keywords internal
+force_meta <- function(x, geo_type = NULL, time_type = NULL) {
+  meta <- attr(x, "metadata")
+  if (!is.null(geo_type)) meta$geo_type <- geo_type
+  if (!is.null(time_type)) meta$time_type <- time_type
+  attr(x, "metadata") <- meta
+  x
 }

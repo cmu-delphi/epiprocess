@@ -87,6 +87,20 @@ test_that("as_epi_df works for nonstandard input", {
   expect_error(tib_epi_df <- tib %>% as_epi_df(),
     class = "epiprocess__guess_column__multiple_substitution_error"
   )
+
+  # Test guessing of reference_time and report_time columns
+  tib_ref <- tibble::tibble(
+    x = 1:10,
+    reference_time = rep(seq(as.Date("2020-01-01"), by = 1, length.out = 5), times = 2),
+    geo_value = rep(c("ca", "hi"), each = 5),
+    report_time = rep(as.Date("2020-01-06"), 10)
+  )
+  expect_message(
+    expect_no_error(tib_ref_epi_df <- tib_ref %>% as_epi_df()),
+    class = "epiprocess__guess_column_inferring_inform"
+  )
+  expect_identical(tib_ref_epi_df$time_value, tib_ref$reference_time)
+  expect_identical(attributes(tib_ref_epi_df)$metadata$as_of, as.Date("2020-01-06"))
 })
 
 test_that("as_epi_df ungroups", {

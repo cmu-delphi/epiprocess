@@ -17,7 +17,7 @@ vec_approx_equal(
 }
 \arguments{
 \item{vec1, vec2}{vctrs vectors (includes data frames). Take care when using
-on named vectors or "keyed" data frames; \code{\link[=vec_names]{vec_names()}} are largely
+on named vectors or "keyed" data frames; \code{\link[vctrs:vec_names]{vec_names()}} are largely
 ignored, and key columns are treated as normal value columns (when they
 should probably generate an error if they are not lined up correctly, or be
 tested for exact rather than approximate equality).}

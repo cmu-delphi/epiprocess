@@ -71,14 +71,21 @@ test_that("`validate_version_bound` validate and class checks together allow and
   # Bad:
   expect_error(validate_version_bound(3.5, x_int, TRUE, "vb"), regexp = "must have the same `class`")
   expect_error(validate_version_bound(.Machine$integer.max, x_dbl, TRUE, "vb"), regexp = "must have the same `class`")
-  expect_error(validate_version_bound(
-    `class<-`(list(2), "clazz"),
-    tibble::tibble(version = `class<-`(5L, "clazz")), TRUE, "vb"
-  ), regexp = "must have the same `typeof`", class = "epiprocess__version_bound_mismatched_typeof")
   # Maybe questionable:
   expect_error(validate_version_bound(3, x_int, TRUE, "vb"))
   expect_error(validate_version_bound(3L, x_dbl, TRUE, "vb"))
+  # Maybe questionable, but accept to relax things a bit, as this is happening
+  # with Dates in some R(?) versions. Might need to turn some things into
+  # vec_cast_common, but idea is just make Date stuff work for now:
+  validate_version_bound(
+    `class<-`(list(2), "clazz"),
+    tibble::tibble(version = `class<-`(5L, "clazz")), TRUE, "vb"
+  )
   # Good:
+  validate_version_bound(
+    `class<-`(2, "Date"),
+    tibble::tibble(version = `class<-`(5L, "Date")), TRUE, "vb"
+  )
   validate_version_bound(my_int, x_int, TRUE, "vb")
   validate_version_bound(my_dbl, x_dbl, TRUE, "vb")
   validate_version_bound(my_list, x_list, TRUE, "vb")

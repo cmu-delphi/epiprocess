@@ -11,6 +11,7 @@ This package introduces common data structures for working with epidemiological 
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://github.com/cmu-delphi/epiprocess}
   \item \url{https://cmu-delphi.github.io/epiprocess/}
 }
 
@@ -20,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Logan Brooks \email{lcbrooks+github@andrew.cmu.edu}
   \item Nat DeFries
   \item Daniel McDonald
   \item Evan Ray
@@ -36,6 +38,7 @@ Other contributors:
   \item Chloe You [contributor]
   \item Quang Nguyen [contributor]
   \item David Weber \email{davidweb@andrew.cmu.edu} [contributor]
+  \item Javier Martinez-Rodriguez [contributor]
   \item Lionel Henry (Author of included rlang fragments) [contributor]
   \item Hadley Wickham (Author of included rlang fragments) [contributor]
   \item Posit (Copyright holder of included rlang fragments) [copyright holder]

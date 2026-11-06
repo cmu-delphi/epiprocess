@@ -1,12 +1,10 @@
 # epiprocess
 
-Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicate PR's.
+Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
+indicate development versions beyond 0.x.
 
-# epiprocess 0.12
+# epiprocess 0.13.0
 
-## New features
-
-- `is_epi_archive` function has been reintroduced.
 ## Breaking changes
 
 - The low-level `new_epi_archive()` function's `x` argument has been replaced
@@ -15,11 +13,71 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   have a need for something lower-level.
 
 ## New features
-
+- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
+- `revision_summary()` now detects bulk reporting adding new time
+  values, and excludes bulk reporting for some statistics.
+- Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
+- Added `plot_heatmap()`, which provides heatmap visualization for `epi_df` objects.
+- `as_epi_df()` and `as_epi_archive()` now support a `signal_format` argument (defaulting to `"auto"`) and `signal_var`. When `"auto"`, the functions detect a signal column with a `value` column and >1 unique signal, and automatically pivot to wide format. When `"add_key"`, the signal column is added to `other_keys` instead of pivoting. When `"pivot_wide"`, it always pivots to wide. When `"as_is"`, all signal processing is skipped.
+- `print.epi_df()` now includes a **Latency info** section that summarizes reporting lags and identifies "lagging keys".
+- `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
+- `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
 - `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
   histories for 7-day-averages of signals, etc.
 
+## Improvements
+
+- Optimized `epi_df` joins for performance and improved metadata handling (e.g., preserving class when joining with richer `epi_df` objects).
+- Key interaction labels in `autoplot()` and `plot_heatmap()` have been standardized to use `; ` as a separator for improved readability.
+- `autoplot()` now more intelligently selects a plot column when multiple numeric candidates are available. If a column named `value` is present, it is favored. If no column named `value` is present and multiple numeric candidates exist, the function now aborts and asks for explicit selection.
+- Improved metadata handling and consistency in `epi_df` methods, including `pivot_wider` and `pivot_longer`.
+- `revision_summary()` by default no longer removes revisions from
+  non-NA values to explicit NAs, instead only dropping initial
+  estimates of NA that were likely inserted by `epix_merge`ing with a
+  more timely and/or more widely available signal.  This behavior is
+  customizable with the `compactify`, `compactify_drop_initial_nas`,
+  and `drop_nas` parameters.  It also runs more quickly.
+- `revision_summary()` printed lag summaries now display fractional-week
+  lags (e.g., when `time_type = "week"` but versions fall mid-week) in
+  days rather than fractional weeks, for easier interpretation.
+- `epix_as_of_current()` been renamed `epix_as_of_latest()`, to help
+  express that it's giving the latest available snapshot in an archive
+  which may or may not be "current".  `epix_as_of_current()` remains
+  in place with a deprecation warning.
+
+## Bug fixes
+
+- `autoplot.epi_archive` now works properly on archives that contain a column
+  named `v` (#674, thanks to @pcollender for the report).
+- `epi_slide_opt` (and wrappers `epi_slide_mean`, `epi_slide_sum`) now throw an informative error if the `.col_names` argument is omitted.
+- `revision_summary()` with `drop_nas = FALSE` no longer ignores
+  `min_waiting_period`.  Summary statistics about number of NAs and
+  overall observations have also been updated to follow
+  `min_waiting_period` and compactification steps.
+- `revision_summary()` now computes lag relative to the end of each
+  week.
+
+# epiprocess 0.12
+
+## New features
+
+- `is_epi_archive` function has been reintroduced.
+- `epix_as_of_current()` introduced as an alias for `epix_as_of(.$versions_end)`.
+- Added `dplyr::filter` implementation for `epi_archive`s.
+
+## Improvements
+
+- Various documentation has been updated, simplified, and improved with better
+  examples.
+
 # epiprocess 0.11
+
+## Highlights
+
+`{epiprocess}` should once again not require Rtools or a compiler to be able to
+install! We've also updated some function interfaces to be more consistent
+throughout the package & with tidyverse, and improved the generality of and
+fixed bugs in various functions and documentation.
 
 ## Breaking changes
 
@@ -32,7 +90,7 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   for users without a compiler, we have placed `{trendfilter}` in Suggests:; if
   you want to use `method = "trendfilter"` you will need to manually install
   this dependency (e.g., with `remotes::install_github("glmgen/trendfilter")`).
-- In `revision_summary()`:
+- In `revision_summary()` (aliased to `revision_analysis()`):
   - The `should_compactify` argument is now called `compactify`. To migrate,
     change any calls with `should_compactfiy =` to `compactify =`.
   - Output now uses the name `lag_near_latest` instead of `time_near_latest`. To
@@ -46,6 +104,11 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   - `min_waiting_period` now defines a nonstrict inequality instead of a strict
     one. To obtain the old bounds, bump the `min_waiting_period` up to the next
     possible value for your `time_type`.
+  - Added a `print()` method to take the place of `print_inform`.
+  - Removed the the argument `print_inform`. This is now always false. Replaced
+    with an option, `return_only_tibble` to return only the tibble of results 
+    rather than the full S3 object.
+    
 - In `key_colnames()`:
   - On regular (non-`epi_df`) data frames, now requires manual specification of
     `geo_keys`, `other_keys`, and `time_keys`.
@@ -59,12 +122,16 @@ Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.y will indicat
   `new_epi_archive()`.
 - `validate_epi_archive()` now follows the validator convention of operating on
   an "unvalidated" `epi_archive` (from `new_epi_archive`) rather than arguments.
+- `autoplot.epi_df()` argument `.max_facets` has been deprecated in favor of
+  `.facet_filter` which allows explicit selection of facets to show.
 
 ## Improvements
-- `revision_summary()` now supports all `time_type`s.
+- `revision_summary()` now supports all `time_type`s. Printed summary is more attractive.
 - The compactification tolerance setting now works with integer-type columns.
 - Various functions are now faster, using faster variants of core operations and
   avoiding reconstructing grouped `epi_df`s when unnecessary.
+- Add `autoplot.epi_archive()` to display revision patterns.
+- `sum_groups_epi_df()` now supports tidyselect syntax in it's second argument (#655).
 
 ## Bug fixes
 

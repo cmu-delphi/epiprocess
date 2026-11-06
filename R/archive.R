@@ -52,13 +52,6 @@ validate_version_bound <- function(version_bound, x, na_ok = FALSE,
         class = "epiprocess__version_bound_mismatched_class"
       )
     }
-    if (!identical(typeof(version_bound), typeof(x[["version"]]))) {
-      cli_abort(
-        "{version_bound_arg} must have the same `typeof` as x$version,
-        which has a `typeof` of {typeof(x$version)}",
-        class = "epiprocess__version_bound_mismatched_typeof"
-      )
-    }
   }
 
   return(invisible(NULL))
@@ -109,12 +102,31 @@ max_version_with_row_in <- function(x) {
 next_after <- function(x) UseMethod("next_after")
 
 
-#' @keywords internal
+#' @export
 next_after.integer <- function(x) x + 1L
 
-
-#' @keywords internal
+#' @export
 next_after.Date <- function(x) x + 1L
+
+#' @export
+next_after.POSIXct <- function(x) {
+  # Trying to avoid compilation dependency, so Rcpp nextafter() is
+  # out.  The current implementation assumes binary64, and still may
+  # not be accurate.
+  x_dbl <- as.double(x)
+  x_abs <- abs(x_dbl)
+  result_dbl <- x_dbl
+  result_dbl[x_dbl == -Inf] <- -.Machine$double.xmax
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + 2^-1074 # subnormal step
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.neg.eps * x_abs # for x == -2^k
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs
+  unchanged <- result_dbl == x_dbl
+  result_dbl[unchanged] <- result_dbl[unchanged] + .Machine$double.eps * x_abs * 2 # hedge against rounding weirdness
+  stop("FIXME TODO finish")
+}
 
 
 #' `epi_archive` object
@@ -211,23 +223,23 @@ next_after.Date <- function(x) x + 1L
 #'   undergo tiny nonmeaningful revisions and the archive object with the
 #'   default setting is too large.
 #' @param clobberable_versions_start Optional; `length`-1; either a value of the
-#'   same `class` and `typeof` as `x$version`, or an `NA` of any `class` and
-#'   `typeof`: specifically, either (a) the earliest version that could be
-#'   subject to "clobbering" (being overwritten with different update data, but
-#'   using the *same* version tag as the old update data), or (b) `NA`, to
-#'   indicate that no versions are clobberable. There are a variety of reasons
-#'   why versions could be clobberable under routine circumstances, such as (a)
-#'   today's version of one/all of the columns being published after initially
-#'   being filled with `NA` or LOCF, (b) a buggy version of today's data being
-#'   published but then fixed and republished later in the day, or (c) data
-#'   pipeline delays (e.g., publisher uploading, periodic scraping, database
-#'   syncing, periodic fetching, etc.) that make events (a) or (b) reflected
-#'   later in the day (or even on a different day) than expected; potential
-#'   causes vary between different data pipelines. The default value is `NA`,
-#'   which doesn't consider any versions to be clobberable. Another setting that
-#'   may be appropriate for some pipelines is `max_version_with_row_in(x)`.
-#' @param versions_end Optional; length-1, same `class` and `typeof` as
-#'   `x$version`: what is the last version we have observed? The default is
+#'   same `class` as `x$version`, or an `NA` of any `class`: specifically,
+#'   either (a) the earliest version that could be subject to "clobbering"
+#'   (being overwritten with different update data, but using the *same* version
+#'   tag as the old update data), or (b) `NA`, to indicate that no versions are
+#'   clobberable. There are a variety of reasons why versions could be
+#'   clobberable under routine circumstances, such as (a) today's version of
+#'   one/all of the columns being published after initially being filled with
+#'   `NA` or LOCF, (b) a buggy version of today's data being published but then
+#'   fixed and republished later in the day, or (c) data pipeline delays (e.g.,
+#'   publisher uploading, periodic scraping, database syncing, periodic
+#'   fetching, etc.) that make events (a) or (b) reflected later in the day (or
+#'   even on a different day) than expected; potential causes vary between
+#'   different data pipelines. The default value is `NA`, which doesn't consider
+#'   any versions to be clobberable. Another setting that may be appropriate for
+#'   some pipelines is `max_version_with_row_in(x)`.
+#' @param versions_end Optional; length-1, same `class` as `x$version`: what is
+#'   the last version we have observed? The default is
 #'   `max_version_with_row_in(x)`, but values greater than this could also be
 #'   valid, and would indicate that we observed additional versions of the data
 #'   beyond `max(x$version)`, but they all contained empty updates. (The default
@@ -287,7 +299,8 @@ new_epi_archive <- function(
     time_type,
     other_keys,
     clobberable_versions_start,
-    versions_end) {
+    versions_end
+) {
   assert_class(data_table, "data.table")
   assert_string(geo_type)
   assert_string(time_type)
@@ -313,6 +326,9 @@ new_epi_archive <- function(
 }
 
 #' Perform second (costly) round of validation that `x` is a proper `epi_archive`
+#'
+#' Does not validate `geo_type` or `time_type` against `geo_value` and
+#' `time_value` columns. These are assumed to have been set to compatibly.
 #'
 #' @return * Of `validate_epi_archive`: an `epi_archive`,
 #'   [invisibly][base::invisible] (or raises an error if `x` was invalid)
@@ -391,13 +407,25 @@ validate_epi_archive <- function(x) {
 #' @param abs_tol numeric, >=0; absolute tolerance to use on numeric measurement
 #'   columns when determining whether something can be compactified away; see
 #'   [`vec_approx_equal`]
+#' @param init_nas_are_locf bool; do we treat [entirely-missing
+#'   values][vctrs::vec_detect_missing] in the initial measurement for
+#'   each epikey-time as LOCF?  Ordinarily `FALSE`, but `TRUE` if
+#'   we're trying to "invert" an [`epix_merge`], i.e., we've just
+#'   narrowed down the value column set and are trying to remove extra
+#'   `NA`s (and other rows) created by using [`epix_merge`] / the
+#'   `epi_archive` format.  Currently, this is ordinarily `FALSE` in
+#'   order to preserve explicit measurements of `NA` provided by the
+#'   user; this also matches "vanilla expectations", as outer joins /
+#'   the data frame format also promote some implicit NAs into
+#'   explicit ones, conflating their origins.  We're forced into a
+#'   judgment call here by the current `epi_archive` format.
 #'
 #' @importFrom data.table is.data.table key
 #' @importFrom dplyr arrange filter
 #' @importFrom vctrs vec_duplicate_any
 #'
 #' @keywords internal
-apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
+apply_compactify <- function(updates_df, ukey_names, abs_tol = 0, init_nas_are_locf = FALSE) {
   assert_data_frame(updates_df)
   assert_character(ukey_names)
   assert_subset(ukey_names, names(updates_df))
@@ -408,6 +436,7 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
     cli_abort('"version" must appear in `ukey_names` and must be last.')
   }
   assert_numeric(abs_tol, len = 1, lower = 0)
+  assert_logical(init_nas_are_locf, len = 1, any.missing = FALSE)
 
   if (is.data.table(updates_df)) {
     if (!identical(key(updates_df), ukey_names)) {
@@ -424,36 +453,37 @@ apply_compactify <- function(updates_df, ukey_names, abs_tol = 0) {
   # first argument inside DT[...] is a single symbol (e.g. DT[var]), data.table
   # looks for var in calling scope". In case it's not a data.table, make sure to
   # use df[i,] not just df[i].
-  to_keep <- !update_is_locf(updates_df, ukey_names, abs_tol)
+  to_keep <- !update_is_locf(updates_df, ukey_names, abs_tol, init_nas_are_locf)
   updates_df[to_keep, ]
 }
 
 #' get the entries that `compactify` would remove
 #' @keywords internal
 #' @importFrom dplyr filter if_all everything
-removed_by_compactify <- function(updates_df, ukey_names, abs_tol) {
+removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_locf = FALSE) {
   if (!is.data.table(updates_df) || !identical(key(updates_df), ukey_names)) {
     updates_df <- updates_df %>% arrange(pick(all_of(ukey_names)))
   }
-  updates_df[update_is_locf(updates_df, ukey_names, abs_tol), ]
+  updates_df[update_is_locf(updates_df, ukey_names, abs_tol, init_nas_are_locf), ]
 }
 
 #' Internal helper; lgl; which updates are LOCF and should thus be dropped when
 #' compactifying
 #'
-#' (Not validated:) Must be called inside certain dplyr data masking verbs (e.g.,
-#' `filter` or `mutate`) being run on an `epi_archive`'s `DT` or a data frame
+#' (Not validated:) Must be called on an `epi_archive`'s `DT` or a data frame
 #' formatted like one.
 #'
-#' @param arranged_updates_df an arranged update data frame like an `epi_archive` `DT`
+#' @param arranged_updates_df an arranged update data frame like an
+#'   `epi_archive` `DT`
 #' @param ukey_names (not validated:) chr; the archive/equivalent
 #'   [`key_colnames`]; must include `"version"`.
 #' @param abs_tol (not validated:) as in [`apply_compactify`]
+#' @param init_nas_are_locf (not validated:) as in [`apply_compactify`]
 #'
 #' @return lgl
 #'
 #' @keywords internal
-update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
+update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf) {
   # Use as.list to get a shallow "copy" in case of data.table, so that column
   # selection does not copy the column contents. Don't leak these column aliases
   # or it will break data.table ownership model.
@@ -463,11 +493,62 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
   ekt_names <- ukey_names[ukey_names != "version"]
   val_names <- all_names[!all_names %in% ukey_names]
 
-  n_updates <- nrow(arranged_updates_df)
-  if (n_updates == 0L) {
-    logical(0L)
-  } else if (n_updates == 1L) {
-    FALSE # sole observation is not LOCF
+  ekt_is_locf <-
+    Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) %||%
+    # 0-col case:
+    rep(TRUE, nrow(arranged_updates_df))
+  value_is_locf <- Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE)) %||%
+    # 0-col case:
+    rep(TRUE, nrow(arranged_updates_df))
+
+  if (init_nas_are_locf) {
+    value_is_missing <- vctrs::vec_detect_missing(
+      vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df))
+    )
+    fifelse(ekt_is_locf, value_is_locf, value_is_missing)
+  } else {
+    ekt_is_locf & value_is_locf
+  }
+}
+
+#' Checks to see if a value in a vector is LOCF
+#' @description LOCF meaning last observation carried forward (to later
+#'   versions). Lags the vector by 1, then compares with itself. If `is_key` is
+#'   `TRUE`, only values that are exactly the same between the lagged and
+#'   original are considered LOCF. If `is_key` is `FALSE` and `vec` is a vector
+#'   of numbers ([`base::is.numeric`]), then approximate equality will be used,
+#'   checking whether the absolute difference between each pair of entries is
+#'   `<= abs_tol`; if `vec` is something else, then exact equality is used
+#'   instead.
+#'
+#' @details
+#'
+#' We include epikey-time columns in LOCF comparisons as part of an optimization
+#' to avoid slower grouped operations while still ensuring that the first
+#' observation for each time series will not be marked as LOCF. We test these
+#' key columns for exact equality to prevent chopping off consecutive
+#' time_values during flat periods when `abs_tol` is high.
+#'
+#' We use exact equality for non-`is.numeric` double/integer columns such as
+#' dates, datetimes, difftimes, `tsibble::yearmonth`s, etc., as these may be
+#' used as part of re-indexing or grouping procedures, and we don't want to
+#' change the number of groups for those operations when we remove LOCF data
+#' during compactification.
+#'
+#' @importFrom dplyr lag if_else
+#' @importFrom rlang is_bare_numeric
+#' @importFrom vctrs vec_equal
+#' @keywords internal
+is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
+  lag_vec <- lag(vec)
+  if (is.vector(vec, mode = "numeric") && !is_key) {
+    # (integer or double vector, no class (& no dims); maybe names, which we'll
+    # ignore like `vec_equal`); not a key column
+    unname(if_else(
+      !is.na(vec) & !is.na(lag_vec),
+      abs(vec - lag_vec) <= abs_tol,
+      is.na(vec) & is.na(lag_vec)
+    ))
   } else {
     ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
     vals_tbl <- new_tibble(updates_col_refs[val_names])
@@ -502,6 +583,7 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
 #' @param x A data.frame, data.table, or tibble, with columns `geo_value`,
 #'   `time_value`, `version`, and then any additional number of columns, either
 #'   keys or values.
+#' @inheritParams as_epi_df
 #' @param ... used for specifying column names, as in [`dplyr::rename`]. For
 #'   example `version = release_date`
 #' @param .versions_end location based versions_end, used to avoid prefix
@@ -514,15 +596,20 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol) {
 #'
 #' @export
 as_epi_archive <- function(
-    x,
-    geo_type = deprecated(),
-    time_type = deprecated(),
-    other_keys = character(),
-    compactify = TRUE,
-    compactify_abs_tol = 0,
-    clobberable_versions_start = NA,
-    .versions_end = max_version_with_row_in(x), ...,
-    versions_end = .versions_end) {
+  x,
+  geo_type = deprecated(),
+  time_type = deprecated(),
+  other_keys = character(),
+  compactify = TRUE,
+  compactify_abs_tol = 0,
+  clobberable_versions_start = NA,
+  .versions_end = max_version_with_row_in(x),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
+  ...,
+  versions_end = .versions_end
+) {
+  signal_format <- rlang::arg_match(signal_format)
   assert_data_frame(x)
   # Convert first to data.frame to guard against data.table#6859 and potentially
   # other things epiprocess#618:
@@ -560,10 +647,19 @@ as_epi_archive <- function(
   geo_type <- guess_geo_type(x$geo_value)
   time_type <- guess_time_type(x$time_value)
 
-  result <- validate_epi_archive(new_epi_archive(
+  result <- new_epi_archive(
     x, geo_type, time_type, other_keys,
     clobberable_versions_start, versions_end
-  ))
+  )
+
+  result <- process_signal_archive(
+    result,
+    signal_format = signal_format,
+    signal_var = signal_var,
+    other_keys = other_keys
+  )
+
+  result <- validate_epi_archive(result)
 
   # Compactification:
   if (!list(compactify) %in% list(TRUE, FALSE, "message")) {
@@ -606,7 +702,6 @@ as_epi_archive <- function(
   result
 }
 
-
 #' Print information about an `epi_archive` object
 #'
 #' @param x An `epi_archive` object.
@@ -628,20 +723,30 @@ print.epi_archive <- function(x, ..., class = TRUE, methods = TRUE) {
 
   cat_line(format_message(
     c(
-      ">" = if (class) "An `epi_archive` object, with metadata:",
+      if (class) "An `epi_archive` object, with:",
       "i" = if (length(setdiff(key(x$DT), c("geo_value", "time_value", "version"))) > 0) {
         "Other DT keys: {setdiff(key(x$DT), c('geo_value', 'time_value', 'version'))}"
       },
       "i" = if (nrow(x$DT) != 0L) {
-        "Min/max time values: {min(x$DT$time_value)} / {max(x$DT$time_value)}"
+        # \u00a0 is non-breaking space cli won't crush, to align with version range
+        line <- 'Time range:{strrep("\u00a0", 3)} {min(x$DT$time_value)} -- {max(x$DT$time_value)}'
+        if (time_type(x) %in% c("day", "week")) {
+          line <- paste0(line, " (times are {time_type(x)}s)")
+        }
+        line
       },
       "i" = if (nrow(x$DT) != 0L) {
-        "First/last version with update: {min(x$DT$version)} / {max(x$DT$version)}"
+        max_update_version <- max(x$DT$version)
+        if (vec_equal(max_update_version, x$versions_end)) {
+          "Version range: {min(x$DT$version)} -- {max_update_version}"
+        } else {
+          "Version range: {min(x$DT$version)} -- {x$versions_end},
+           but no row updates recorded after {max_update_version}"
+        }
       },
       "i" = if (!is.na(x$clobberable_versions_start)) {
         "Clobberable versions start: {x$clobberable_versions_start}"
       },
-      "i" = "Versions end: {x$versions_end}",
       "i" = "A preview of the table ({nrow(x$DT)} rows x {ncol(x$DT)} columns):"
     )
   ))
@@ -822,6 +927,97 @@ clone.epi_archive <- function(x) {
   x$DT <- data.table::copy(x$DT)
   x
 }
+
+#' Process signal column in epi archive
+#'
+#' Handles signal detection and transformation based on `signal_format`.
+#'
+#' @return A list with `x` (the transformed archive) and `other_keys`.
+#' @keywords internal
+#' @noRd
+#' @return The transformed `epi_archive`.
+#' @keywords internal
+#' @noRd
+process_signal_archive <- function(
+  archive,
+  signal_format,
+  signal_var,
+  other_keys,
+  value_var = "value"
+) {
+  res <- validate_signal_format(
+    archive$DT,
+    signal_format,
+    signal_var,
+    other_keys,
+    value_var
+  )
+
+  if (res$format == "as_is") {
+    return(archive)
+  }
+
+  if (res$format == "add_key") {
+    cli::cli_inform("Adding {.var {res$signal_var}} to `other_keys`.")
+    archive$other_keys <- res$other_keys
+    data.table::setkeyv(
+      archive$DT,
+      c("geo_value", "time_value", archive$other_keys, "version")
+    )
+    return(archive)
+  }
+
+  # pivot_wide
+  archive$other_keys <- unique(c(archive$other_keys, res$signal_var))
+  archive <- epix_pivot_wider(
+    archive,
+    names_from = res$signal_var,
+    values_from = value_var
+  )
+  archive
+}
+#' Pivot an archive from long to wide
+#'
+#' @keywords internal
+epix_pivot_wider <- function(x, names_from, values_from) {
+  assert_class(x, "epi_archive")
+  assert_string(names_from)
+  assert_string(values_from)
+
+  # Use vctrs::vec_split to split the data table by the names_from column.
+  # This returns an object with 'key' and 'val'.
+  data <- tibble::as_tibble(as.data.frame(x$DT))
+  split_data <- vctrs::vec_split(data, data[[names_from]])
+
+  archives <- purrr::map2(split_data$key, split_data$val, function(sig_name, df) {
+    sig_name <- as.character(sig_name)
+    df <- df %>%
+      dplyr::select(
+        tidyselect::all_of(
+          c(
+            "geo_value", setdiff(x$other_keys, names_from),
+            "time_value", "version"
+          )
+        ),
+        !!rlang::sym(values_from)
+      ) %>%
+      dplyr::rename(
+        !!sig_name := !!rlang::sym(values_from)
+      )
+
+    new_epi_archive(
+      df,
+      geo_type = x$geo_type,
+      time_type = x$time_type,
+      other_keys = setdiff(x$other_keys, names_from),
+      clobberable_versions_start = x$clobberable_versions_start,
+      versions_end = x$versions_end
+    )
+  })
+
+  purrr::reduce(archives, epix_merge)
+}
+
 
 #' Test for `epi_archive` format
 #'

@@ -4,7 +4,12 @@
 \alias{n_steps_to_time_delta}
 \title{Convert from integerish/infinite/mix to time_delta}
 \usage{
-n_steps_to_time_delta(n_steps, time_type, format = c("friendly", "fast"))
+n_steps_to_time_delta(
+  n_steps,
+  time_type,
+  format = c("friendly", "fast"),
+  require_integer = TRUE
+)
 }
 \arguments{
 \item{n_steps}{integerish vector that can mix in infinite values}

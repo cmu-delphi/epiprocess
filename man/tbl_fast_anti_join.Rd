@@ -2,7 +2,7 @@
 % Please edit documentation in R/patch.R
 \name{tbl_fast_anti_join}
 \alias{tbl_fast_anti_join}
-\title{Variation on \code{\link[dplyr:filter-joins]{dplyr::anti_join}} for speed + tolerance setting}
+\title{Variation on \code{\link[dplyr:anti_join]{dplyr::anti_join}} for speed + tolerance setting}
 \usage{
 tbl_fast_anti_join(x, y, ukey_names, val_names, abs_tol = 0)
 }
@@ -26,6 +26,6 @@ ukey in \code{y}, or (b) have a matching ukey in \code{y}, but don't have
 approximately equal value column values
 }
 \description{
-Variation on \code{\link[dplyr:filter-joins]{dplyr::anti_join}} for speed + tolerance setting
+Variation on \code{\link[dplyr:anti_join]{dplyr::anti_join}} for speed + tolerance setting
 }
 \keyword{internal}

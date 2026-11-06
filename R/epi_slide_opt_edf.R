@@ -322,37 +322,37 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   out_tbl
 }
 
-#' Optimized slide functions for common cases
+#' Calculate rolling or running means, sums, etc., or custom calculations
 #'
 #' @description
 #'
-#' `epi_slide_opt` calculates n-time-step rolling means&sums,
-#' cumulative/"running" means&sums, and other operations supported by
-#' [`data.table::froll`] or [`slider::summary-slide`] functions.
+#' These methods take each subpopulation (i.e., a single
+#' `geo_value` and combination of any `other_keys` you set up for age groups,
+#' etc.) and perform a `.window_size`-width time window rolling/sliding
+#' computation, or alternatively, a running/cumulative computation (with
+#' `.window_size = Inf`) on the requested columns. Explicit `NA` measurements
+#' are temporarily added to fill in any time gaps, and, for rolling
+#' computations, to pad the time series to ensure that the first & last
+#' computations use exactly `.window_size` values.
 #'
-#' * On `epi_df`s, it will take care of looping over `geo_value`s, temporarily
-#'   filling in time gaps with `NA`s and other work needed to ensure there are
-#'   exactly `n` consecutive time steps per computation, and has some other
-#'   convenience features. See `vignette("epi_df")` for more examples.
+#' * On `epi_df`s, this will return another `epi_df` with the same set of geo x
+#' other key x time values as the input, but with an extra column for the
+#' result.
 #'
-#' * On `epi_archive`s, it will calculate the version history for these slide
-#'   computations and combine it with the version history for the rest of the
-#'   columns.
+#' * On `epi_archive`s, this is equivalent to using `epix_slide` to run
+#'   `epi_slide_opt` on every version, but optimized for the case where there
+#'   are only a limited range of time values being updated in each version.
 #'
 #' This function tends to be much faster than using `epi_slide()` and
 #' `epix_slide()` directly.
 #'
 #' @template basic-slide-params
-#' @param .col_names <[`tidy-select`][dplyr_tidy_select]> An unquoted column
-#'   name (e.g., `cases`), multiple column names (e.g., `c(cases, deaths)`),
-#'   [other tidy-select expression][tidyselect::language], or a vector of
-#'   characters (e.g. `c("cases", "deaths")`). Variable names can be used as if
-#'   they were positions in the data frame, so expressions like `x:y` can be
-#'   used to select a range of variables.
+#' @param .col_names <[`tidy-select`][dplyr_tidy_select]>
 #'
 #'   The tidy-selection renaming interface is not supported, and cannot be used
 #'   to provide output column names; if you want to customize the output column
 #'   names, use [`dplyr::rename`] after the slide.
+#' @param .col_names `r tidyselect_arg_roxygen`
 #' @param .f Function; together with `...` specifies the computation to slide.
 #'  `.f` must be one of `data.table`'s rolling functions
 #'  (`frollmean`, `frollsum`, `frollapply`. See [data.table::roll]) or one
@@ -468,7 +468,8 @@ epi_slide_opt <- function(
     .x, .col_names, .f, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
     .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE
+) {
   UseMethod("epi_slide_opt")
 }
 
@@ -548,6 +549,15 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
   # Validate/process .col_names, .f:
   col_names_quo <- enquo(.col_names)
+  if (rlang::quo_is_missing(col_names_quo)) {
+    cli_abort(
+      paste0(
+        "`.col_names` must be specified. Please provide the columns you want to ",
+        "slide over (e.g., `value` or `c(cases, deaths)`)."
+      ),
+      class = "epiprocess__epi_slide_opt__missing_col_names"
+    )
+  }
   f_info <- upstream_slide_f_info(.f, ...)
   f_from_package <- f_info$from_package
 
@@ -629,7 +639,8 @@ epi_slide_mean <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
     .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE
+) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
@@ -689,7 +700,8 @@ epi_slide_sum <- function(
     .x, .col_names, ...,
     .window_size = NULL, .align = c("right", "center", "left"),
     .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
-    .ref_time_values = NULL, .all_rows = FALSE) {
+    .ref_time_values = NULL, .all_rows = FALSE
+) {
   # Deprecated argument handling
   provided_args <- rlang::call_args_names(rlang::call_match())
   if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
@@ -746,6 +758,7 @@ epi_slide_sum <- function(
 #' `before` and `after` args are assumed to have been validated by the calling
 #' function (using `validate_slide_window_arg`).
 #'
+#' @importFrom checkmate assert_function anyInfinite
 #' @keywords internal
 full_date_seq <- function(x, before, after, time_type) {
   if (!time_type %in% c("day", "week", "yearmonth", "integer")) {
@@ -763,7 +776,7 @@ full_date_seq <- function(x, before, after, time_type) {
   if (time_type %in% c("yearmonth", "integer")) {
     all_dates <- seq(min(x$time_value), max(x$time_value), by = 1L)
 
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       pad_early_dates <- all_dates[1L] - before:1
     }
     if (after != 0) {
@@ -771,12 +784,12 @@ full_date_seq <- function(x, before, after, time_type) {
     }
   } else {
     by <- switch(time_type,
-      day = "days",
-      week = "weeks",
-    )
+                 day = "days",
+                 week = "weeks",
+                 )
 
     all_dates <- seq(min(x$time_value), max(x$time_value), by = by)
-    if (before != 0 && before != Inf) {
+    if (before != 0 && !anyInfinite(before)) {
       # The behavior is analogous to the branch with tsibble types above. For
       # more detail, note that the function `seq.Date(from, ..., length.out =
       # n)` returns `from + 0:n`. Since we want `from + 1:n`, we drop the first

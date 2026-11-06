@@ -22,9 +22,4 @@ a time_value (vector) of time type \code{time_type}
 \description{
 Here, a "step" is based on the \code{time_type}, not just the class of \code{x}.
 }
-\seealso{
-\code{\link{time_plus_slide_window_arg}} if you're working with a \code{y} that is
-a slide window arg, which is scalar but otherwise more general (class-wise,
-Inf-wise) than an integerish vector.
-}
 \keyword{internal}

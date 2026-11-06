@@ -22,3 +22,4 @@ man-roxygen
 ^README_cache$
 ^pkgdown-watch.R$
 ^.editorconfig$
+^benchmarks$

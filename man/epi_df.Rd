@@ -22,14 +22,30 @@ as_epi_df(x, ...)
   time_type = deprecated(),
   as_of,
   other_keys = character(),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
   ...
 )
 
 \method{as_epi_df}{grouped_df}(x, ...)
 
-\method{as_epi_df}{data.frame}(x, as_of, other_keys = character(), ...)
+\method{as_epi_df}{data.frame}(
+  x,
+  as_of,
+  other_keys = character(),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
+  ...
+)
 
-\method{as_epi_df}{tbl_ts}(x, as_of, other_keys = character(), ...)
+\method{as_epi_df}{tbl_ts}(
+  x,
+  as_of,
+  other_keys = character(),
+  signal_format = c("auto", "pivot_wide", "add_key", "as_is"),
+  signal_var = NULL,
+  ...
+)
 
 is_epi_df(x)
 
@@ -66,6 +82,20 @@ then the current day-time will be used.}
 
 \item{other_keys}{If your tibble has additional keys, be sure to specify them
 as a character vector here (typical examples are "age" or sub-geographies).}
+
+\item{signal_format}{Format of the signal data. If \code{"auto"} (default),
+the function will try to detect if the data is in long format and pivot
+to wide if necessary. This happens only if a unique signal identifier
+column (see \code{signal_var}) and a \code{value} column are both present,
+and the signal column contains more than one unique value. \code{"add_key"}
+treats the signal as a metadata key by adding it to \code{other_keys}.
+\code{"pivot_wide"} tries to pivot to wide. \code{"as_is"} skips all signal
+processing.}
+
+\item{signal_var}{The name of the column that contains the signal
+identifiers. If \code{NULL}, the function will try to guess this column
+(see \code{signal_column_names()} for a list of column names that will be
+checked).}
 }
 \value{
 \itemize{
@@ -89,7 +119,8 @@ which can be seen as measured variables at each key. In brief, an \code{epi_df}
 represents a snapshot of an epidemiological data set at a point in time.
 }
 \details{
-An \code{epi_df} is a tibble with (at least) the following columns:
+An \code{epi_df} is a kind of tibble with (at least) the following
+columns:
 \itemize{
 \item \code{geo_value}: A character vector representing the geographical unit of
 observation. This could be a country code, a state name, a county code,
@@ -98,10 +129,11 @@ etc.
 }
 
 Other columns can be considered as measured variables, which we also refer to
-as signal variables. An \code{epi_df} object also has metadata with (at least)
-the following fields:
+as indicators or signals. An \code{epi_df} object also has metadata with (at
+least) the following fields:
 \itemize{
 \item \code{geo_type}: the type for the geo values.
+\item \code{time_type}: the type for the time values.
 \item \code{as_of}: the time value at which the given data were available.
 }
 

@@ -14,6 +14,11 @@ Please:
       (backwards-incompatible changes to the documented interface) are noted.
       Collect the changes under the next release number (e.g. if you are on
       1.7.2, then write your changes under the 1.8 heading).
+- [ ] Styling and documentation checks. Make a PR comment with:
+  - `/style` to check the style and fix any issues.
+  - `/document` to check the package documentation and fix any issues.
+  - `/preview-docs` to preview the docs.
+  - See Actions GitHub tab to track progress of these commands.
 - See [DEVELOPMENT.md](DEVELOPMENT.md) for more information on the development
   process.
 

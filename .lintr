@@ -1,6 +1,8 @@
 linters: linters_with_defaults(
   line_length_linter(120),
-  object_length_linter(length = 40L)
+  object_length_linter(length = 40L),
+  return_linter = NULL,
+  pipe_consistency_linter = NULL
   )
 exclusions: list(
   "renv",

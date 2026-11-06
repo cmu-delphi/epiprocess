@@ -4,7 +4,7 @@
 \alias{epi_slide_opt}
 \alias{epi_slide_mean}
 \alias{epi_slide_sum}
-\title{Optimized slide functions for common cases}
+\title{Calculate rolling or running means, sums, etc., or custom calculations}
 \usage{
 epi_slide_opt(
   .x,
@@ -51,20 +51,16 @@ epi_slide_sum(
 and any columns in \code{other_keys}. If grouped, we make sure the grouping is by
 \code{geo_value} and \code{other_keys}.}
 
-\item{.col_names}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> An unquoted column
+\item{.col_names}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> An unquoted column
 name (e.g., \code{cases}), multiple column names (e.g., \code{c(cases, deaths)}),
 \link[tidyselect:language]{other tidy-select expression}, or a vector of
 characters (e.g. \code{c("cases", "deaths")}). Variable names can be used as if
 they were positions in the data frame, so expressions like \code{x:y} can be
-used to select a range of variables.
-
-The tidy-selection renaming interface is not supported, and cannot be used
-to provide output column names; if you want to customize the output column
-names, use \code{\link[dplyr:rename]{dplyr::rename}} after the slide.}
+used to select a range of variables.}
 
 \item{.f}{Function; together with \code{...} specifies the computation to slide.
 \code{.f} must be one of \code{data.table}'s rolling functions
-(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:froll]{data.table::roll}) or one
+(\code{frollmean}, \code{frollsum}, \code{frollapply}. See \link[data.table:roll]{data.table::roll}) or one
 of \code{slider}'s specialized sliding functions (\code{slide_mean}, \code{slide_sum},
 etc. See \link[slider:summary-slide]{slider::summary-slide}).
 
@@ -134,17 +130,21 @@ added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
 as \code{.x} if \code{.x} was grouped.
 }
 \description{
-\code{epi_slide_opt} calculates n-time-step rolling means&sums,
-cumulative/"running" means&sums, and other operations supported by
-\code{\link[data.table:froll]{data.table::froll}} or \code{\link[slider:summary-slide]{slider::summary-slide}} functions.
+These methods take each subpopulation (i.e., a single
+\code{geo_value} and combination of any \code{other_keys} you set up for age groups,
+etc.) and perform a \code{.window_size}-width time window rolling/sliding
+computation, or alternatively, a running/cumulative computation (with
+\code{.window_size = Inf}) on the requested columns. Explicit \code{NA} measurements
+are temporarily added to fill in any time gaps, and, for rolling
+computations, to pad the time series to ensure that the first & last
+computations use exactly \code{.window_size} values.
 \itemize{
-\item On \code{epi_df}s, it will take care of looping over \code{geo_value}s, temporarily
-filling in time gaps with \code{NA}s and other work needed to ensure there are
-exactly \code{n} consecutive time steps per computation, and has some other
-convenience features. See \code{vignette("epi_df")} for more examples.
-\item On \code{epi_archive}s, it will calculate the version history for these slide
-computations and combine it with the version history for the rest of the
-columns.
+\item On \code{epi_df}s, this will return another \code{epi_df} with the same set of geo x
+other key x time values as the input, but with an extra column for the
+result.
+\item On \code{epi_archive}s, this is equivalent to using \code{epix_slide} to run
+\code{epi_slide_opt} on every version, but optimized for the case where there
+are only a limited range of time values being updated in each version.
 }
 
 This function tends to be much faster than using \code{epi_slide()} and

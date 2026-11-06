@@ -9,8 +9,6 @@
 tsibble::as_tsibble
 
 
-
-
 # dplyr -------------------------------------------------------------------
 
 #' @importFrom dplyr arrange
@@ -49,6 +47,33 @@ dplyr::rename
 #' @export
 dplyr::slice
 
+#' @importFrom dplyr left_join
+#' @export
+dplyr::left_join
+
+#' @importFrom dplyr right_join
+#' @export
+dplyr::right_join
+
+#' @importFrom dplyr inner_join
+#' @export
+dplyr::inner_join
+
+#' @importFrom dplyr full_join
+#' @export
+dplyr::full_join
+
+#' @importFrom dplyr anti_join
+#' @export
+dplyr::anti_join
+
+#' @importFrom dplyr semi_join
+#' @export
+dplyr::semi_join
+
+#' @importFrom dplyr cross_join
+#' @export
+dplyr::cross_join
 
 # tidyr -------------------------------------------------------------------
 
@@ -60,6 +85,19 @@ tidyr::unnest
 #' @importFrom tidyr complete
 #' @export
 tidyr::complete
+
+
+#' @importFrom tidyr drop_na
+#' @export
+tidyr::drop_na
+
+#' @importFrom tidyr pivot_wider
+#' @export
+tidyr::pivot_wider
+
+#' @importFrom tidyr pivot_longer
+#' @export
+tidyr::pivot_longer
 
 # We don't provide a method for full_seq, but complete-ing using
 # full_seq(time_value) is still needed to make some downstream things behave
