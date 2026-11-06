@@ -470,56 +470,15 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_
 #' Internal helper; lgl; which updates are LOCF and should thus be dropped when
 #' compactifying
 #'
-#' (Not validated:) Must be called on an `epi_archive`'s `DT` or a data frame
-#' formatted like one.
+#' @description LOCF meaning last observation carried forward (to later
+#'   versions).
 #'
 #' @param arranged_updates_df an arranged update data frame like an
-#'   `epi_archive` `DT`
+#'   `epi_archive` `DT` (not validated)
 #' @param ukey_names (not validated:) chr; the archive/equivalent
 #'   [`key_colnames`]; must include `"version"`.
 #' @param abs_tol (not validated:) as in [`apply_compactify`]
 #' @param init_nas_are_locf (not validated:) as in [`apply_compactify`]
-#'
-#' @return lgl
-#'
-#' @keywords internal
-update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf) {
-  # Use as.list to get a shallow "copy" in case of data.table, so that column
-  # selection does not copy the column contents. Don't leak these column aliases
-  # or it will break data.table ownership model.
-  updates_col_refs <- as.list(arranged_updates_df)
-
-  all_names <- names(arranged_updates_df)
-  ekt_names <- ukey_names[ukey_names != "version"]
-  val_names <- all_names[!all_names %in% ukey_names]
-
-  ekt_is_locf <-
-    Reduce(`&`, lapply(updates_col_refs[ekt_names], is_locf, abs_tol, TRUE)) %||%
-    # 0-col case:
-    rep(TRUE, nrow(arranged_updates_df))
-  value_is_locf <- Reduce(`&`, lapply(updates_col_refs[val_names], is_locf, abs_tol, FALSE)) %||%
-    # 0-col case:
-    rep(TRUE, nrow(arranged_updates_df))
-
-  if (init_nas_are_locf) {
-    value_is_missing <- vctrs::vec_detect_missing(
-      vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df))
-    )
-    fifelse(ekt_is_locf, value_is_locf, value_is_missing)
-  } else {
-    ekt_is_locf & value_is_locf
-  }
-}
-
-#' Checks to see if a value in a vector is LOCF
-#' @description LOCF meaning last observation carried forward (to later
-#'   versions). Lags the vector by 1, then compares with itself. If `is_key` is
-#'   `TRUE`, only values that are exactly the same between the lagged and
-#'   original are considered LOCF. If `is_key` is `FALSE` and `vec` is a vector
-#'   of numbers ([`base::is.numeric`]), then approximate equality will be used,
-#'   checking whether the absolute difference between each pair of entries is
-#'   `<= abs_tol`; if `vec` is something else, then exact equality is used
-#'   instead.
 #'
 #' @details
 #'
@@ -535,20 +494,27 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_ar
 #' change the number of groups for those operations when we remove LOCF data
 #' during compactification.
 #'
-#' @importFrom dplyr lag if_else
-#' @importFrom rlang is_bare_numeric
-#' @importFrom vctrs vec_equal
+#' @return lgl
+#'
 #' @keywords internal
-is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
-  lag_vec <- lag(vec)
-  if (is.vector(vec, mode = "numeric") && !is_key) {
-    # (integer or double vector, no class (& no dims); maybe names, which we'll
-    # ignore like `vec_equal`); not a key column
-    unname(if_else(
-      !is.na(vec) & !is.na(lag_vec),
-      abs(vec - lag_vec) <= abs_tol,
-      is.na(vec) & is.na(lag_vec)
-    ))
+update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf) {
+  # Use as.list to get a shallow "copy" in case of data.table, so that column
+  # selection does not copy the column contents. Don't leak these column aliases
+  # or it will break data.table ownership model.
+  updates_col_refs <- as.list(arranged_updates_df)
+
+  all_names <- names(arranged_updates_df)
+  ekt_names <- ukey_names[ukey_names != "version"]
+  val_names <- all_names[!all_names %in% ukey_names]
+
+  n_updates <- nrow(arranged_updates_df)
+  if (n_updates == 0L) {
+    ekt_is_locf <- logical(0L)
+    value_is_locf <- logical(0L)
+  } else if (n_updates == 1L) {
+    # sole observation is not LOCF
+    ekt_is_locf <- FALSE
+    value_is_locf <- FALSE
   } else {
     ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
     vals_tbl <- new_tibble(updates_col_refs[val_names])
@@ -558,22 +524,29 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
     # separating out n_updates == 1L from this case):
     inds1 <- 2L:n_updates
     inds2 <- 1L:(n_updates - 1L)
-    c(
+    ekt_is_locf <- c(
       FALSE, # first observation is not LOCF
-      # for the rest, check that both the keys are exactly the same, and the
-      # values are within abs_tol
-      # the key comparison effectively implements a group_by, so that when the
-      # key changes we're guaranteed the value is correct
       vec_approx_equal0(ekts_tbl,
-        inds1 = inds1, ekts_tbl, inds2 = inds2,
-        # check ekt (key) cols with 0 tolerance:
-        na_equal = TRUE, abs_tol = 0
-      ) &
-        vec_approx_equal0(vals_tbl,
-          inds1 = inds1, vals_tbl, inds2 = inds2,
-          na_equal = TRUE, abs_tol = abs_tol
-        )
+                        inds1 = inds1, ekts_tbl, inds2 = inds2,
+                        # check ekt (key) cols with 0 tolerance:
+                        na_equal = TRUE, abs_tol = 0
+                        )
     )
+    value_is_locf <- c(
+      FALSE, # first observation is not LOCF
+      vec_approx_equal0(vals_tbl,
+                        inds1 = inds1, vals_tbl, inds2 = inds2,
+                        na_equal = TRUE, abs_tol = abs_tol
+                        )
+    )
+  }
+  if (init_nas_are_locf) {
+    value_is_missing <- vctrs::vec_detect_missing(
+      vctrs::new_data_frame(updates_col_refs[val_names], nrow(arranged_updates_df))
+    )
+    fifelse(ekt_is_locf, value_is_locf, value_is_missing)
+  } else {
+    ekt_is_locf & value_is_locf
   }
 }
 

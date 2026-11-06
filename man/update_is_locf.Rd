@@ -9,7 +9,7 @@ update_is_locf(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf)
 }
 \arguments{
 \item{arranged_updates_df}{an arranged update data frame like an
-\code{epi_archive} \code{DT}}
+\code{epi_archive} \code{DT} (not validated)}
 
 \item{ukey_names}{(not validated:) chr; the archive/equivalent
 \code{\link{key_colnames}}; must include \code{"version"}.}
@@ -22,7 +22,20 @@ update_is_locf(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf)
 lgl
 }
 \description{
-(Not validated:) Must be called on an \code{epi_archive}'s \code{DT} or a data frame
-formatted like one.
+LOCF meaning last observation carried forward (to later
+versions).
+}
+\details{
+We include epikey-time columns in LOCF comparisons as part of an optimization
+to avoid slower grouped operations while still ensuring that the first
+observation for each time series will not be marked as LOCF. We test these
+key columns for exact equality to prevent chopping off consecutive
+time_values during flat periods when \code{abs_tol} is high.
+
+We use exact equality for non-\code{is.numeric} double/integer columns such as
+dates, datetimes, difftimes, \code{tsibble::yearmonth}s, etc., as these may be
+used as part of re-indexing or grouping procedures, and we don't want to
+change the number of groups for those operations when we remove LOCF data
+during compactification.
 }
 \keyword{internal}
