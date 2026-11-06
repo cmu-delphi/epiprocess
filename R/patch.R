@@ -153,7 +153,8 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
       vec_size(entry1) == vec_size(entry2) &&
         # Trying to follow current vec_equal: strict on ptypes, (names & other) attrs:
         identical(vec_ptype(entry1), vec_ptype(entry2)) &&
-        identical(attributes(entry1), attributes(entry2)) &&
+        identical(attributes(entry1) %>% {if (is.null(.)) . else .[order(names(.))]},
+                  attributes(entry2) %>% {if (is.null(.)) . else .[order(names(.))]}) &&
         all(vec_approx_equal0(entry1, entry2, na_equal, abs_tol))
     }, logical(1L))
   } else {
