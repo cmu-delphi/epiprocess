@@ -949,6 +949,7 @@ process_signal_archive <- function(
   )
   archive
 }
+
 #' Pivot an archive from long to wide
 #'
 #' @keywords internal
@@ -978,11 +979,12 @@ epix_pivot_wider <- function(x, names_from, values_from) {
         !!sig_name := !!rlang::sym(values_from)
       )
 
+    other_keys <- setdiff(x$other_keys, names_from)
     new_epi_archive(
-      df,
+      as.data.table(df, key = c("geo_value", "time_value", other_keys, "version")),
       geo_type = x$geo_type,
       time_type = x$time_type,
-      other_keys = setdiff(x$other_keys, names_from),
+      other_keys = other_keys,
       clobberable_versions_start = x$clobberable_versions_start,
       versions_end = x$versions_end
     )
