@@ -284,7 +284,7 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
         f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
     } else {
       out_cols <- f_dots_baked(slide[, in_colnames], before_n_steps + after_n_steps + 1L)
-      if (after_n_steps != 0L) {
+      if (after_n_steps != 0L && out_t_max >= out_t_min) {
         # Shift an appropriate amount of NA padding from the start to the end.
         # (This padding will later be cut off when we filter down to the
         # original time_values.)
