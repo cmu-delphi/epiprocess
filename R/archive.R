@@ -527,17 +527,17 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_ar
     ekt_is_locf <- c(
       FALSE, # first observation is not LOCF
       vec_approx_equal0(ekts_tbl,
-                        inds1 = inds1, ekts_tbl, inds2 = inds2,
-                        # check ekt (key) cols with 0 tolerance:
-                        na_equal = TRUE, abs_tol = 0
-                        )
+        inds1 = inds1, ekts_tbl, inds2 = inds2,
+        # check ekt (key) cols with 0 tolerance:
+        na_equal = TRUE, abs_tol = 0
+      )
     )
     value_is_locf <- c(
       FALSE, # first observation is not LOCF
       vec_approx_equal0(vals_tbl,
-                        inds1 = inds1, vals_tbl, inds2 = inds2,
-                        na_equal = TRUE, abs_tol = abs_tol
-                        )
+        inds1 = inds1, vals_tbl, inds2 = inds2,
+        na_equal = TRUE, abs_tol = abs_tol
+      )
     )
   }
   if (init_nas_are_locf) {

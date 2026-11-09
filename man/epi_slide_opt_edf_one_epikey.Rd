@@ -15,7 +15,8 @@ epi_slide_opt_edf_one_epikey(
   time_type,
   out_colnames,
   out_filter_time_range,
-  out_filter_time_set
+  out_filter_time_set,
+  inf_slide_time_min
 )
 }
 \arguments{
@@ -51,6 +52,13 @@ provided, should be a length-2 vector/list containing the minimum and
 maximum \code{time_value} to allow in the output. \code{out_filter_time_set}, if
 provided, should be a vector of \code{time_values} to intersect with the input
 \code{time_value}s.}
+
+\item{inf_slide_time_min}{\code{NULL} or a single \code{time_value}; when
+\code{before_n_steps} is \code{Inf}, the time at which the "sliding" (actually,
+running) windows start. \code{NULL} will use each epikey's min \code{time_value}
+rather than the overall; pass the minimum \code{time_value} across all epikeys
+to treat times before this epikey's first \code{time_value} as (NA-padded) gaps,
+matching \code{epi_slide}.}
 }
 \value{
 tibble; like \code{inp_tbl} with addition of \code{out_colnames} holding the
@@ -73,7 +81,8 @@ tbl \%>\%
     frollmean, "data.table",
     1L, 0L, 1L, "integer",
     "slide_value",
-    c(11L, 16L), NULL
+    c(11L, 16L), NULL,
+    NULL
   )
 
 tbl \%>\%
@@ -82,7 +91,8 @@ tbl \%>\%
     frollmean, "data.table",
     0L, 1L, 1L, "integer",
     "slide_value",
-    NULL, c(11, 15, 16, 17, 18)
+    NULL, c(11, 15, 16, 17, 18),
+    NULL
   )
 
 tbl \%>\%
@@ -91,7 +101,8 @@ tbl \%>\%
     frollmean, "data.table",
     Inf, 0L, 1L, "integer",
     "slide_value",
-    NULL, c(12, 17)
+    NULL, c(12, 17),
+    NULL
   )
 
 }

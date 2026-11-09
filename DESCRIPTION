@@ -122,4 +122,4 @@ Collate:
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

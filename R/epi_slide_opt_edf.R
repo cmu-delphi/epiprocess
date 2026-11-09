@@ -194,6 +194,12 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'   maximum `time_value` to allow in the output. `out_filter_time_set`, if
 #'   provided, should be a vector of `time_values` to intersect with the input
 #'   `time_value`s.
+#' @param inf_slide_time_min `NULL` or a single `time_value`; when
+#'   `before_n_steps` is `Inf`, the time at which the "sliding" (actually,
+#'   running) windows start. `NULL` will use each epikey's min `time_value`
+#'   rather than the overall; pass the minimum `time_value` across all epikeys
+#'   to treat times before this epikey's first `time_value` as (NA-padded) gaps,
+#'   matching `epi_slide`.
 #' @return tibble; like `inp_tbl` with addition of `out_colnames` holding the
 #'   slide computation results, with times filtered down as specified
 #'
@@ -211,7 +217,8 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'     frollmean, "data.table",
 #'     1L, 0L, 1L, "integer",
 #'     "slide_value",
-#'     c(11L, 16L), NULL
+#'     c(11L, 16L), NULL,
+#'     NULL
 #'   )
 #'
 #' tbl %>%
@@ -220,7 +227,8 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'     frollmean, "data.table",
 #'     0L, 1L, 1L, "integer",
 #'     "slide_value",
-#'     NULL, c(11, 15, 16, 17, 18)
+#'     NULL, c(11, 15, 16, 17, 18),
+#'     NULL
 #'   )
 #'
 #' tbl %>%
@@ -229,7 +237,8 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'     frollmean, "data.table",
 #'     Inf, 0L, 1L, "integer",
 #'     "slide_value",
-#'     NULL, c(12, 17)
+#'     NULL, c(12, 17),
+#'     NULL
 #'   )
 #'
 #' @keywords internal
@@ -238,7 +247,8 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
                                          f_dots_baked, f_from_package,
                                          before_n_steps, after_n_steps, unit_step, time_type,
                                          out_colnames,
-                                         out_filter_time_range, out_filter_time_set) {
+                                         out_filter_time_range, out_filter_time_set,
+                                         inf_slide_time_min) {
   # TODO try converting time values to reals, do work on reals, convert back at very end?
   #
   # TODO loosen restrictions here.  each filter optional?
@@ -261,7 +271,7 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
     cli_abort("Exactly one of `out_filter_time_range` and `out_filter_time_set` must be non-`NULL`.")
   }
   if (before_n_steps == Inf) {
-    slide_t_min <- min(inp_tbl$time_value)
+    slide_t_min <- if (is.null(inf_slide_time_min)) min(inp_tbl$time_value) else inf_slide_time_min
     slide_start_padding_n <- time_minus_time_in_n_steps(out_t_min, slide_t_min, time_type)
   } else {
     slide_t_min <- out_t_min - before_n_steps * unit_step
@@ -614,9 +624,13 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
       purrr::partial(.f, ... = , ...) # `... =` stands in for future args
     }
 
+  # Like `epi_slide`, start `Inf` windows at the min time_value across the
+  # entire edf, treating earlier times for later-starting epikeys as gaps:
+  inf_slide_time_min <- if (before_n_steps == Inf) min(.x$time_value) else NULL
+
   result <- .x %>%
     group_modify(function(grp_data, grp_key) {
-      epi_slide_opt_edf_one_epikey(grp_data, names_info$input_col_names, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, names_info$output_col_names, NULL, ref_time_values)
+      epi_slide_opt_edf_one_epikey(grp_data, names_info$input_col_names, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, names_info$output_col_names, NULL, ref_time_values, inf_slide_time_min)
     }) %>%
     arrange_col_canonical()
 
