@@ -61,8 +61,8 @@ test_that("epi_slide_opt with type-transforming frollapply FUN handles a geo wit
   # Target .ref_time_values where geo "a" has no input, or where geo "c" has no
   # input (for Inf windows, the latter means sliding over NA padding from the
   # edf-wide min time_value, on which `FUN` may output a different type):
-  toStringIfSeemsComplete <- function(x) if (anyNA(x)) NA else toString(x)
-  for (fun_name in c("toString", "toStringIfSeemsComplete")) {
+  to_string_if_complete <- function(x) if (anyNA(x)) NA else toString(x)
+  for (fun_name in c("toString", "to_string_if_complete")) {
     fun <- get(fun_name)
     for (ref_time_values in list(start_date + 5:6, start_date + 0:1)) {
       for (window_size in c(3, Inf)) {
@@ -108,7 +108,7 @@ test_that("epi_slide_sum handles left-aligned window with no ref_time_values in 
 # implementation based on epix_slide + epi_slide_opt; not checking latter's
 # behavior.
 
-expect_archive_opt_slide_sum_matches_reference <- function(arch, ...) {
+expect_archive_slide_sum_matches_refimpl <- function(arch, ...) {
   opt_result <- epi_slide_sum(arch, value, ...)
   ref_result <- epix_slide(arch, function(snapshot, group_key, version) {
     epi_slide_sum(snapshot, value, ...)
@@ -139,7 +139,7 @@ test_that("epi_slide_sum.arch with Inf window matches epix_slide + epi_slide_sum
       version = start_date + 10 + .data$version
     ) %>%
     as_epi_archive()
-  expect_archive_opt_slide_sum_matches_reference(arch, .window_size = Inf)
+  expect_archive_slide_sum_matches_refimpl(arch, .window_size = Inf)
 })
 
 test_that("epi_slide_sum on archive with Inf window handles NA revisions same as epix_slide + epi_slide_sum on edfs", {
@@ -160,7 +160,7 @@ test_that("epi_slide_sum on archive with Inf window handles NA revisions same as
       version = start_date + 10 + .data$version
     ) %>%
     as_epi_archive()
-  expect_archive_opt_slide_sum_matches_reference(arch, .window_size = Inf)
+  expect_archive_slide_sum_matches_refimpl(arch, .window_size = Inf)
 })
 
 test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi_slide_sum on edfs", {
@@ -184,11 +184,11 @@ test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi
     ) %>%
     as_epi_archive()
   for (align in c("right", "center", "left")) {
-    expect_archive_opt_slide_sum_matches_reference(arch, .window_size = 3, .align = align)
+    expect_archive_slide_sum_matches_refimpl(arch, .window_size = 3, .align = align)
   }
 })
 
-test_that("epi_slide_opt.epi_archive with type-transforming frollapply FUN matches epix_slide + epi_slide_opt on edfs", {
+test_that("epi_slide_opt.epi_archive with type-transforming frollapply FUN matches epix_slide+epi_slide_opt on edfs", {
   # This is just a basic sanity check. The real tests would come in if we
   # allowed a `.ref_time_values` parameter etc.
   arch <- tibble::tribble(

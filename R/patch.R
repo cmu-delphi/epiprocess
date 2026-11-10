@@ -140,7 +140,8 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     # (we only need to manually recurse if we potentially have columns that would
     # be specially processed by the above)
     if (ncol(vec1) == 0) {
-      rep(TRUE, nrow(vec1))
+      # (Output size should match `inds1` (and `inds2`) if provided.)
+      rep(TRUE, if (is.null(inds1)) nrow(vec1) else vec_size(inds1))
     } else {
       Reduce(`&`, lapply(seq_len(ncol(vec1)), function(col_i) {
         vec_approx_equal0(vec1[[col_i]], vec2[[col_i]], na_equal, abs_tol, inds1, inds2)
@@ -200,8 +201,8 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
 tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
   x_keyvals <- x[c(ukey_names, val_names)]
   y_keyvals <- y[c(ukey_names, val_names)]
-  xy_keyvals <- vec_rbind(x, y)
-  if (abs_tol == 0) {
+  xy_keyvals <- vec_rbind(x_keyvals, y_keyvals)
+  if (abs_tol == 0 || length(val_names) == 0L) {
     # perf: 0 tolerance is just like a normal `anti_join` by both ukey_names and
     # val_names together. We can do that more quickly than `anti_join` with
     # `vctrs` by checking for keyvals of `x` that are not duplicated in `y`.
@@ -223,7 +224,7 @@ tbl_fast_anti_join <- function(x, y, ukey_names, val_names, abs_tol = 0) {
     # `FALSE` for everything and just fill in `TRUE`/`FALSE` results for the
     # ukeys with matches in `y`:
     x_exclude <- rep(FALSE, nrow(x))
-    xy_vals <- xy[val_names]
+    xy_vals <- xy_keyvals[val_names]
     x_exclude[xy_ukey_dup_inds1] <- vec_approx_equal(
       xy_vals,
       inds1 = xy_ukey_dup_inds2,

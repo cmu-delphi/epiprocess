@@ -320,7 +320,10 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
     }
   } else if (f_from_package == "slider") {
     for (col_i in seq_along(in_colnames)) {
-      slide[[out_colnames[[col_i]]]] <- f_dots_baked(slide[[in_colnames[[col_i]]]], before = before_n_steps, after = after_n_steps)
+      slide[[out_colnames[[col_i]]]] <- f_dots_baked(
+        slide[[in_colnames[[col_i]]]],
+        before = before_n_steps, after = after_n_steps
+      )
     }
   } else {
     cli_abort(
@@ -642,7 +645,14 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
   result <- .x %>%
     group_modify(function(grp_data, grp_key) {
-      epi_slide_opt_edf_one_epikey(grp_data, names_info$input_col_names, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, names_info$output_col_names, NULL, ref_time_values, inf_slide_time_min)
+      epi_slide_opt_edf_one_epikey(
+        grp_data, input_col_names,
+        f_dots_baked, f_from_package, before_n_steps, after_n_steps,
+        unit_step, time_type,
+        output_col_names,
+        NULL, ref_time_values,
+        inf_slide_time_min
+      )
     }) %>%
     arrange_col_canonical()
 

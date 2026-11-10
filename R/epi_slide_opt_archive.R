@@ -128,7 +128,7 @@ epi_slide_opt_archive_one_epikey <- function(
       # has an input update. Similarly, we could have updates beginning with
       # inp_update_min_t - after, or anything in between these two bounds. If
       # before == Inf, we need to update outputs all the way to the end of the
-      # input *snapshot*.
+      # input *snapshot*. nolint: commented_code_linter
       out_update_min_t <- inp_update_min_t - after_n_steps * unit_step
       if (before_n_steps == Inf) {
         out_update_max_t <- max(inp_snapshot$time_value)
@@ -136,7 +136,14 @@ epi_slide_opt_archive_one_epikey <- function(
         out_update_max_t <- inp_update_max_t + before_n_steps * unit_step
       }
     }
-    out_update <- epi_slide_opt_edf_one_epikey(inp_snapshot, in_colnames, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, out_colnames, list(out_update_min_t, out_update_max_t), NULL, inf_slide_time_min)
+    out_update <- epi_slide_opt_edf_one_epikey(
+      inp_snapshot, in_colnames,
+      f_dots_baked, f_from_package, before_n_steps, after_n_steps,
+      unit_step, time_type,
+      out_colnames,
+      list(out_update_min_t, out_update_max_t), NULL,
+      inf_slide_time_min
+    )
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")
