@@ -3,9 +3,18 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
-# epiprocess 0.13.0
+# epiprocess 0.13.0.9999
 
 ## Breaking changes
+
+- `.versions =` arguments have been standardized across
+  `autoplot.epi_archive()` and `epix_slide()`: (a) a vector of
+  versions, (b) a description of desired spacing (e.g., "2 weeks"), or
+  (c) `NULL`, for default behavior. The default, `NULL`, now means all
+  versions with updates; `epix_slide()` will no longer add additional
+  versions based on the imputed reporting cadence and `versions_end`.
+  And `autoplot()` will no longer accept just a number in (b), to
+  avoid ambiguity with case (a) in some types of archives.
 
 - The low-level `new_epi_archive()` function's `x` argument has been replaced
   with a `data_table` argument, which now has extra requirements; see
@@ -13,7 +22,28 @@ indicate development versions beyond 0.x.
   have a need for something lower-level.
 
 ## New features
-- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time` and `report_time` columns, mapping them to `time_value` and `version` / `as_of` respectively.
+
+- `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
+  histories for 7-day-averages of signals, etc.
+
+## Improvements
+
+- Automatic character-to-Date and `vec_cast()` conversions have been
+  added to various function arguments.
+
+- `as_epi_archive()` now detects POSIXct datetime `version` columns
+  and converts them to `Date`s.  Actual POSIXct `version` support may
+  be added in the future.  Two kinds of datetimes are supported: (a)
+  fake purportedly-UTC midnight/noon datetimes that actually represent
+  dates, and (b) actual datetimes. (Improves compatibility with
+  `{epidatr}` 1.4.0's `epidata_archive()`.)
+
+# epiprocess 0.13.0
+
+## New features
+- `as_epi_df()` and `as_epi_archive()` now recognize `reference_time`
+  and `report_time` columns, mapping them to `time_value` and
+  `version` / `as_of` respectively.
 - `revision_summary()` now detects bulk reporting adding new time
   values, and excludes bulk reporting for some statistics.
 - Added `linelist_to_archive()`, which converts a linelist or chart of patient data updates into an `epi_archive`.
@@ -22,8 +52,6 @@ indicate development versions beyond 0.x.
 - `print.epi_df()` now includes a **Latency info** section that summarizes reporting lags and identifies "lagging keys".
 - `summary.epi_df()` now includes detailed notes about even/uneven min and max `time_value` (by `epikey`) and detects implicit or explicit gaps.
 - `autoplot()` now includes `.max_keys` and `.interactive` parameters. The `.max_keys` parameter helps manage large datasets by restricting the number of key combinations shown. The `.interactive` feature enables interactive plots using Plotly, which now supports `.facet_to_dropdown` to consolidate facets into a dropdown menu.
-- `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
-  histories for 7-day-averages of signals, etc.
 
 ## Improvements
 

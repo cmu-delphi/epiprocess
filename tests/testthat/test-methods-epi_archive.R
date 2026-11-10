@@ -15,8 +15,6 @@ ea2_data <- tibble::tribble(
   dplyr::mutate(dplyr::across(c(time_value, version), as.Date))
 
 test_that("Errors are thrown due to bad epix_as_of inputs", {
-  # max_version cannot be of string class rather than date class
-  expect_error(ea %>% epix_as_of("2020-01-01"))
   # max_version cannot be later than latest version
   expect_error(ea %>% epix_as_of(as.Date("2025-01-01")))
   # max_version cannot be a vector
@@ -42,8 +40,8 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
 
   old_key <- data.table::key(ea2$DT)
 
-  edf_as_of <- ea2 %>%
-    epix_as_of(as.Date("2020-06-03"))
+  edf_as_of1 <- ea2 %>% epix_as_of(as.Date("2020-06-03"))
+  edf_as_of2 <- ea2 %>% epix_as_of("2020-06-03")
 
   edf_expected <- as_epi_df(tibble(
     geo_value = "ca",
@@ -51,8 +49,21 @@ test_that("epix_as_of properly grabs the data and doesn't mutate key", {
     cases = c(2, 1, 1)
   ), as_of = as.Date("2020-06-03"))
 
-  expect_equal(edf_as_of, edf_expected, ignore_attr = c(".internal.selfref", "sorted"))
+  expect_equal(edf_as_of1, edf_expected, ignore_attr = c(".internal.selfref", "sorted"))
+  expect_equal(edf_as_of2, edf_expected, ignore_attr = c(".internal.selfref", "sorted"))
   expect_equal(data.table::key(ea2$DT), old_key)
+
+  edf_as_of_b1 <- ea2 %>% epix_as_of(as.Date("2020-06-03"), min_time = d + 1)
+  edf_as_of_b2 <- ea2 %>% epix_as_of("2020-06-03", min_time = as.character(d + 1))
+
+  edf_expected_b <- as_epi_df(tibble(
+    geo_value = "ca",
+    time_value = d + 1:2,
+    cases = c(1, 1)
+  ), as_of = as.Date("2020-06-03"))
+
+  expect_equal(edf_as_of_b1, edf_expected_b, ignore_attr = c(".internal.selfref", "sorted"))
+  expect_equal(edf_as_of_b2, edf_expected_b, ignore_attr = c(".internal.selfref", "sorted"))
 })
 
 test_that("Errors are thrown due to bad epix_truncate_versions_after inputs", {

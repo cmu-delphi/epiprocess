@@ -422,3 +422,131 @@ set_time_type0.epi_archive <- function(x, value) {
   x$time_type <- value
   x
 }
+
+versions_param_roxygen <- function(optional = TRUE) {
+  glue::glue('
+    Either
+    (a) a vector containing the set of desired versions to
+        include,
+    (b) a description of the desired spacing, such as `"week"`,
+        `"2 weeks"`, `"month"`, or another string accepted by
+        [`seq`]\'s / [`seq.Date`]\'s `by` parameter, or
+    (c) `NULL`{if (optional) " (the default)" else ""},
+        to include all versions containing updates.
+
+    In case (a), we accept vectors that can be automatically converted
+    to match the [ptype][vctrs::vec_ptype] of versions in the archive;
+    we try both character-to-Date and [`vctrs::vec_cast`] conversions.
+    In case (c), we look at the unique `version`s recorded in the archive\'s
+    DT object.
+  ')
+}
+
+#' Standardize a `versions`/`.versions` argument into a vector of versions
+#'
+#' @param versions `r versions_param_roxygen(FALSE)`
+#' @param archive the `epi_archive` to select versions from.
+#' @return a vector with the same ptype as `archive$DT$version`
+#'
+#' @keywords internal
+versions_standardize <- function(versions, archive, versions_arg = caller_arg(versions), call = caller_env()) {
+  versions_arg # must force this before `versions` is
+  if (is.null(versions)) {
+    # all versions
+    versions <- vec_sort(vec_unique(archive$DT$version))
+  } else if (
+    is.character(versions) && length(versions) == 1L &&
+      forcing_raises_error(vec_cast_patched(versions, archive$DT$version))
+  ) {
+    # version spacing
+    min_version <- min(archive$DT$version)
+    versions_end <- archive$versions_end
+    versions <- seq(min_version, versions_end, by = versions)
+  } else {
+    versions <- withCallingHandlers(
+      vec_cast_patched(versions, archive$DT$version),
+      error = function(e) {
+        cli::cli_abort("{.arg {versions_arg}} did not look like
+                          (something that could be automatically converted to) a vector of versions,
+                          nor a version spacing specification,
+                          nor {.code NULL}.",
+          class = "epiprocess__autoplot_archive_bad_versions",
+          call = call, parent = e
+        )
+      }
+    )
+  }
+  versions
+}
+
+#' An attempt at a more "accurate"/relevant [`Sys.timezone()`]
+#'
+#' The documentation for [`Sys.timezone()`] states that it tries to
+#' detect the "initial" value of the "TZ" environment variable, but
+#' `print` seems to use the current value, so the latter seems more
+#' relevant.  It also mentions invalid time zones maybe being treated
+#' as UTC, and maybe being warned about, and `print` on one platform
+#' seems to follow as-UTC, no warning, plus sometimes displaying and
+#' sometimes not displaying the invalid time zone; we don't want to
+#' encounter these situations, so try to abort before they happen.
+#' Also, adds a gate for session timezones of "UTC" used by some CI
+#' and cloud computing services, requiring users to confirm that "UTC"
+#' is actually relevant to them.
+#'
+#' @keywords internal
+session_tz <- function() {
+  tz <- Sys.getenv("TZ")
+  if (tz == "") {
+    tz <- Sys.timezone()
+  }
+  tz <- sub("^:", "", tz) # colon prefix -> tz filepath; OlsonNames() is already just filepaths
+  if (!tz %in% OlsonNames()) {
+    cli_abort(c('Unrecognized time zone provided in environment variable "TZ": "{tz}"',
+      "i" = 'OlsonNames() contains the recognized valid time zone names;
+             these often look like "US/Eastern" or "America/New_York" rather than "ET"/"EST"/"EDT".',
+      ">" = 'Set the time zone with {.code Sys.setenv("TZ" = "US/Eastern")} etc.,
+             or use the operating system\'s time zone with {.code Sys.unsetenv("TZ")}.'
+    ))
+  }
+  if (tz %in% c("UTC", "Etc/UTC", "posix/UTC")) {
+    if (!identical(Sys.getenv("CONFIRM_UTC"), "TRUE")) {
+      cli_abort(c(
+        "Cannot guess which time zone you are in / working with,
+         so we do not know how to convert datetimes to dates.",
+        "i" = "R session timezone is UTC, but maybe this is only
+               because we're running on  AWS, GitHub Actions, or
+               some other cloud service.",
+        ">" = 'If you are located in / dealing with indicators
+               measuring epidemic activity in a non-UTC timezone,
+               please set the TZ environment variable to that timezone
+               or a nearby one, e.g., {.code Sys.setenv(TZ = "US/Eastern")},
+               and retry.',
+        "i" = "To make this selection permanent, run
+               {.code usethis::edit_r_environ()} and add a line
+               with e.g. {.code TZ=US/Eastern} (no quotes) and save.",
+        ">" = 'If you are located in / dealing with data that is
+               actually about locations using UTC, please use
+               {.code Sys.setenv(CONFIRM_UTC="TRUE")} instead.'
+      ), class = "epiprocess__session_tz__unconfirmed_utc")
+    }
+  }
+  tz
+}
+
+ct_check_tz <- function(x, x_arg = caller_arg(x)) {
+  tz <- attr(x, "tzone", exact = TRUE)
+  if (is.null(tz) || tz %in% OlsonNames()) {
+    TRUE
+  } else {
+    cli_abort(c('Unrecognized POSIXct display time zone in "tzone" attr of {.arg {x_arg}}.',
+      "i" = 'OlsonNames() contains the recognized valid time zone names;
+             these look like "US/Eastern", not "ET"/"EST"/"EDT".',
+      ">" = 'Set the display time zone with {.code as.POSIXct(<valid object>, tz = "US/Eastern")} etc.,
+             or use the R session\'s time zone with {.code as.POSIXct(<valid object>, tz = "")}.'
+    ))
+  }
+}
+
+ct_to_date <- function(x, date_calc_tz) {
+  as.Date(format(as.POSIXct(x, date_calc_tz), "%Y-%m-%d"))
+}

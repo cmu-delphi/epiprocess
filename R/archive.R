@@ -613,6 +613,52 @@ as_epi_archive <- function(
   x <- guess_column_name(x, "time_value", time_column_names())
   x <- guess_column_name(x, "version", version_column_names())
 
+  if (inherits(x$version, "POSIXct")) {
+    vec_assert(clobberable_versions_start, size = 1L)
+    vec_assert(versions_end, size = 1L)
+    # convert metadata POSIXct to same timezone, or Dates to POSIXct with timezone matching x$version:
+    clobberable_versions_start <- vec_cast(clobberable_versions_start, x$version)
+    versions_end <- vec_cast(versions_end, x$version)
+    #
+    utc_display_datetimes <- c(as.POSIXct(x$version, tz = "UTC"), clobberable_versions_start, versions_end)
+    utc_dates <- as.Date(utc_display_datetimes) # hedge against as.Date(<any-tz POSIXct>) impl changing
+    utc_midnights <- as.POSIXct(utc_dates, tz = "UTC")
+    utc_noons <- as.POSIXct(utc_dates, tz = "UTC") + as.difftime(12, units = "hours")
+    if (
+      all(vec_equal(utc_display_datetimes, utc_midnights, na_equal = TRUE)) ||
+        all(vec_equal(utc_display_datetimes, utc_noons, na_equal = TRUE))
+    ) {
+      # Treat x$version as a vector of dates masquerading as datetimes.  Silently convert:
+      x$version <- utc_dates[seq_len(nrow(x))]
+      clobberable_versions_start <- utc_dates[nrow(x) + 1L]
+      versions_end <- utc_dates[nrow(x) + 2L]
+    } else {
+      # Treat x$version as a vector of all actual datetimes.
+      date_calc_tz <- session_tz()
+      date_calc_tz_source <- "R session time zone" # nolint: object_usage_linter
+
+      cli_inform(
+        c('POSIXct `version`s are not yet supported;
+           converting to Dates in {date_calc_tz_source}, "{date_calc_tz}".',
+          "i" = "Only keeping the last version of each measurement if there are multiple within a day."
+        ),
+        class = "epiprocess__as_epi_archive__datetime_version"
+      )
+
+      ekt_names <- c("geo_value", other_keys, "time_value")
+      ukey_names <- c(ekt_names, "version")
+      x <- as_tibble(x) # (`x` is a data.frame here; check_ukey_unique needs a tibble)
+      assert(check_ukey_unique(x, ukey_names))
+      x <- x %>%
+        arrange(pick(all_of(ekt_names)), desc(version)) %>%
+        mutate(version = ct_to_date(version, date_calc_tz)) %>%
+        vec_slice(vec_duplicate_id(.[ukey_names]) == seq_len(nrow(.)))
+      clobberable_versions_start <- ct_to_date(clobberable_versions_start, date_calc_tz)
+      versions_end <- ct_to_date(versions_end, date_calc_tz)
+    }
+    if (is.na(clobberable_versions_start)) clobberable_versions_start <- NA
+  }
+
   # Convert to data.table:
   key_vars <- c("geo_value", other_keys, "time_value", "version")
   if (x_already_copied) {
