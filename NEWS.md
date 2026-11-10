@@ -38,6 +38,12 @@ indicate development versions beyond 0.x.
   dates, and (b) actual datetimes. (Improves compatibility with
   `{epidatr}` 1.4.0's `epidata_archive()`.)
 
+- Some column ordering operations have been changed to place any `other_keys`
+  between `geo_value` and `time_value`. This better hints at how we group
+  together `geo_value` and `other_keys` in many processing functions. Upon
+  construction and some operations, `epi_df`s and `epi_archive`s will now
+  reorder columns to this order.
+
 # epiprocess 0.13.0
 
 ## New features
