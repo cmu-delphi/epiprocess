@@ -11,50 +11,55 @@ edf <- tibble::tibble(
   as_epi_df(as_of = start_date + 30) %>%
   group_epi_df(exclude = "time_value")
 
-test_that("epi_slide and epi_slide_sum agree on Inf window for a later-starting geo", {
+# Sum implementations from each supported package, to exercise both the
+# data.table and slider code paths:
+sum_fs <- list(frollsum = data.table::frollsum, slide_sum = slider::slide_sum)
+
+test_that("epi_slide and epi_slide_opt sums agree on Inf window for a later-starting geo", {
   # (Both pad with NAs back to the min time_value in the entire edf, making all
   # output values for "c" NA for many `.f`s.)
-  expect_equal(
-    epi_slide(edf, ~ sum(.x$value), .window_size = Inf),
-    epi_slide_sum(edf, value, .window_size = Inf, .new_col_names = "slide_value")
-  )
+  for (f_name in names(sum_fs)) {
+    expect_equal(
+      epi_slide(edf, ~ sum(.x$value), .window_size = Inf),
+      epi_slide_opt(edf, value, sum_fs[[f_name]], .window_size = Inf, .new_col_names = "slide_value"),
+      info = f_name
+    )
+  }
 })
 
-test_that("epi_slide_sum handles Inf window with none of .ref_time_values in a geo's range", {
-  # Geo "c" time range starts later; try .ref_time_values all preceding its min
-  # (should NA pad its slide computation inputs, leading to everything NA for
-  # basic sum):
-  ref_time_values <- start_date + 0:1
-  expect_equal(
-    epi_slide(edf, ~ sum(.x$value),
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE
-    ),
-    epi_slide_sum(edf, value,
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE,
-      .new_col_names = "slide_value"
+test_that("epi_slide_opt sums handle Inf window with none of .ref_time_values in a geo's range", {
+  for (f_name in names(sum_fs)) {
+    f <- sum_fs[[f_name]]
+    # Geo "c" time range starts later; try .ref_time_values all preceding its
+    # min (should NA pad its slide computation inputs, leading to everything NA
+    # for basic sum):
+    ref_time_values <- start_date + 0:1
+    expect_equal(
+      epi_slide(edf, ~ sum(.x$value),
+        .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE
+      ),
+      epi_slide_opt(edf, value, f,
+        .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE,
+        .new_col_names = "slide_value"
+      ),
+      info = f_name
     )
-  )
-  # Geo "a" time range ends earlier; test .ref_time_values all following its max
-  # (should not have rows):
-  ref_time_values <- start_date + 5:6
-  expect_equal(
-    epi_slide(edf, ~ sum(.x$value),
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = FALSE
-    ),
-    epi_slide_sum(edf, value,
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = FALSE,
-      .new_col_names = "slide_value"
-    )
-  )
-  expect_equal(
-    epi_slide(edf, ~ sum(.x$value),
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE
-    ),
-    epi_slide_sum(edf, value,
-      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE,
-      .new_col_names = "slide_value"
-    )
-  )
+    # Geo "a" time range ends earlier; test .ref_time_values all following its
+    # max (should not have rows):
+    ref_time_values <- start_date + 5:6
+    for (all_rows in c(FALSE, TRUE)) {
+      expect_equal(
+        epi_slide(edf, ~ sum(.x$value),
+          .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = all_rows
+        ),
+        epi_slide_opt(edf, value, f,
+          .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = all_rows,
+          .new_col_names = "slide_value"
+        ),
+        info = glue::glue("{f_name}, .all_rows = {all_rows}")
+      )
+    }
+  }
 })
 
 test_that("epi_slide_opt with type-transforming frollapply FUN handles a geo with nothing to slide over", {
@@ -91,17 +96,20 @@ test_that("epi_slide_opt with type-transforming frollapply FUN handles a geo wit
   # better-behaved.
 })
 
-test_that("epi_slide_sum handles left-aligned window with no ref_time_values in a geo's range", {
+test_that("epi_slide_opt sums handle left-aligned window with no ref_time_values in a geo's range", {
   ref_time_values <- start_date + 0:1
-  expect_equal(
-    epi_slide(edf, ~ sum(.x$value),
-      .window_size = 7, .align = "left", .ref_time_values = ref_time_values
-    ),
-    epi_slide_sum(edf, value,
-      .window_size = 7, .align = "left", .ref_time_values = ref_time_values,
-      .new_col_names = "slide_value"
+  for (f_name in names(sum_fs)) {
+    expect_equal(
+      epi_slide(edf, ~ sum(.x$value),
+        .window_size = 7, .align = "left", .ref_time_values = ref_time_values
+      ),
+      epi_slide_opt(edf, value, sum_fs[[f_name]],
+        .window_size = 7, .align = "left", .ref_time_values = ref_time_values,
+        .new_col_names = "slide_value"
+      ),
+      info = f_name
     )
-  )
+  }
 })
 
 # Archive tests: all comparing epi_slide_opt.epi_archive vs. (slow) reference
@@ -109,16 +117,19 @@ test_that("epi_slide_sum handles left-aligned window with no ref_time_values in 
 # behavior.
 
 expect_archive_slide_sum_matches_refimpl <- function(arch, ...) {
-  opt_result <- epi_slide_sum(arch, value, ...)
-  ref_result <- epix_slide(arch, function(snapshot, group_key, version) {
-    epi_slide_sum(snapshot, value, ...)
-  }) %>%
-    select(names(arch$DT), everything()) %>%
-    as_epi_archive()
-  expect_equal(opt_result, ref_result)
+  for (f_name in names(sum_fs)) {
+    f <- sum_fs[[f_name]]
+    opt_result <- epi_slide_opt(arch, value, f, ...)
+    ref_result <- epix_slide(arch, function(snapshot, group_key, version) {
+      epi_slide_opt(snapshot, value, f, ...)
+    }) %>%
+      select(names(arch$DT), everything()) %>%
+      as_epi_archive()
+    expect_equal(opt_result, ref_result, info = f_name)
+  }
 }
 
-test_that("epi_slide_sum.arch with Inf window matches epix_slide + epi_slide_sum on edfs", {
+test_that("epi_slide_opt sums on archive with Inf window match epix_slide + epi_slide_opt on edfs", {
   # Test input revision timeline by version:
   # 1: geo "a" with earlier min time; geo "c" with later min time.
   # 2: new geo "d" introduced (also with later min time).
@@ -142,7 +153,7 @@ test_that("epi_slide_sum.arch with Inf window matches epix_slide + epi_slide_sum
   expect_archive_slide_sum_matches_refimpl(arch, .window_size = Inf)
 })
 
-test_that("epi_slide_sum on archive with Inf window handles NA revisions same as epix_slide + epi_slide_sum on edfs", {
+test_that("epi_slide_opt sums on archive with Inf window handle NA revisions same as epix_slide + epi_slide_opt on edfs", {
   # Versions:
   # 1: geo "a" starts at the archive-wide min time; geo "c" starts later.
   # 2: "a" revises its first value to NA (but this doesn't change the min t).
@@ -163,7 +174,7 @@ test_that("epi_slide_sum on archive with Inf window handles NA revisions same as
   expect_archive_slide_sum_matches_refimpl(arch, .window_size = Inf)
 })
 
-test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi_slide_sum on edfs", {
+test_that("epi_slide_opt sums on archive with finite windows match epix_slide + epi_slide_opt on edfs", {
   # Versions:
   # 1: geo "a" starts at the archive-wide min time; geo "c" starts later, with
   #    a gap in its time values.
