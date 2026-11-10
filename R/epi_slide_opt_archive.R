@@ -202,6 +202,7 @@ epi_slide_opt.epi_archive <-
         class = "epiprocess__epi_slide_opt__window_size_missing"
       )
     }
+    validate_slide_window_arg(.window_size, time_type)
     names_info <- across_ish_names_info(
       .x$DT, time_type, col_names_quo, .f_info$namer,
       .window_size, .align, .prefix, .suffix, .new_col_names
