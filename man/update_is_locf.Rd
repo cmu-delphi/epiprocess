@@ -12,7 +12,8 @@ update_is_locf(arranged_updates_df, ukey_names, abs_tol, init_nas_are_locf)
 \code{epi_archive} \code{DT} (not validated)}
 
 \item{ukey_names}{(not validated:) chr; the archive/equivalent
-\code{\link{key_colnames}}; must include \code{"version"}.}
+\code{\link{key_colnames}}; must include \code{"version"}. Does not necessarily need to
+have \code{geo_value} and \code{time_value}.}
 
 \item{abs_tol}{(not validated:) as in \code{\link{apply_compactify}}}
 

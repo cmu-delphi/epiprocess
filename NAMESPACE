@@ -240,6 +240,7 @@ importFrom(dplyr,
   if_else,
   inner_join,
   is_grouped_df,
+  join_by,
   left_join,
   mutate,
   n_groups,
@@ -329,7 +330,8 @@ importFrom(slider,
   slide_mean,
   slide_min,
   slide_prod,
-  slide_sum
+  slide_sum,
+  slide_vec
 )
 importFrom(stats,
   cor,

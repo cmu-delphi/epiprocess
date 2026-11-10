@@ -5,6 +5,14 @@
 #'   `group_modify`). Interpretation is analogous to an `epi_archive` `DT`, but
 #'   a specific row order is not required.
 #' @inheritParams epi_slide_opt_edf_one_epikey
+#' @param inf_slide_time_min_changes `NULL` (required if `before_n_steps` is
+#'   finite) or a tibble with columns `version` and `time_min`, sorted by
+#'   `version`, recording each version at which the minimum `time_value` across
+#'   all epikeys in the archive snapshot decreased (including the first
+#'   version), and the new minimum. When `before_n_steps` is `Inf`, this is used
+#'   to start running windows at the archive-wide minimum `time_value` as of
+#'   each version, matching `epi_slide` on `epix_as_of` snapshots. `NULL` with
+#'   `Inf` `before_n_steps` will instead start at this epikey's own minimum.
 #' @return tibble with a `version` column, pre-existing measurement columns, and
 #'   new measurement columns; (compactified) diff data to put into an
 #'   `epi_archive`. May not match column ordering; may not ensure any row
@@ -27,51 +35,121 @@
 #'
 #' inp_updates %>%
 #'   epiprocess:::epi_slide_opt_archive_one_epikey(
-#'     "value", f, "data.table", 2L, 0L, "day", "slide_value"
+#'     "value", f, "data.table", 2L, 0L, "day", "slide_value",
+#'     NULL
 #'   )
 #'
+#' @importFrom dplyr left_join join_by
 #' @keywords internal
 epi_slide_opt_archive_one_epikey <- function(
   inp_updates,
   in_colnames,
   f_dots_baked, f_from_package,
   before_n_steps, after_n_steps, time_type,
-  out_colnames
+  out_colnames,
+  inf_slide_time_min_changes
 ) {
   inp_updates_by_version <- inp_updates %>%
     nest(.by = version, .key = "subtbl") %>%
     arrange(version)
+  if (!is.null(inf_slide_time_min_changes)) {
+    # The slide computation's output depends both on the epikey snapshot and the
+    # overall time min, so we need to know when either is updated. This is
+    # essentially epix_merge() the epikey's row updates with the
+    # inf_slide_time_min_changes, but it doesn't handle this configuration yet.
+    # We also want to ensure empty updates are represented with 0-row tibbles,
+    # not NULL.
+    #
+    # But first: we don't care about inf_slide_time_min_changes before our
+    # epikey's first update; we'd output 0 rows anyway. In fact, we need to
+    # ignore it to avoid some inconveniences when performing computations
+    # (output type ambiguity, ...). Do a "versions_filter" on
+    # inf_slide_time_min_changes:
+    x <- inp_updates_by_version
+    first_version <- min(x$version)
+    y <- inf_slide_time_min_changes
+    y <- vec_rbind(
+      tibble(
+        version = first_version,
+        time_min = y$time_min[[max(which(y$version <= first_version))]]
+      ),
+      y[y$version > first_version, ]
+    )
+    # Now, the merge:
+    extra_versions <- vec_set_difference(y$version, x$version)
+    empty_update <- vec_slice(inp_updates_by_version$subtbl[[1L]], 0L)
+    xy_rows_x_cols <- vec_rbind(
+      x,
+      tibble(
+        version = extra_versions,
+        subtbl = rep(list(empty_update), length(extra_versions))
+      )
+    ) %>%
+      arrange(version)
+    # Now, for both original and extra versions, line up with the archive-wide
+    # time_min as of that version:
+    inp_updates_by_version <-
+      left_join(
+        xy_rows_x_cols,
+        y %>% select(
+          inf_slide_time_min_version = version,
+          inf_slide_time_min = time_min
+        ),
+        by = join_by(closest(version >= inf_slide_time_min_version))
+      ) %>%
+      select(-inf_slide_time_min_version)
+  }
   unit_step <- unit_time_delta(time_type, format = "fast")
   prev_inp_snapshot <- NULL
   prev_out_snapshot <- NULL
+  prev_inf_slide_time_min <- NULL
   result <- lapply(seq_len(nrow(inp_updates_by_version)), function(version_i) {
     version <- inp_updates_by_version$version[[version_i]]
     inp_update <- inp_updates_by_version$subtbl[[version_i]]
+    if (is.null(inf_slide_time_min_changes)) {
+      inf_slide_time_min <- NULL
+      inf_slide_time_min_changed <- FALSE
+    } else {
+      inf_slide_time_min <- inp_updates_by_version$inf_slide_time_min[[version_i]]
+      # (On this epikey's first version, `prev_inf_slide_time_min` is `NULL`, so
+      # this counts as a change and we compute all outputs.)
+      inf_slide_time_min_changed <- !identical(inf_slide_time_min, prev_inf_slide_time_min)
+    }
     inp_snapshot <- tbl_patch(prev_inp_snapshot, inp_update, "time_value")
-    inp_update_min_t <- min(inp_update$time_value)
-    inp_update_max_t <- max(inp_update$time_value)
-    # Time inp_update_max_t + before should have an output update, since it
-    # depends on inp_update_max_t + before - before = inp_update_max_t, which
-    # has an input update. Similarly, we could have updates beginning with
-    # inp_update_min_t - after, or anything in between these two bounds. If
-    # before == Inf, we need to update outputs all the way to the end of the
-    # input *snapshot*.
-    out_update_min_t <- inp_update_min_t - after_n_steps * unit_step
-    if (before_n_steps == Inf) {
+    if (inf_slide_time_min_changed) {
+      # All running-window outputs may change; recompute all of them:
+      out_update_min_t <- min(inp_snapshot$time_value)
       out_update_max_t <- max(inp_snapshot$time_value)
     } else {
-      out_update_max_t <- inp_update_max_t + before_n_steps * unit_step
+      inp_update_min_t <- min(inp_update$time_value)
+      inp_update_max_t <- max(inp_update$time_value)
+      # Time inp_update_max_t + before should have an output update, since it
+      # depends on inp_update_max_t + before - before = inp_update_max_t, which
+      # has an input update. Similarly, we could have updates beginning with
+      # inp_update_min_t - after, or anything in between these two bounds. If
+      # before == Inf, we need to update outputs all the way to the end of the
+      # input *snapshot*.
+      out_update_min_t <- inp_update_min_t - after_n_steps * unit_step
+      if (before_n_steps == Inf) {
+        out_update_max_t <- max(inp_snapshot$time_value)
+      } else {
+        out_update_max_t <- inp_update_max_t + before_n_steps * unit_step
+      }
     }
-    out_update <- epi_slide_opt_edf_one_epikey(inp_snapshot, in_colnames, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, out_colnames, list(out_update_min_t, out_update_max_t), NULL, NULL)
+    out_update <- epi_slide_opt_edf_one_epikey(inp_snapshot, in_colnames, f_dots_baked, f_from_package, before_n_steps, after_n_steps, unit_step, time_type, out_colnames, list(out_update_min_t, out_update_max_t), NULL, inf_slide_time_min)
     out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
     prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")
+    prev_inf_slide_time_min <<- inf_slide_time_min
     out_diff$version <- version
     out_diff
   })
   result <- list_rbind(result)
   result
 }
+
+# (`closest` is only defined inside `join_by`.)
+utils::globalVariables(c("inf_slide_time_min_version", "closest", "time_min"))
 
 #' @method epi_slide_opt grouped_epi_archive
 #' @export
@@ -142,6 +220,44 @@ epi_slide_opt.epi_archive <-
       .progress <- "Time series processed:"
     }
     use_progress <- !isFALSE(.progress)
+    if (nrow(.x$DT) == 0L) {
+      # Nothing to slide over. (`group_modify` would still call our per-epikey
+      # function once on a 0-row group, which it doesn't handle.) Just add 0-row
+      # output columns, using `.f` to determine their types:
+      result <- clone(.x)
+      for (col_i in seq_along(names_info$input_col_names)) {
+        inp_col <- result$DT[[names_info$input_col_names[[col_i]]]]
+        out_col <-
+          if (.f_info$from_package == "data.table") {
+            .f_dots_baked(list(inp_col), 1L)[[1L]]
+          } else {
+            .f_dots_baked(inp_col, before = 0L, after = 0L)
+          }
+        set(result$DT, j = names_info$output_col_names[[col_i]], value = out_col)
+      }
+      return(result)
+    }
+    # Like `epi_slide` on `epix_as_of` snapshots, start `Inf` windows at the min
+    # time_value across all epikeys in each snapshot. Snapshots never lose rows
+    # (deletions are represented as NA rows), so this min can only decrease;
+    # record the versions where it does:
+    inf_slide_time_min_changes <-
+      if (before_n_steps == Inf) {
+        updates_time_mins <- .x$DT[, list(time_min = min(time_value)), keyby = version] %>%
+          setDF() %>%
+          as_tibble()
+        snapshot_time_mins <- tibble(
+          version = updates_time_mins$version,
+          time_min = slide_vec(updates_time_mins$time_min, min, .before = Inf)
+          # (^ use generic slide since cummin, slide_min, frollmin don't/mis- handle Dates)
+        )
+        inf_slide_time_min_changes <- apply_compactify(snapshot_time_mins, ukey_names = "version")
+        # (^ compactifying currently not necessary, but will help if we replace
+        # the epix_merge-like operation in epi_slide_opt_archive_one_epikey with
+        # a lazy one)
+      } else {
+        NULL
+      }
     # Perform the slide:
     updates_grouped <- .x$DT %>%
       as.data.frame() %>%
@@ -156,7 +272,8 @@ epi_slide_opt.epi_archive <-
           group_values,
           names_info$input_col_names,
           .f_dots_baked, .f_info$from_package, before_n_steps, after_n_steps, time_type,
-          names_info$output_col_names
+          names_info$output_col_names,
+          inf_slide_time_min_changes
         )
         if (use_progress) cli::cli_progress_update(id = progress_bar_id)
         res

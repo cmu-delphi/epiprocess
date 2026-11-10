@@ -424,6 +424,16 @@ validate_epi_archive <- function(x) {
 #' @importFrom dplyr arrange filter
 #' @importFrom vctrs vec_duplicate_any
 #'
+#' @examples
+#'
+#' # Typical usage: compactifying epi_archive-like data
+#' tibble::tibble(geo_value = 1, time_value = 1, version = 1:4, value = c(1, 1, 3, 4)) %>%
+#'   apply_compactify(ukey_names = c("geo_value", "time_value", "version"))
+#'
+#' # Other usage: compactifying data that may not have geo or time
+#' data.table::data.table(version = 2:6, version_info = c(1, 1, 3, 4, 0), key = "version") %>%
+#'   apply_compactify(ukey_names = "version")
+#'
 #' @keywords internal
 apply_compactify <- function(updates_df, ukey_names, abs_tol = 0, init_nas_are_locf = FALSE) {
   assert_data_frame(updates_df)
@@ -476,7 +486,8 @@ removed_by_compactify <- function(updates_df, ukey_names, abs_tol, init_nas_are_
 #' @param arranged_updates_df an arranged update data frame like an
 #'   `epi_archive` `DT` (not validated)
 #' @param ukey_names (not validated:) chr; the archive/equivalent
-#'   [`key_colnames`]; must include `"version"`.
+#'   [`key_colnames`]; must include `"version"`. Does not necessarily need to
+#'   have `geo_value` and `time_value`.
 #' @param abs_tol (not validated:) as in [`apply_compactify`]
 #' @param init_nas_are_locf (not validated:) as in [`apply_compactify`]
 #'
@@ -516,8 +527,8 @@ update_is_locf <- function(arranged_updates_df, ukey_names, abs_tol, init_nas_ar
     ekt_is_locf <- FALSE
     value_is_locf <- FALSE
   } else {
-    ekts_tbl <- new_tibble(updates_col_refs[ekt_names])
-    vals_tbl <- new_tibble(updates_col_refs[val_names])
+    ekts_tbl <- new_tibble(updates_col_refs[ekt_names], nrow = nrow(arranged_updates_df))
+    vals_tbl <- new_tibble(updates_col_refs[val_names], nrow = nrow(arranged_updates_df))
     # grab the data and a shifted version of the data, and compute the
     # entry-wise difference to see if the value has changed
     # n_updates >= 2L so we can use `:` naturally (this is the reason for

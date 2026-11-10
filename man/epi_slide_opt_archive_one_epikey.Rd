@@ -12,7 +12,8 @@ epi_slide_opt_archive_one_epikey(
   before_n_steps,
   after_n_steps,
   time_type,
-  out_colnames
+  out_colnames,
+  inf_slide_time_min_changes
 )
 }
 \arguments{
@@ -41,6 +42,15 @@ to include all times beginning with the min \code{time_value}}
 
 \item{out_colnames}{chr, same length as \code{in_colnames}; column names to use
 for results}
+
+\item{inf_slide_time_min_changes}{\code{NULL} (required if \code{before_n_steps} is
+finite) or a tibble with columns \code{version} and \code{time_min}, sorted by
+\code{version}, recording each version at which the minimum \code{time_value} across
+all epikeys in the archive snapshot decreased (including the first
+version), and the new minimum. When \code{before_n_steps} is \code{Inf}, this is used
+to start running windows at the archive-wide minimum \code{time_value} as of
+each version, matching \code{epi_slide} on \code{epix_as_of} snapshots. \code{NULL} with
+\code{Inf} \code{before_n_steps} will instead start at this epikey's own minimum.}
 }
 \value{
 tibble with a \code{version} column, pre-existing measurement columns, and
@@ -68,7 +78,8 @@ f <- purrr::partial(data.table::frollmean, algo = "exact")
 
 inp_updates \%>\%
   epiprocess:::epi_slide_opt_archive_one_epikey(
-    "value", f, "data.table", 2L, 0L, "day", "slide_value"
+    "value", f, "data.table", 2L, 0L, "day", "slide_value",
+    NULL
   )
 
 }

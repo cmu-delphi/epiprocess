@@ -279,7 +279,9 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   }
   slide_t_max <- out_t_max + after_n_steps * unit_step
   slide_nrow <- time_delta_to_n_steps(slide_t_max - slide_t_min, time_type) + 1L
-  slide_time_values <- slide_t_min + 0L:(slide_nrow - 1L) * unit_step
+  # (`slide_nrow` can be 0, e.g., when none of `out_filter_time_set` is in this
+  # epikey's time range; use `seq_len` rather than `:` to handle this.)
+  slide_time_values <- slide_t_min + (seq_len(slide_nrow) - 1L) * unit_step
   slide_inp_backrefs <- vec_match(slide_time_values, inp_tbl$time_value)
   # Get values needed from inp_tbl + perform any NA tail-padding needed to make
   # slider results a fixed window size rather than adaptive at tails, and
@@ -291,7 +293,18 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   if (f_from_package == "data.table") {
     if (before_n_steps == Inf) {
       slide[, out_colnames] <-
-        f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
+        if (slide_nrow == 0L) {
+          # `data.table::froll*` rejects zero-length adaptive `n`; use a fixed
+          # window instead, which still gives us 0-row output columns of the
+          # appropriate type:
+          #
+          # XXX except frollapply, since it now allows slide computations to
+          # output non-numeric things (and maybe even before with
+          # integer vs. numeric)...
+          f_dots_baked(slide[, in_colnames], 1L)
+        } else {
+          f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
+        }
     } else {
       out_cols <- f_dots_baked(slide[, in_colnames], before_n_steps + after_n_steps + 1L)
       if (after_n_steps != 0L && out_t_max >= out_t_min) {

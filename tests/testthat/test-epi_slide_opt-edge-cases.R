@@ -21,7 +21,31 @@ test_that("epi_slide and epi_slide_sum agree on Inf window for a later-starting 
 })
 
 test_that("epi_slide_sum handles Inf window with none of .ref_time_values in a geo's range", {
+  # Geo "c" time range starts later; try .ref_time_values all preceding its min
+  # (should NA pad its slide computation inputs, leading to everything NA for
+  # basic sum):
   ref_time_values <- start_date + 0:1
+  expect_equal(
+    epi_slide(edf, ~ sum(.x$value),
+      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE
+    ),
+    epi_slide_sum(edf, value,
+      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE,
+      .new_col_names = "slide_value"
+    )
+  )
+  # Geo "a" time range ends earlier; test .ref_time_values all following its max
+  # (should not have rows):
+  ref_time_values <- start_date + 5:6
+  expect_equal(
+    epi_slide(edf, ~ sum(.x$value),
+      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = FALSE
+    ),
+    epi_slide_sum(edf, value,
+      .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = FALSE,
+      .new_col_names = "slide_value"
+    )
+  )
   expect_equal(
     epi_slide(edf, ~ sum(.x$value),
       .window_size = Inf, .ref_time_values = ref_time_values, .all_rows = TRUE
@@ -44,4 +68,110 @@ test_that("epi_slide_sum handles left-aligned window with no ref_time_values in 
       .new_col_names = "slide_value"
     )
   )
+})
+
+# Archive tests: all comparing epi_slide_opt.epi_archive vs. (slow) reference
+# implementation based on epix_slide + epi_slide_opt; not checking latter's
+# behavior.
+
+expect_archive_opt_slide_sum_matches_reference <- function(arch, ...) {
+  opt_result <- epi_slide_sum(arch, value, ...)
+  ref_result <- epix_slide(arch, function(snapshot, group_key, version) {
+    epi_slide_sum(snapshot, value, ...)
+  }) %>%
+    select(names(arch$DT), everything()) %>%
+    as_epi_archive()
+  expect_equal(opt_result, ref_result)
+}
+
+test_that("epi_slide_sum.arch with Inf window matches epix_slide + epi_slide_sum on edfs", {
+  # Test input revision timeline by version:
+  # 1: geo "a" with earlier min time; geo "c" with later min time.
+  # 2: new geo "d" introduced (also with later min time).
+  # 3: "c" revises a value.
+  # 4: "c" adds an earlier time value, decreasing the archive-wide min, which
+  #    should change "a"'s outputs even though "a" has no update in version 4.
+  arch <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "a", 0:4, 1, c(1, 2, 3, 4, 5),
+    "c", 2:6, 1, c(10, 20, 30, 40, 50),
+    "d", 4:6, 2, c(100, 200, 300),
+    "c", 3L, 3, 25,
+    "c", -1L, 4, 5
+  ) %>%
+    tidyr::unnest_longer(c("time_value", "value")) %>%
+    dplyr::mutate(
+      time_value = start_date + .data$time_value,
+      version = start_date + 10 + .data$version
+    ) %>%
+    as_epi_archive()
+  expect_archive_opt_slide_sum_matches_reference(arch, .window_size = Inf)
+})
+
+test_that("epi_slide_sum on archive with Inf window handles NA revisions same as epix_slide + epi_slide_sum on edfs", {
+  # Versions:
+  # 1: geo "a" starts at the archive-wide min time; geo "c" starts later.
+  # 2: "a" revises its first value to NA (but this doesn't change the min t).
+  # 3: "a" revises it back to a non-NA value.
+  arch <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "a", 0:4, 1, c(1, 2, 3, 4, 5),
+    "c", 2:6, 1, c(10, 20, 30, 40, 50),
+    "a", 0L, 2, NA_real_,
+    "a", 0L, 3, 7
+  ) %>%
+    tidyr::unnest_longer(c("time_value", "value")) %>%
+    dplyr::mutate(
+      time_value = start_date + .data$time_value,
+      version = start_date + 10 + .data$version
+    ) %>%
+    as_epi_archive()
+  expect_archive_opt_slide_sum_matches_reference(arch, .window_size = Inf)
+})
+
+test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi_slide_sum on edfs", {
+  # Versions:
+  # 1: geo "a" starts at the archive-wide min time; geo "c" starts later, with
+  #    a gap in its time values.
+  # 2: "c" fills in its gap; "a" revises a value.
+  # 3: "a" adds an earlier time value.
+  arch <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "a", 0:6, 1, c(1, 2, 3, 4, 5, 6, 7),
+    "c", c(2:3, 5:8), 1, c(10, 20, 40, 50, 60, 70),
+    "c", 4L, 2, 30,
+    "a", 3L, 2, 40,
+    "a", -1L, 3, 0.5
+  ) %>%
+    tidyr::unnest_longer(c("time_value", "value")) %>%
+    dplyr::mutate(
+      time_value = start_date + .data$time_value,
+      version = start_date + 10 + .data$version
+    ) %>%
+    as_epi_archive()
+  for (align in c("right", "center", "left")) {
+    expect_archive_opt_slide_sum_matches_reference(arch, .window_size = 3, .align = align)
+  }
+})
+
+test_that("epi_slide_opt on a 0-row archive gives a 0-row archive with output columns", {
+  arch <- tibble::tibble(
+    geo_value = character(),
+    time_value = as.Date(character()),
+    version = as.Date(character()),
+    value = numeric()
+  ) %>%
+    as_epi_archive(versions_end = start_date + 10, clobberable_versions_start = NA)
+  for (window_size in list(3, Inf)) {
+    for (f in list(data.table::frollsum, slider::slide_sum)) {
+      arch_out <- epi_slide_opt(arch, value, f, .window_size = window_size, .new_col_names = "slide_value")
+      expect_identical(names(arch_out$DT), c(names(arch$DT), "slide_value"))
+      expect_identical(nrow(arch_out$DT), 0L)
+      expect_type(arch_out$DT$slide_value, "double")
+      expect_identical(arch_out$versions_end, arch$versions_end)
+      expect_identical(arch_out$clobberable_versions_start, arch$clobberable_versions_start)
+    }
+  }
+  # Input should not be modified:
+  expect_identical(names(arch$DT), c("geo_value", "time_value", "version", "value"))
 })
