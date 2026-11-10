@@ -79,9 +79,9 @@ tbl <- tibble(
 )
 
 tbl \%>\%
-  epi_slide_opt_edf_one_epikey(
+  epiprocess:::epi_slide_opt_edf_one_epikey(
     "value",
-    frollmean, "data.table",
+    data.table::frollmean, "data.table",
     1L, 0L, 1L, "integer",
     "slide_value",
     c(11L, 16L), NULL,
@@ -89,9 +89,9 @@ tbl \%>\%
   )
 
 tbl \%>\%
-  epi_slide_opt_edf_one_epikey(
+  epiprocess:::epi_slide_opt_edf_one_epikey(
     "value",
-    frollmean, "data.table",
+    data.table::frollmean, "data.table",
     0L, 1L, 1L, "integer",
     "slide_value",
     NULL, c(11, 15, 16, 17, 18),
@@ -99,9 +99,9 @@ tbl \%>\%
   )
 
 tbl \%>\%
-  epi_slide_opt_edf_one_epikey(
+  epiprocess:::epi_slide_opt_edf_one_epikey(
     "value",
-    frollmean, "data.table",
+    data.table::frollmean, "data.table",
     Inf, 0L, 1L, "integer",
     "slide_value",
     NULL, c(12, 17),

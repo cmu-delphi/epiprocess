@@ -245,7 +245,7 @@ test_that("POSIXct versions are converted to Dates", {
     version = as.Date("2020-01-01") + 1:5,
     value = 1:5
   )
-  withr::with_envvar(list("TZ" = "US/Eastern"), {
+  withr::with_envvar(list("TZ" = "America/New_York"), {
     # Silent UTC midnight and UTC noon conversions (despite being
     # located outside of UTC):
     #
@@ -266,7 +266,7 @@ test_that("POSIXct versions are converted to Dates", {
       protoarchive %>%
         mutate(
           version = as.POSIXct(version, tz = "UTC") %>%
-            as.POSIXct(tz = "US/Eastern")
+            as.POSIXct(tz = "America/New_York")
         ) %>%
         as_epi_archive(),
       protoarchive %>% as_epi_archive()
@@ -280,7 +280,7 @@ test_that("POSIXct versions are converted to Dates", {
           as.POSIXct(tz = "UTC") %>%
           # midnight UTC -> late night ET
           `+`(as.difftime(27, units = "hours")) %>%
-          as.POSIXct(tz = "US/Eastern") %>%
+          as.POSIXct(tz = "America/New_York") %>%
           `+`(as.difftime(c(1:3, 1:2), units = "mins"))
       )
     expect_snapshot(
@@ -342,18 +342,18 @@ test_that("POSIXct versions are converted to Dates", {
     expect_equal(utc_result2, utc_result1)
     expect_equal(utc_result3, utc_result1)
   })
-  withr::with_envvar(list("TZ" = "US/Eastern"), {
+  withr::with_envvar(list("TZ" = "America/New_York"), {
     # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
     expect_message(expect_equal(
       as_epi_archive(
         tibble(
           geo_value = c(1, 2, 2),
           time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-          version = as.POSIXct("2020-01-08 08:30:00", tz = "US/Eastern"),
+          version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
           value = 1:3
         ),
         clobberable_versions_start = as.Date("2020-01-08"),
-        versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "US/Eastern") %>% as.POSIXct(tz = "UTC")
+        versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "America/New_York") %>% as.POSIXct(tz = "UTC")
       ),
       as_epi_archive(
         tibble(

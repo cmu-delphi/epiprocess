@@ -125,7 +125,7 @@ expect_archive_slide_sum_matches_refimpl <- function(arch, ...) {
     }) %>%
       select(names(arch$DT), everything()) %>%
       as_epi_archive()
-    expect_equal(opt_result, ref_result, info = f_name)
+    testthat::expect_equal(opt_result, ref_result, info = f_name)
   }
 }
 
