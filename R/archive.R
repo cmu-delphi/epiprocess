@@ -680,14 +680,14 @@ as_epi_archive <- function(
   nrow_before_compactify <- nrow(data_table)
   # Runs compactify on data_table
   if (identical(compactify, TRUE) || identical(compactify, "message")) {
-    compactified <- apply_compactify(data_table, key_vars, compactify_abs_tol)
+    compactified <- apply_compactify(data_table, key(data_table), compactify_abs_tol)
   } else {
     compactified <- data_table
   }
   # Messages about redundant rows if the number of rows decreased, and we didn't
   # explicitly say to compactify
   if (identical(compactify, "message") && nrow(compactified) < nrow_before_compactify) {
-    elim <- removed_by_compactify(data_table, key_vars, compactify_abs_tol)
+    elim <- removed_by_compactify(data_table, key(data_table), compactify_abs_tol)
     message_intro <- cli::format_inline(
       "Found rows that appear redundant based on
        last (version of each) observation carried forward;

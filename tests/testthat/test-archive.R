@@ -389,3 +389,14 @@ test_that("POSIXct versions are converted to Dates", {
     "UTC"
   )
 })
+
+test_that("as_epi_archive adding signal column to keys works:", {
+  expect_equal(
+    suppressMessages(
+      tibble(signal = 1, geo_value = 1, time_value = 1, version = 1, value = 1) %>%
+        as_epi_archive() %>%
+        .$other_keys
+    ),
+    "signal"
+  )
+})
