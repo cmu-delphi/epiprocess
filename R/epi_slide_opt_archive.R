@@ -226,9 +226,12 @@ epi_slide_opt.epi_archive <-
       if (identical(.f, frollapply)) {
         # `frollapply`'s output type depends on its `FUN`, which we're not
         # calling. There's no good marker: logical(0) is ptype logical(), not
-        # vctrs::unspecified(); and unspecified() is meant only for ptype logic,
-        # and replaced with logical() when used as a value. We could fake input
-        # and attempt a guess, like group_modify(). But for now, just balk (like
+        # vctrs::unspecified(); and unspecified() is meant only for ptype logic:
+        # it's finalized to logical() when combined (e.g., by `vec_rbind`), but
+        # stored directly as a column, it would remain a strange
+        # `vctrs_unspecified` column (which, e.g., `data.table::rbindlist`
+        # rejects). We could fake input and attempt a guess, like
+        # `dplyr::summarise()` does on 0-row data. But for now, just balk (like
         # we do with epi_dfs for all slide computation functions).
         cli_abort(c(
           "`epi_slide_opt` can't determine output column types when using
@@ -268,9 +271,6 @@ epi_slide_opt.epi_archive <-
           # (^ use generic slide since cummin, slide_min, frollmin don't/mis- handle Dates)
         )
         inf_slide_time_min_changes <- apply_compactify(snapshot_time_mins, ukey_names = "version")
-        # (^ compactifying currently not necessary, but will help if we replace
-        # the epix_merge-like operation in epi_slide_opt_archive_one_epikey with
-        # a lazy one)
       } else {
         NULL
       }

@@ -62,7 +62,6 @@ upstream_slide_f_info <- function(.f, ...) {
   }
   f_from_package <- f_info_row$package
   if (f_from_package == "data.table" && "fill" %in% names(rlang::call_match(dots_expand = FALSE)[["..."]])) {
-    # XXX this doesn't detect with `fill` is passed positionally through dots...
     cli_abort("`epi_slide_opt` does not support `data.table::froll*()` with a
                custom `fill =` arg",
       class = "epiprocess__epi_slide_opt__fill_unsupported"
@@ -252,9 +251,6 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
                                          out_colnames,
                                          out_filter_time_range, out_filter_time_set,
                                          inf_slide_time_min) {
-  # TODO try converting time values to reals, do work on reals, convert back at very end?
-  #
-  # TODO loosen restrictions here.  each filter optional?
   if (!is.null(out_filter_time_range) && is.null(out_filter_time_set)) {
     out_filter_time_style <- "range"
     out_t_min <- out_filter_time_range[[1L]]
@@ -289,24 +285,30 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   # slider results a fixed window size rather than adaptive at tails, and
   # perform any NA gap-filling needed:
   slide <- vec_slice(inp_tbl, slide_inp_backrefs)
-  # TODO refactor to use a join if not using backrefs later anymore? or perf:
-  # try removing time_value column before slice?
   slide$time_value <- slide_time_values
-  if (slide_nrow == 0L) {
-    # Don't call `f_dots_baked`: `data.table::froll*` rejects zero-length
-    # adaptive `n`, and on zero-length input, `frollapply` outputs the input
-    # type, which may be incompatible with the type its `FUN` outputs on other
-    # epikeys. Instead, *omit* the output columns; they'll be filled in with the
-    # output types of other epikeys when combined (e.g., by `bind_rows`). The
-    # outer epi_slide_opt.epi_df impl has checks that ensure that such
-    # combination will occur (though epi_slide does not).
+  if (out_t_max < out_t_min) {
+    # No output time values. Don't call `f_dots_baked`:
+    # * On padded input + fixed window, frollapply may output only logical-NA
+    #   fill for incomplete windows, and the trimmed result logical(0L) will be
+    #   treated by vctrs/dplyr as strictly logical, not vctrs::unspecified.
+    # * On nonpadded input + fixed window (i.e., `.window_size = 1`),
+    #   frollapply may output zero-length output with type matching the input.
+    # * On padded input + adaptive window, frollapply may output `FUN`'s output
+    #   type on (complete windows of) NA padding.
+    # * On nonpadded input + adaptive window, froll* rejects zero-length `n`.
+    # There's no reliable way to get output types that are compatible with other
+    # epikeys' output types without real output values. Instead, *omit* the
+    # output columns; they'll be filled in with the output types of other
+    # epikeys when combined (e.g., by `bind_rows`). The outer
+    # epi_slide_opt.epi_df impl has checks that ensure that such combination
+    # will occur (though epi_slide does not).
   } else if (f_from_package == "data.table") {
     if (before_n_steps == Inf) {
       slide[, out_colnames] <-
         f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
     } else {
       out_cols <- f_dots_baked(slide[, in_colnames], before_n_steps + after_n_steps + 1L)
-      if (after_n_steps != 0L && out_t_max >= out_t_min) {
+      if (after_n_steps != 0L) {
         # Shift an appropriate amount of NA padding from the start to the end.
         # (This padding will later be cut off when we filter down to the
         # original time_values.)
@@ -329,9 +331,7 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   # We should filter down the slide time values to ones in the input time values
   # when preparing the output:
   rows_should_keep1 <- !is.na(slide_inp_backrefs)
-  # We also need to apply the out_filter.
-  #
-  # TODO comments + test vs. just using inequality
+  # We also need to apply the out_filter:
   rows_should_keep2 <- switch(out_filter_time_style,
     range = vec_rep_each(
       c(FALSE, TRUE, FALSE),

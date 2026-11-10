@@ -12,8 +12,8 @@ edf <- tibble::tibble(
   group_epi_df(exclude = "time_value")
 
 test_that("epi_slide and epi_slide_sum agree on Inf window for a later-starting geo", {
-  # (currently, padding with NAs back to min time_value in entire edf, making
-  # all output values for "c" also NA for many `.f`s)
+  # (Both pad with NAs back to the min time_value in the entire edf, making all
+  # output values for "c" NA for many `.f`s.)
   expect_equal(
     epi_slide(edf, ~ sum(.x$value), .window_size = Inf),
     epi_slide_sum(edf, value, .window_size = Inf, .new_col_names = "slide_value")
@@ -58,22 +58,37 @@ test_that("epi_slide_sum handles Inf window with none of .ref_time_values in a g
 })
 
 test_that("epi_slide_opt with type-transforming frollapply FUN handles a geo with nothing to slide over", {
-  # Target .ref_time_values where geo "a" has no input:
-  ref_time_values <- start_date + 5:6
-  for (window_size in c(3, Inf)) {
-    for (all_rows in c(FALSE, TRUE)) {
-      expect_equal(
-        epi_slide_opt(edf, value, data.table::frollapply, FUN = toString,
-                      .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows,
-                      .new_col_names = "slide_value"
-                      ),
-        epi_slide(edf, ~ toString(.x$value),
-                  .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows
-                  ),
-        info = glue::glue(".window_size = {window_size}, .all_rows = {all_rows}")
-      )
+  # Target .ref_time_values where geo "a" has no input, or where geo "c" has no
+  # input (for Inf windows, the latter means sliding over NA padding from the
+  # edf-wide min time_value, on which `FUN` may output a different type):
+  toStringIfSeemsComplete <- function(x) if (anyNA(x)) NA else toString(x)
+  for (fun_name in c("toString", "toStringIfSeemsComplete")) {
+    fun <- get(fun_name)
+    for (ref_time_values in list(start_date + 5:6, start_date + 0:1)) {
+      for (window_size in c(3, Inf)) {
+        for (all_rows in c(FALSE, TRUE)) {
+          expect_equal(
+            epi_slide_opt(edf, value, data.table::frollapply,
+              FUN = fun,
+              .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows,
+              .new_col_names = "slide_value"
+            ),
+            epi_slide(edf, ~ fun(.x$value),
+              .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows
+            ),
+            info = glue::glue(
+              "FUN = {fun_name}, .ref_time_values = {toString(ref_time_values)}, ",
+              ".window_size = {window_size}, .all_rows = {all_rows}"
+            )
+          )
+        }
+      }
     }
   }
+  # Really, frollapply still has some issues with its output typing, e.g., with
+  # computations yielding bare lists, list_ofs, length > 1 numeric, etc. We
+  # should probably see if slider::slide_vec or other slider alternatives are
+  # better-behaved.
 })
 
 test_that("epi_slide_sum handles left-aligned window with no ref_time_values in a geo's range", {
