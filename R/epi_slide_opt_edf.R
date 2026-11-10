@@ -201,7 +201,10 @@ across_ish_names_info <- function(.x, time_type, col_names_quo, .f_namer,
 #'   to treat times before this epikey's first `time_value` as (NA-padded) gaps,
 #'   matching `epi_slide`.
 #' @return tibble; like `inp_tbl` with addition of `out_colnames` holding the
-#'   slide computation results, with times filtered down as specified
+#'   slide computation results, with times filtered down as specified. If there
+#'   is nothing to slide over (0 rows output), the `out_colnames` columns will be
+#'   omitted; when combining with other epikeys' results, e.g., via
+#'   [`dplyr::bind_rows`], they will be filled in with the appropriate types.
 #'
 #' @examples
 #'
@@ -257,7 +260,6 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
     out_t_min <- out_filter_time_range[[1L]]
     out_t_max <- out_filter_time_range[[2L]]
   } else if (is.null(out_filter_time_range) && !is.null(out_filter_time_set)) {
-    # FIXME min time_value for this epikey vs. entire edf; match existing behavior, or complete changeover
     out_filter_time_style <- "set"
     out_time_values <- vec_set_intersect(inp_tbl$time_value, out_filter_time_set)
     if (vec_size(out_time_values) == 0L) {
@@ -290,21 +292,18 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
   # TODO refactor to use a join if not using backrefs later anymore? or perf:
   # try removing time_value column before slice?
   slide$time_value <- slide_time_values
-  if (f_from_package == "data.table") {
+  if (slide_nrow == 0L) {
+    # Don't call `f_dots_baked`: `data.table::froll*` rejects zero-length
+    # adaptive `n`, and on zero-length input, `frollapply` outputs the input
+    # type, which may be incompatible with the type its `FUN` outputs on other
+    # epikeys. Instead, *omit* the output columns; they'll be filled in with the
+    # output types of other epikeys when combined (e.g., by `bind_rows`). The
+    # outer epi_slide_opt.epi_df impl has checks that ensure that such
+    # combination will occur (though epi_slide does not).
+  } else if (f_from_package == "data.table") {
     if (before_n_steps == Inf) {
       slide[, out_colnames] <-
-        if (slide_nrow == 0L) {
-          # `data.table::froll*` rejects zero-length adaptive `n`; use a fixed
-          # window instead, which still gives us 0-row output columns of the
-          # appropriate type:
-          #
-          # XXX except frollapply, since it now allows slide computations to
-          # output non-numeric things (and maybe even before with
-          # integer vs. numeric)...
-          f_dots_baked(slide[, in_colnames], 1L)
-        } else {
-          f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
-        }
+        f_dots_baked(slide[, in_colnames], seq_len(slide_nrow), adaptive = TRUE)
     } else {
       out_cols <- f_dots_baked(slide[, in_colnames], before_n_steps + after_n_steps + 1L)
       if (after_n_steps != 0L && out_t_max >= out_t_min) {

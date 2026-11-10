@@ -62,7 +62,10 @@ matching \code{epi_slide}.}
 }
 \value{
 tibble; like \code{inp_tbl} with addition of \code{out_colnames} holding the
-slide computation results, with times filtered down as specified
+slide computation results, with times filtered down as specified. If there
+is nothing to slide over (0 rows output), the \code{out_colnames} columns will be
+omitted; when combining with other epikeys' results, e.g., via
+\code{\link[dplyr:bind_rows]{dplyr::bind_rows}}, they will be filled in with the appropriate types.
 }
 \description{
 Run a specialized slide computation on a single \code{epi_df} epikey, with temporary completion

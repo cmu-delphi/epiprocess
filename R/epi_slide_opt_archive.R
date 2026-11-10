@@ -203,12 +203,12 @@ epi_slide_opt.epi_archive <-
     before_n_steps <- time_delta_to_n_steps(window_args$before, time_type)
     after_n_steps <- time_delta_to_n_steps(window_args$after, time_type)
     if (!is.null(.ref_time_values)) {
-      cli_abort("epi_slide.epi_archive does not support the `.ref_time_values` argument",
+      cli_abort("epi_slide_opt.epi_archive does not support the `.ref_time_values` argument",
         class = "epiprocess__epi_slide_opt_archive__ref_time_values_unsupported"
       )
     }
     if (!identical(.all_rows, FALSE)) {
-      cli_abort("epi_slide.epi_archive does not support the `.all_rows` argument",
+      cli_abort("epi_slide_opt.epi_archive does not support the `.all_rows` argument",
         class = "epiprocess__epi_slide_opt_archive__all_rows_unsupported"
       )
     }
@@ -221,9 +221,25 @@ epi_slide_opt.epi_archive <-
     }
     use_progress <- !isFALSE(.progress)
     if (nrow(.x$DT) == 0L) {
-      # Nothing to slide over. (`group_modify` would still call our per-epikey
-      # function once on a 0-row group, which it doesn't handle.) Just add 0-row
-      # output columns, using `.f` to determine their types:
+      # Zero input rows, zero output rows: try to add 0-row output columns,
+      # using `.f` to determine their types:
+      if (identical(.f, frollapply)) {
+        # `frollapply`'s output type depends on its `FUN`, which we're not
+        # calling. There's no good marker: logical(0) is ptype logical(), not
+        # vctrs::unspecified(); and unspecified() is meant only for ptype logic,
+        # and replaced with logical() when used as a value. We could fake input
+        # and attempt a guess, like group_modify(). But for now, just balk (like
+        # we do with epi_dfs for all slide computation functions).
+        cli_abort(c(
+          "`epi_slide_opt` can't determine output column types when using
+           `.f = frollapply` on an archive with 0 rows.",
+          ">" = "Check whether you accidentally filtered away all the data
+                 in a prior operation (e.g., filtering down to a geo that
+                 lacks availability in the time period of interest).",
+          ">" = "Otherwise, you'll need to check for this 0-row case and
+                 manually provide the appropriate output."
+        ), class = "epiprocess__epi_slide_opt__frollapply_0_rows")
+      }
       result <- clone(.x)
       for (col_i in seq_along(names_info$input_col_names)) {
         inp_col <- result$DT[[names_info$input_col_names[[col_i]]]]

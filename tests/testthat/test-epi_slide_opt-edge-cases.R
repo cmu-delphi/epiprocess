@@ -57,6 +57,25 @@ test_that("epi_slide_sum handles Inf window with none of .ref_time_values in a g
   )
 })
 
+test_that("epi_slide_opt with type-transforming frollapply FUN handles a geo with nothing to slide over", {
+  # Target .ref_time_values where geo "a" has no input:
+  ref_time_values <- start_date + 5:6
+  for (window_size in c(3, Inf)) {
+    for (all_rows in c(FALSE, TRUE)) {
+      expect_equal(
+        epi_slide_opt(edf, value, data.table::frollapply, FUN = toString,
+                      .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows,
+                      .new_col_names = "slide_value"
+                      ),
+        epi_slide(edf, ~ toString(.x$value),
+                  .window_size = window_size, .ref_time_values = ref_time_values, .all_rows = all_rows
+                  ),
+        info = glue::glue(".window_size = {window_size}, .all_rows = {all_rows}")
+      )
+    }
+  }
+})
+
 test_that("epi_slide_sum handles left-aligned window with no ref_time_values in a geo's range", {
   ref_time_values <- start_date + 0:1
   expect_equal(
@@ -99,7 +118,7 @@ test_that("epi_slide_sum.arch with Inf window matches epix_slide + epi_slide_sum
     "c", 3L, 3, 25,
     "c", -1L, 4, 5
   ) %>%
-    tidyr::unnest_longer(c("time_value", "value")) %>%
+    tidyr::unchop(c("time_value", "value")) %>%
     dplyr::mutate(
       time_value = start_date + .data$time_value,
       version = start_date + 10 + .data$version
@@ -120,7 +139,7 @@ test_that("epi_slide_sum on archive with Inf window handles NA revisions same as
     "a", 0L, 2, NA_real_,
     "a", 0L, 3, 7
   ) %>%
-    tidyr::unnest_longer(c("time_value", "value")) %>%
+    tidyr::unchop(c("time_value", "value")) %>%
     dplyr::mutate(
       time_value = start_date + .data$time_value,
       version = start_date + 10 + .data$version
@@ -143,7 +162,7 @@ test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi
     "a", 3L, 2, 40,
     "a", -1L, 3, 0.5
   ) %>%
-    tidyr::unnest_longer(c("time_value", "value")) %>%
+    tidyr::unchop(c("time_value", "value")) %>%
     dplyr::mutate(
       time_value = start_date + .data$time_value,
       version = start_date + 10 + .data$version
@@ -152,6 +171,32 @@ test_that("epi_slide_sum on archive with finite windows matches epix_slide + epi
   for (align in c("right", "center", "left")) {
     expect_archive_opt_slide_sum_matches_reference(arch, .window_size = 3, .align = align)
   }
+})
+
+test_that("epi_slide_opt.epi_archive with type-transforming frollapply FUN matches epix_slide + epi_slide_opt on edfs", {
+  # This is just a basic sanity check. The real tests would come in if we
+  # allowed a `.ref_time_values` parameter etc.
+  arch <- tibble::tribble(
+    ~geo_value, ~time_value, ~version, ~value,
+    "a", 0:4, 1, c(1, 2, 3, 4, 5),
+    "c", 2:6, 1, c(10, 20, 30, 40, 50),
+    "d", 4:5, 2, c(100, 200),
+    "c", 3L, 3, 25
+  ) %>%
+    tidyr::unchop(c("time_value", "value")) %>%
+    dplyr::mutate(
+      time_value = start_date + .data$time_value,
+      version = start_date + 10 + .data$version
+    ) %>%
+    as_epi_archive()
+  opt_result <- epi_slide_opt(arch, value, data.table::frollapply, FUN = toString, .window_size = 3)
+  ref_result <- epix_slide(arch, function(snapshot, group_key, version) {
+    epi_slide_opt(snapshot, value, data.table::frollapply, FUN = toString, .window_size = 3)
+  }) %>%
+    select(names(arch$DT), everything()) %>%
+    as_epi_archive()
+  expect_type(opt_result$DT$value_3dslide, "character")
+  expect_equal(opt_result, ref_result)
 })
 
 test_that("epi_slide_opt on a 0-row archive gives a 0-row archive with output columns", {
@@ -172,6 +217,14 @@ test_that("epi_slide_opt on a 0-row archive gives a 0-row archive with output co
       expect_identical(arch_out$clobberable_versions_start, arch$clobberable_versions_start)
     }
   }
+  # `frollapply`'s output type depends on its `FUN`, so we can't know it:
+  expect_error(
+    epi_slide_opt(arch, value, data.table::frollapply,
+      FUN = function(x) paste(x, collapse = "+"),
+      .window_size = 3, .new_col_names = "slide_value"
+    ),
+    class = "epiprocess__epi_slide_opt__frollapply_0_rows"
+  )
   # Input should not be modified:
   expect_identical(names(arch$DT), c("geo_value", "time_value", "version", "value"))
 })
