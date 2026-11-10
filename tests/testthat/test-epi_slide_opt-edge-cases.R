@@ -153,7 +153,7 @@ test_that("epi_slide_opt sums on archive with Inf window match epix_slide + epi_
   expect_archive_slide_sum_matches_refimpl(arch, .window_size = Inf)
 })
 
-test_that("epi_slide_opt sums on archive with Inf window handle NA revisions same as epix_slide + epi_slide_opt on edfs", {
+test_that("epi_slide_opt sums on arch with Inf window handle NA revisions same as epix_slide + epi_slide_opt on edfs", {
   # Versions:
   # 1: geo "a" starts at the archive-wide min time; geo "c" starts later.
   # 2: "a" revises its first value to NA (but this doesn't change the min t).
