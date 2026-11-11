@@ -621,7 +621,6 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   window_args <- get_before_after_from_window(.window_size, .align, time_type)
   before_n_steps <- time_delta_to_n_steps(window_args$before, time_type)
   after_n_steps <- time_delta_to_n_steps(window_args$after, time_type)
-  unit_step <- unit_time_delta(time_type, format = "fast")
 
   # Handle output naming:
   names_info <- across_ish_names_info(
@@ -639,6 +638,22 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
     } else {
       purrr::partial(.f, ... = , ...) # `... =` stands in for future args
     }
+
+  # Arithmetic on some time-related classes is slow; perform the computation
+  # under integer time_type. `ref_time_values` are converted consistently;
+  # `before_n_steps` and `after_n_steps` are in terms of time steps, so are
+  # unaffected by the conversion. (Output column names were already determined
+  # above based on the original time_type.)
+  if (time_type == "integer") {
+    conversion <- NULL
+  } else {
+    converted <- to_vstretched_numeric_edf_info(.x)
+    conversion <- converted$conversion
+    .x <- converted$edf
+    ref_time_values <- time_values_to_torigin_offsets(ref_time_values, conversion$torigin, time_type)
+    time_type <- "integer"
+  }
+  unit_step <- unit_time_delta(time_type, format = "fast")
 
   # Like `epi_slide`, start `Inf` windows at the min time_value across the
   # entire edf, treating earlier times for later-starting epikeys as gaps:
@@ -660,6 +675,10 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
   if (.all_rows) {
     ekt_names <- key_colnames(.x)
     result <- left_join(ungroup(.x), result[c(ekt_names, output_col_names)], by = ekt_names)
+  }
+
+  if (!is.null(conversion)) {
+    result <- from_vstretched_numeric_edf_info(result, conversion)
   }
 
   result <- group_by(result, !!!.x_orig_groups)

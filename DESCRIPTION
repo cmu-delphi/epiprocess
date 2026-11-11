@@ -123,4 +123,4 @@ Collate:
     'time-utils.R'
     'utils.R'
     'utils_pipe.R'
-    'vstretched_numeric_archive.R'
+    'vstretched_numeric_formats.R'

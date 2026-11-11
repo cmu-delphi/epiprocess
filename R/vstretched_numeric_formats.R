@@ -200,15 +200,15 @@ to_vstretched_numeric_archive_info <- function(x) {
   )
 }
 
-#' @param transformed_x an `epi_archive` with `time_type` `"integer"` and bare numeric,
-#'   `time_value`s and `version`s, in the converted form described by
+#' @param transformed_x an `epi_archive` with `time_type` `"integer"` and bare
+#'   numeric `time_value`s and `version`s, in the converted form described by
 #'   `conversion`; e.g., `to_vstretched_numeric_archive_info(x)$archive` or some
 #'   processed version of it. `time_value`s must be integerish.
 #' @param conversion the `conversion` element of the
 #'   `to_vstretched_numeric_archive_info` output.
-#' @return * Of `from_vstretched_numeric_archive_info`: `transformed_x` with `time_type`,
-#'   `time_value`, and `version` representations converted back to those of the
-#'   original archive.
+#' @return * Of `from_vstretched_numeric_archive_info`: `transformed_x` with
+#'   `time_type`, `time_value`, and `version` representations converted back to
+#'   those of the original archive.
 #'
 #' @rdname to_vstretched_numeric_archive_info
 #' @keywords internal
@@ -231,5 +231,101 @@ from_vstretched_numeric_archive_info <- function(transformed_x, conversion) {
     transformed_x$geo_type, conversion$time_type, transformed_x$other_keys,
     vorigin_offset_bound_to_version_bound(transformed_x$clobberable_versions_start, vorigin),
     vorigin_offset_bound_to_version_bound(transformed_x$versions_end, vorigin)
+  )
+}
+
+#' `epi_df` with its `time_value` column and `time_type` replaced
+#'
+#' Keeps all other attributes, including grouping, which is assumed not to
+#' involve `time_value`.
+#'
+#' @param x an `epi_df`; if grouped, must not include `time_value` in grouping
+#'   (unchecked)
+#' @param time_values vector with as many entries as `x` has rows, to become the
+#'   result's `time_value` column.
+#' @param time_type string; the result's `time_type`.
+#' @return an `epi_df`.
+#'
+#' @keywords internal
+edf_with_time_values <- function(x, time_values, time_type) {
+  attrs <- attributes(x)
+  res <- unclass(x)
+  res$time_value <- time_values
+  attributes(res) <- attrs
+  attr(res, "metadata")$time_type <- time_type
+  res
+}
+
+#' Convert an `epi_df` to/from a "vstretched, numeric" form
+#'
+#' Analogue of [`to_vstretched_numeric_archive_info`] for `epi_df`s:
+#' `to_vstretched_numeric_edf_info` converts an `epi_df` `x` to (i) an `epi_df`
+#' with integer `time_type` and bare numeric `time_value`s, plus (ii) conversion
+#' metadata, with (i) and (ii) packed in a named list.
+#' `from_vstretched_numeric_edf_info` converts from this format back to the
+#' format of `x`.
+#'
+#' `time_value`s are converted with [`time_values_to_torigin_offsets`]; other
+#' time values (e.g., function arguments) can be converted consistently by
+#' forwarding `conversion$torigin` and `conversion$time_type` to it, and back
+#' with [`torigin_offsets_to_time_values`]. `epi_df`s have no `version` column,
+#' and `as_of` is left unchanged (it's not converted to the stretched scale), so
+#' verbs shouldn't relate it to the converted `time_value`s.
+#'
+#' Grouping is preserved, but `x` must not be grouped by `time_value`.
+#'
+#' Verbs that change the number of rows from zero to nonzero are incompatible
+#' with the "from" transformation.
+#'
+#' @param x an `epi_df`
+#' @return * Of `to_vstretched_numeric_edf_info`: a list with elements:
+#'   * `edf`: the converted `epi_df`, with `time_type` `"integer"`.
+#'   * `conversion`: a list with elements `time_type` (`x`'s `time_type`) and
+#'     `torigin`, to pass to `from_vstretched_numeric_edf_info` or use when
+#'     converting other time values.
+#'
+#' @keywords internal
+to_vstretched_numeric_edf_info <- function(x) {
+  assert_class(x, "epi_df")
+  if ("time_value" %in% group_vars(x)) {
+    cli_abort("`x` must not be grouped by `time_value`")
+  }
+  time_type <- attr(x, "metadata")$time_type
+  # As in `to_vstretched_numeric_archive_info`:
+  torigin <- vec_slice(x$time_value, seq_len(min(1L, nrow(x))))
+  edf <- edf_with_time_values(
+    x,
+    time_values_to_torigin_offsets(x$time_value, torigin, time_type),
+    "integer"
+  )
+  list(
+    edf = edf,
+    conversion = list(time_type = time_type, torigin = torigin)
+  )
+}
+
+#' @param transformed_x an `epi_df` with `time_type` `"integer"` and bare
+#'   numeric `time_value`s, in the converted form described by `conversion`;
+#'   e.g., `to_vstretched_numeric_edf_info(x)$edf` or some processed version of
+#'   it.
+#' @param conversion the `conversion` element of the
+#'   `to_vstretched_numeric_edf_info` output.
+#' @return * Of `from_vstretched_numeric_edf_info`: `transformed_x` with
+#'   `time_type` and `time_value` representations converted back to those of the
+#'   original `epi_df`.
+#'
+#' @rdname to_vstretched_numeric_edf_info
+#' @keywords internal
+from_vstretched_numeric_edf_info <- function(transformed_x, conversion) {
+  if (!inherits(transformed_x, "epi_df")) {
+    cli_abort("`transformed_x` must be an `epi_df`, but it was a {.cls {class(transformed_x)}}")
+  }
+  if (!is.numeric(transformed_x$time_value) || is.object(transformed_x$time_value)) {
+    cli_abort("`transformed_x` must have bare numeric `time_value`s")
+  }
+  edf_with_time_values(
+    transformed_x,
+    torigin_offsets_to_time_values(transformed_x$time_value, conversion$torigin, conversion$time_type),
+    conversion$time_type
   )
 }
