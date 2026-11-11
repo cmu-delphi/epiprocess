@@ -3,6 +3,13 @@
 Pre-1.0.0 numbering scheme: 0.x will indicate releases, while 0.x.0.9999 will
 indicate development versions beyond 0.x.
 
+# epiprocess 0.13.1.9999
+
+## Bug fixes
+
+- `as_epi_archive()` no longer drops integer corrections when their difference
+  overflows during compactification (#732).
+
 # epiprocess 0.13.0.9999
 
 ## Breaking changes

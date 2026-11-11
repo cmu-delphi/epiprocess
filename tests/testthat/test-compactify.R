@@ -7,6 +7,21 @@ test_that("Input for compactify must be NULL or a boolean", {
   expect_error(as_epi_archive(dt, compactify = "no"))
 })
 
+test_that("compactify preserves large integer corrections", {
+  d <- as.Date("2020-01-01")
+  x <- tibble::tibble(
+    geo_value = "ak",
+    time_value = d,
+    version = d + 1:2,
+    value = c(-2e9L, 2e9L)
+  )
+
+  expect_no_warning(
+    result <- as_tibble(as.data.frame(as_epi_archive(x)$DT))
+  )
+  expect_identical(result$value, x$value)
+})
+
 dt$percent_cli <- c(1:80)
 dt$case_rate <- c(1:80)
 

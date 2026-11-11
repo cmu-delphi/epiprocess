@@ -547,7 +547,7 @@ is_locf <- function(vec, abs_tol, is_key) { # nolint: object_usage_linter
     # ignore like `vec_equal`); not a key column
     unname(if_else(
       !is.na(vec) & !is.na(lag_vec),
-      abs(vec - lag_vec) <= abs_tol,
+      abs(as.double(vec) - as.double(lag_vec)) <= abs_tol,
       is.na(vec) & is.na(lag_vec)
     ))
   } else {
