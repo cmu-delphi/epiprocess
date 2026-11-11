@@ -26,7 +26,7 @@ test_that("linelist_to_archive works with basic inputs", {
     n = c(2, 1, 1)
   )
   expected_ea <- as_epi_archive(expected_df)
-  expect_equal(ea, expected_ea)
+  expect_equal(archive_tbl(ea), archive_tbl(expected_ea))
 })
 
 test_that("linelist_to_archive handles tidy selection", {
@@ -44,7 +44,7 @@ test_that("linelist_to_archive handles tidy selection", {
   )
 
   expect_s3_class(ea, "epi_archive")
-  expect_equal(ea$DT$geo_value, "ca")
+  expect_equal(archive_col(ea, "geo_value"), "ca")
 })
 
 test_that("linelist_to_archive handles other_keys", {
@@ -63,8 +63,8 @@ test_that("linelist_to_archive handles other_keys", {
     other_keys = age_group
   )
 
-  expect_true("age_group" %in% names(ea$DT))
-  expect_equal(key(ea$DT), c("geo_value", "time_value", "age_group", "version"))
+  expect_true("age_group" %in% archive_colnames(ea))
+  expect_equal(key_colnames(ea), c("geo_value", "age_group", "time_value", "version"))
 })
 
 test_that("linelist_to_archive errors on missing required cols", {
@@ -168,7 +168,7 @@ test_that("linelist_to_archive uses smart defaults", {
   # Should work without args
   ea <- linelist_to_archive(linelist_default)
   expect_s3_class(ea, "epi_archive")
-  expect_equal(ea$DT$geo_value, "ca")
+  expect_equal(archive_col(ea, "geo_value"), "ca")
 
   # Partial defaults
   # geo_value -> geo_value, time_value -> date, version -> my_ver
@@ -180,7 +180,7 @@ test_that("linelist_to_archive uses smart defaults", {
 
   ea2 <- linelist_to_archive(linelist_mixed, version_recorded = my_ver)
   expect_s3_class(ea2, "epi_archive")
-  expect_equal(ea2$DT$geo_value, "ny")
+  expect_equal(archive_col(ea2, "geo_value"), "ny")
 
   # version_recorded recognized by name
   linelist_canonical <- tibble::tibble(
@@ -189,7 +189,7 @@ test_that("linelist_to_archive uses smart defaults", {
     version_recorded = as.Date("2022-01-02")
   )
   ea_canonical <- linelist_to_archive(linelist_canonical)
-  expect_equal(ea_canonical$DT$version, as.Date("2022-01-02"))
+  expect_equal(archive_col(ea_canonical, "version"), as.Date("2022-01-02"))
 
   # version_recorded recognized from report_date
   linelist_report <- tibble::tibble(
@@ -198,7 +198,7 @@ test_that("linelist_to_archive uses smart defaults", {
     report_date = as.Date("2022-01-02")
   )
   ea3 <- linelist_to_archive(linelist_report)
-  expect_equal(ea3$DT$version, as.Date("2022-01-02"))
+  expect_equal(archive_col(ea3, "version"), as.Date("2022-01-02"))
 
   # version_deleted recognized from delete_date
   linelist_del <- tibble::tibble(
@@ -244,7 +244,7 @@ test_that("linelist_to_archive works with multi-state data", {
     n = c(1, 1, 1, 0)
   )
   expected_ea <- as_epi_archive(expected_df)
-  expect_equal(ea, expected_ea)
+  expect_equal(archive_tbl(ea), archive_tbl(expected_ea))
 })
 
 test_that("linelist_to_archive errors when defaults not found", {

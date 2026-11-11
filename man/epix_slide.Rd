@@ -220,19 +220,20 @@ archive_cases_dv_subset \%>\%
   group_by(geo_value) \%>\%
   epix_slide(
     function(x, gk, rtv) {
+      x_tbl <- tibble::as_tibble(x)
       tibble(
-        versions_start = if (nrow(x$DT) == 0L) {
+        versions_start = if (nrow(x_tbl) == 0L) {
           "NA (0 rows)"
         } else {
-          toString(min(x$DT$version))
+          toString(min(x_tbl$version))
         },
         versions_end = x$versions_end,
-        time_range = if (nrow(x$DT) == 0L) {
+        time_range = if (nrow(x_tbl) == 0L) {
           "0 `time_value`s"
         } else {
-          sprintf("\%s -- \%s", min(x$DT$time_value), max(x$DT$time_value))
+          sprintf("\%s -- \%s", min(x_tbl$time_value), max(x_tbl$time_value))
         },
-        n = nrow(x$DT),
+        n = nrow(x_tbl),
         class1 = class(x)[[1L]]
       )
     },

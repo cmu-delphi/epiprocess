@@ -30,9 +30,9 @@ inside the \code{.f} in \code{epix_slide()}. If they don't cover your use case, 
 you can set \code{.format_aware = TRUE} to enable usage of these columns, but be
 careful to:
 \itemize{
-\item Factor in that \code{.data$DT} may have been converted into a compact format
-based on diffing consecutive versions, and the last version of each
-observation in \code{.data$DT} will always be carried forward to future
+\item Factor in that the archive rows may have been converted into a compact
+format based on diffing consecutive versions, and the last version of each
+observation in the archive will always be carried forward to future
 \code{version}s\verb{; see details of [}as_epi_archive`].
 \item Set \code{clobberable_versions_start} and \code{versions_end} of the result
 appropriately after the \code{filter} call. They will be initialized with the

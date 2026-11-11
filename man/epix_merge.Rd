@@ -85,7 +85,7 @@ s2 <- tibble::tibble(
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 merged <- epix_merge(s1, s2, sync = "locf")
-merged[["DT"]]
+tibble::as_tibble(merged)
 
 # Example 2
 # The s1 signal at August 1st gets revised from 12 to 13 on August 3rd
@@ -104,7 +104,7 @@ s2 <- tibble::tibble(
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 merged <- epix_merge(s1, s2, sync = "locf")
-merged[["DT"]]
+tibble::as_tibble(merged)
 
 
 # Example 3:
@@ -124,5 +124,5 @@ s2 <- tibble::tibble(
 s1 <- s1 \%>\% as_epi_archive()
 s2 <- s2 \%>\% as_epi_archive()
 merged <- epix_merge(s1, s2, sync = "locf")
-merged[["DT"]]
+tibble::as_tibble(merged)
 }
