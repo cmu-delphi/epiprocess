@@ -576,7 +576,7 @@ autoplot_interactive <- function(p, object, .max_keys, .facet_by = "none") {
     if (length(keys) > .max_keys) {
       # Keys to keep
       keep <- sample(keys, .max_keys)
-      p_plotly$x$data <- purrr::map(p_plotly$x$data, \(tr) {
+      p_plotly$x$data <- purrr::map(p_plotly$x$data, function(tr) {
         # Do not display keys that are not kept (still showing legend)
         if ((tr$name %||% "") %in% vctrs::vec_set_difference(keys, keep)) tr$visible <- "legendonly"
         tr
