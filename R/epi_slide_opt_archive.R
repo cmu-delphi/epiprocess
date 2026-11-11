@@ -101,7 +101,6 @@ epi_slide_opt_archive_one_epikey <- function(
   }
   unit_step <- unit_time_delta(time_type, format = "fast")
   prev_inp_snapshot <- NULL
-  prev_out_snapshot <- NULL
   prev_inf_slide_time_min <- NULL
   result <- lapply(seq_len(nrow(inp_updates_by_version)), function(version_i) {
     version <- inp_updates_by_version$version[[version_i]]
@@ -144,14 +143,19 @@ epi_slide_opt_archive_one_epikey <- function(
       list(out_update_min_t, out_update_max_t), NULL,
       inf_slide_time_min
     )
-    out_diff <- tbl_diff2(prev_out_snapshot, out_update, "time_value", "update")
     prev_inp_snapshot <<- inp_snapshot
-    prev_out_snapshot <<- tbl_patch(prev_out_snapshot, out_diff, "time_value")
     prev_inf_slide_time_min <<- inf_slide_time_min
-    out_diff$version <- version
-    out_diff
+    # Our `out_update` might contain things that could be compactified away
+    # (from input archive not compactified, NA propagation on edges, sparse
+    # updates connected by slide min_t and max_t, or numerical coincidences
+    # along edges). We could compactify here, but batch-compactifying seems
+    # faster and memory usage is fine in typical cases. As middle ground,
+    # compactify once per epikey (below).
+    out_update$version <- version
+    out_update
   })
   result <- list_rbind(result)
+  result <- apply_compactify(result, c("time_value", "version"))
   result
 }
 
