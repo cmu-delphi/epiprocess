@@ -415,8 +415,9 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
 #'
 #' - `{.n}` will be the number of time steps in the computation
 #'    corresponding to the `.window_size`.
-#' - `{.time_unit_abbr}` will be a lower-case letter corresponding to the
-#'     `time_type` of `.x`
+#' - `{.time_unit_abbr}` will be an abbreviation corresponding to the
+#'     `time_type` of `.x`: `"d"`, `"w"`, `"m"`, or `"step"` for `"day"`,
+#'     `"week"`, `"yearmonth"`, or `"integer"`, respectively
 #' - `{.align_abbr}` will be `""` if `.align` is the default of `"right"`;
 #'    otherwise, it will be the first letter of `.align`
 #' - `{.f_abbr}` will be a character vector containing a short abbreviation

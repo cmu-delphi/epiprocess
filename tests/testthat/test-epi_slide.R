@@ -785,6 +785,10 @@ test_that("epi_slide_opt output naming features", {
     ) %>%
     as_epi_df() %>%
     group_by(geo_value)
+  integerly <-
+    tibble::tibble(geo_value = 1, time_value = 1:10, value = 1:10) %>%
+    as_epi_df(as_of = 11L) %>%
+    group_by(geo_value)
 
   # Auto-naming:
   # * Changing .f and .window_size:
@@ -819,6 +823,10 @@ test_that("epi_slide_opt output naming features", {
   expect_equal(
     yearmonthly %>% epi_slide_opt(value, slide_any, .window_size = 3) %>% names(),
     c(names(yearmonthly), "value_3many") # not the best name, but super unlikely anyway
+  )
+  expect_equal(
+    integerly %>% epi_slide_opt(value, slide_mean, .window_size = 3) %>% names(),
+    c(names(integerly), "value_3stepav")
   )
   # * Through forwarding functions:
   expect_equal(

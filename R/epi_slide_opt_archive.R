@@ -264,13 +264,27 @@ epi_slide_opt.epi_archive <-
       }
       return(result)
     }
+    # Arithmetic on some time-related classes is slow; perform the computation
+    # under integer time_type. The only other inputs to the computation,
+    # `before_n_steps` and `after_n_steps`, are in terms of time steps, so are
+    # unaffected by the conversion. (Output column names were already
+    # determined above based on the original time_type.)
+    if (time_type == "integer") {
+      conversion <- NULL
+      x <- .x
+    } else {
+      converted <- to_vstretched_numeric_archive_info(.x)
+      x <- converted$archive
+      conversion <- converted$conversion
+    }
+    comp_time_type <- x$time_type
     # Like `epi_slide` on `epix_as_of` snapshots, start `Inf` windows at the min
     # time_value across all epikeys in each snapshot. Snapshots never lose rows
     # (deletions are represented as NA rows), so this min can only decrease;
     # record the versions where it does:
     inf_slide_time_min_changes <-
       if (before_n_steps == Inf) {
-        updates_time_mins <- .x$DT[, list(time_min = min(time_value)), keyby = version] %>%
+        updates_time_mins <- x$DT[, list(time_min = min(time_value)), keyby = version] %>%
           setDF() %>%
           as_tibble()
         snapshot_time_mins <- tibble(
@@ -283,7 +297,7 @@ epi_slide_opt.epi_archive <-
         NULL
       }
     # Perform the slide:
-    updates_grouped <- .x$DT %>%
+    updates_grouped <- x$DT %>%
       as.data.frame() %>%
       as_tibble(.name_repair = "minimal") %>%
       # 0 rows input -> 0 rows output for any drop = FALSE groups with 0 rows, so
@@ -295,7 +309,7 @@ epi_slide_opt.epi_archive <-
         res <- epi_slide_opt_archive_one_epikey(
           group_values,
           names_info$input_col_names,
-          .f_dots_baked, .f_info$from_package, before_n_steps, after_n_steps, time_type,
+          .f_dots_baked, .f_info$from_package, before_n_steps, after_n_steps, comp_time_type,
           names_info$output_col_names,
           inf_slide_time_min_changes
         )
@@ -303,13 +317,16 @@ epi_slide_opt.epi_archive <-
         res
       }) %>%
       as.data.frame() %>% # data.table#6859
-      as.data.table(key = key(.x$DT)) %>%
+      as.data.table(key = key(x$DT)) %>%
       new_epi_archive(
-        .x$geo_type, .x$time_type, .x$other_keys,
-        .x$clobberable_versions_start, .x$versions_end
+        x$geo_type, x$time_type, x$other_keys,
+        x$clobberable_versions_start, x$versions_end
       )
     if (use_progress) cli::cli_progress_done(id = progress_bar_id)
     # Keep ordering of old columns, place new columns at end:
-    setcolorder(result$DT, names(.x$DT))
+    setcolorder(result$DT, names(x$DT))
+    if (!is.null(conversion)) {
+      result <- from_vstretched_numeric_archive_info(result, conversion)
+    }
     result
   }

@@ -168,8 +168,9 @@ and \code{.suffix}, we provide \code{glue} with some additional variable binding
 \itemize{
 \item \code{{.n}} will be the number of time steps in the computation
 corresponding to the \code{.window_size}.
-\item \code{{.time_unit_abbr}} will be a lower-case letter corresponding to the
-\code{time_type} of \code{.x}
+\item \code{{.time_unit_abbr}} will be an abbreviation corresponding to the
+\code{time_type} of \code{.x}: \code{"d"}, \code{"w"}, \code{"m"}, or \code{"step"} for \code{"day"},
+\code{"week"}, \code{"yearmonth"}, or \code{"integer"}, respectively
 \item \code{{.align_abbr}} will be \code{""} if \code{.align} is the default of \code{"right"};
 otherwise, it will be the first letter of \code{.align}
 \item \code{{.f_abbr}} will be a character vector containing a short abbreviation
