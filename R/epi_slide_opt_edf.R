@@ -688,7 +688,7 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 
 #' @rdname epi_slide_opt
 #' @description `epi_slide_mean` is a wrapper around `epi_slide_opt` with `.f =
-#' data.table::frollmean`.
+#' slider::slide_mean`.
 #'
 #' @export
 epi_slide_mean <- function(
@@ -735,7 +735,7 @@ epi_slide_mean <- function(
   epi_slide_opt(
     .x = .x,
     .col_names = {{ .col_names }},
-    .f = data.table::frollmean,
+    .f = slider::slide_mean,
     ...,
     .window_size = .window_size,
     .align = .align,
@@ -749,7 +749,7 @@ epi_slide_mean <- function(
 
 #' @rdname epi_slide_opt
 #' @description `epi_slide_sum` is a wrapper around `epi_slide_opt` with `.f =
-#' data.table::frollsum`.
+#' slider::slide_sum`.
 #'
 #' @export
 epi_slide_sum <- function(
@@ -795,7 +795,7 @@ epi_slide_sum <- function(
   epi_slide_opt(
     .x = .x,
     .col_names = {{ .col_names }},
-    .f = data.table::frollsum,
+    .f = slider::slide_sum,
     ...,
     .window_size = .window_size,
     .align = .align,

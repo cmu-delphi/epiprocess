@@ -155,9 +155,9 @@ are only a limited range of time values being updated in each version.
 This function tends to be much faster than using \code{epi_slide()} and
 \code{epix_slide()} directly.
 
-\code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollmean}.
+\code{epi_slide_mean} is a wrapper around \code{epi_slide_opt} with \code{.f = slider::slide_mean}.
 
-\code{epi_slide_sum} is a wrapper around \code{epi_slide_opt} with \code{.f = data.table::frollsum}.
+\code{epi_slide_sum} is a wrapper around \code{epi_slide_opt} with \code{.f = slider::slide_sum}.
 }
 \section{Prefix and suffix shorthand}{
 
