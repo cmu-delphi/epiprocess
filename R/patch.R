@@ -134,8 +134,16 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
     }
 
     if (!is.null(dim(vec1))) {
+      # We had one or more matrix/array input, and standardized ptypes to that
+      # input. fifelse may drop dims, but comparisons here should either
+      # actually or conceptually be matrix/array. Combine into row comparisons
+      # (length matching first dim):
       dim(res) <- dim(vec1)
-      res <- rowSums(res) == ncol(res)
+      # Calculate fast `all()` by row (manually; matrixStats::rowAlls has different
+      # NA logic than `all()`.)
+      any_false <- rowSums(!res, na.rm = TRUE) > 0L
+      any_na <- rowSums(is.na(res)) > 0L
+      res <- fifelse(any_false, FALSE, fifelse(any_na, NA, TRUE))
     }
     # `fifelse` inherits any unrecognized attributes; drop them instead:
     attributes(res) <- NULL

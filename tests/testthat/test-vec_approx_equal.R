@@ -103,3 +103,62 @@ test_that("vec_approx_equal doesn't have issue with large integer differences", 
   expect_identical(vec_approx_equal(large_int, -large_int, na_equal = TRUE, abs_tol = 1e-8), FALSE)
   expect_identical(vec_approx_equal(large_int, -large_int, na_equal = FALSE, abs_tol = 1e-8), FALSE)
 })
+
+test_that("vec_approx_equal matches vec_equal on matrices (row-wise)", {
+  # Row 1 equal; row 2 has a non-NA difference and an NA; row 3 differs only
+  # with NAs; row 4 is a huge integer difference.
+  large_int <- (.Machine$integer.max %/% 4L) * 3L
+  m1 <- matrix(c(1L, 2L,
+                 1L, NA,
+                 1L, NA,
+                 large_int, 1L),
+               4L, 2L, byrow = TRUE)
+  m2 <- matrix(c(1L, 2L,
+                 2L, NA, # only first entry differs, non-NA in both mats
+                 1L, 3L, # only second entry differs, non-NA in one mat
+                 -large_int, 1L), # only first entry differs, large int difference
+               4L, 2L, byrow = TRUE)
+  for (na_equal in c(TRUE, FALSE)) {
+    for (abs_tol in c(0, 1e-8)) {
+      expected <- vctrs::vec_equal(m1, m2, na_equal = na_equal)
+      expect_identical(vec_approx_equal(m1, m2, na_equal = na_equal, abs_tol = abs_tol), expected,
+                       info = glue::glue("na_equal = {na_equal}, abs_tol = {abs_tol}"))
+      # with double-type matrices instead:
+      expect_identical(vec_approx_equal(m1 + 0, m2 + 0, na_equal = na_equal, abs_tol = abs_tol), expected,
+                       info = glue::glue("na_equal = {na_equal}, abs_tol = {abs_tol}"))
+      # with matrices wrapped inside of tibble-type columns:
+      expect_identical(
+        vec_approx_equal(tibble::tibble(m = m1), tibble::tibble(m = m2), na_equal = na_equal, abs_tol = abs_tol),
+        expected,
+        info = glue::glue("na_equal = {na_equal}, abs_tol = {abs_tol}")
+      )
+    }
+  }
+})
+
+test_that("vec_approx_equal matches vec_equal and expected results on data frames with NAs", {
+  skip("`vec_equal` seems buggy here, and we inherit its behavior in certain branches")
+  comparisons <- tibble(
+    val1 = c(11, 11, 11, NA),
+    val2 = c(11, 55, NA, NA)
+  )
+  comparison_pairs <- tidyr::crossing(x = comparisons, y = comparisons)
+  df1 <- tibble(x = comparison_pairs$x$val1, y = comparison_pairs$y$val1)
+  df2 <- tibble(x = comparison_pairs$x$val2, y = comparison_pairs$y$val2)
+  for (na_equal in c(TRUE, FALSE)) {
+    for (abs_tol in c(0, 1e-8)) {
+      info <- tibble(
+        df1 = df1,
+        df2 = df2,
+        xcomp = vec_equal(df1$x, df2$x, na_equal = na_equal),
+        ycomp = vec_equal(df1$y, df2$y, na_equal = na_equal),
+        comp = vec_equal(df1, df2, na_equal = na_equal),
+        comp2 = fifelse(xcomp, ycomp, xcomp, na = xcomp), # what it's doing behind the scenes?
+        ours = vec_approx_equal(df1, df2, na_equal = na_equal, abs_tol = abs_tol),
+        ours2 = xcomp & ycomp, # what we want
+        )
+      expect_identical(info$comp, info$ours)
+      expect_identical(info$ours, info$ours2)
+    }
+  }
+})
