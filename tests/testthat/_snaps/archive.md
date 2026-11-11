@@ -8,7 +8,7 @@
     Code
       et_result <- late_et_display_et %>% as_epi_archive()
     Message <epiprocess__as_epi_archive__datetime_version>
-      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "US/Eastern".
+      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "America/New_York".
       i Only keeping the last version of each measurement if there are multiple within a day.
 
 ---
@@ -17,7 +17,7 @@
       et_result2 <- late_et_display_et %>% mutate(version = as.POSIXct(version, tz = "UTC")) %>%
         as_epi_archive()
     Message <epiprocess__as_epi_archive__datetime_version>
-      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "US/Eastern".
+      POSIXct `version`s are not yet supported; converting to Dates in R session time zone, "America/New_York".
       i Only keeping the last version of each measurement if there are multiple within a day.
 
 ---
