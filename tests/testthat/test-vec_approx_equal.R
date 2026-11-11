@@ -97,3 +97,9 @@ test_that("vec_approx_equal is compatible with vec_equal on some edge cases", {
     TRUE
   )
 })
+
+test_that("vec_approx_equal doesn't have issue with large integer differences", {
+  large_int <- (.Machine$integer.max %/% 4L) * 3L
+  expect_identical(vec_approx_equal(large_int, -large_int, na_equal = TRUE, abs_tol = 1e-8), FALSE)
+  expect_identical(vec_approx_equal(large_int, -large_int, na_equal = FALSE, abs_tol = 1e-8), FALSE)
+})

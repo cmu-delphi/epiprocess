@@ -114,6 +114,10 @@ vec_approx_equal0 <- function(vec1, vec2, na_equal, abs_tol, inds1 = NULL, inds2
   if (is_bare_numeric(vec1) && abs_tol != 0) {
     if (!is.null(inds1)) vec1 <- vec_slice(vec1, inds1)
     if (!is.null(inds2)) vec2 <- vec_slice(vec2, inds2)
+    # Subtract integers as doubles to avoid overflow (-> intermediate NA +
+    # warning + bad result) on very large differences.
+    if (is.integer(vec1)) storage.mode(vec1) <- "double"
+    if (is.integer(vec2)) storage.mode(vec2) <- "double"
     if (na_equal) {
       na_or_nan1 <- is.na(vec1)
       na_or_nan2 <- is.na(vec2)
