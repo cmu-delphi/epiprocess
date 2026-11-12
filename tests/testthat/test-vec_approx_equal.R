@@ -155,8 +155,8 @@ test_that("vec_approx_equal matches vec_equal and expected results on data frame
         comp = vec_equal(df1, df2, na_equal = na_equal),
         comp2 = fifelse(xcomp, ycomp, xcomp, na = xcomp), # what it's doing behind the scenes?
         ours = vec_approx_equal(df1, df2, na_equal = na_equal, abs_tol = abs_tol),
-        ours2 = xcomp & ycomp, # what we want
-        )
+        ours2 = xcomp & ycomp # what we want
+      )
       expect_identical(info$comp, info$ours)
       expect_identical(info$ours, info$ours2)
     }
