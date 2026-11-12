@@ -379,6 +379,12 @@ Functions operating on `epi_archive` objects.
   : JHU daily COVID-19 cases and deaths rates from all states (from
   epidatasets)
 
+## Other utilities
+
+- [`vec_approx_equal()`](https://cmu-delphi.github.io/epiprocess/dev/reference/vec_approx_equal.md)
+  : Test two vctrs vectors for equality with some tolerance in some
+  cases
+
 # Articles
 
 ### Using the package

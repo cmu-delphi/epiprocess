@@ -9,22 +9,26 @@ measurements are temporarily added to fill in any time gaps, and, for
 rolling computations, to pad the time series to ensure that the first &
 last computations use exactly `.window_size` values.
 
-`epi_slide_opt` allows you to use any
-[data.table::froll](https://rdrr.io/pkg/data.table/man/froll.html) or
-[slider::summary-slide](https://slider.r-lib.org/reference/summary-slide.html)
-function. If none of those specialized functions fit your usecase, you
-can use
-[`data.table::frollapply`](https://rdrr.io/pkg/data.table/man/frollapply.html)
-together with a non-rolling function (e.g., `median`). See
-[`epi_slide`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_slide.md)
-if you need to work with multiple columns at once or output a custom
-type.
+- On `epi_df`s, this will return another `epi_df` with the same set of
+  geo x other key x time values as the input, but with an extra column
+  for the result.
+
+- On `epi_archive`s, this is equivalent to using `epix_slide` to run
+  `epi_slide_opt` on every version, but optimized for the case where
+  there are only a limited range of time values being updated in each
+  version.
+
+This function tends to be much faster than using
+[`epi_slide()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epi_slide.md)
+and
+[`epix_slide()`](https://cmu-delphi.github.io/epiprocess/dev/reference/epix_slide.md)
+directly.
 
 `epi_slide_mean` is a wrapper around `epi_slide_opt` with
-`.f = data.table::frollmean`.
+`.f = slider::slide_mean`.
 
 `epi_slide_sum` is a wrapper around `epi_slide_opt` with
-`.f = data.table::frollsum`.
+`.f = slider::slide_sum`.
 
 ## Usage
 
@@ -47,6 +51,8 @@ epi_slide_mean(
   .x,
   .col_names,
   ...,
+  na.rm = NULL,
+  na_rm = NULL,
   .window_size = NULL,
   .align = c("right", "center", "left"),
   .prefix = NULL,
@@ -60,6 +66,8 @@ epi_slide_sum(
   .x,
   .col_names,
   ...,
+  na.rm = NULL,
+  na_rm = NULL,
   .window_size = NULL,
   .align = c("right", "center", "left"),
   .prefix = NULL,
@@ -87,12 +95,6 @@ epi_slide_sum(
   a vector of characters (e.g. `c("cases", "deaths")`). Variable names
   can be used as if they were positions in the data frame, so
   expressions like `x:y` can be used to select a range of variables.
-
-  The tidy-selection renaming interface is not supported, and cannot be
-  used to provide output column names; if you want to customize the
-  output column names, use
-  [`dplyr::rename`](https://dplyr.tidyverse.org/reference/rename.html)
-  after the slide.
 
 - .f:
 
@@ -176,7 +178,8 @@ epi_slide_sum(
 - .ref_time_values:
 
   The time values at which to compute the slides values. By default,
-  this is all the unique time values in `.x`.
+  this is all the unique time values in `.x`. Not supported when `.x` is
+  an `epi_archive`.
 
 - .all_rows:
 
@@ -185,13 +188,25 @@ epi_slide_sum(
   Otherwise, all the rows from `.x` are included by with a missing value
   marker (typically NA, but more technically the result of
   [`vctrs::vec_cast`](https://vctrs.r-lib.org/reference/vec_cast.html)-ing
-  `NA` to the type of the slide computation output).
+  `NA` to the type of the slide computation output). Not supported when
+  `.x` is an `epi_archive`.
+
+- na.rm, na_rm:
+
+  optional, mutually exclusive; provide TRUE or FALSE: Should missing
+  values be excluded from the computation? Defaults to FALSE. In
+  `epi_slide_mean` and `epi_slide_sum` we detect either `na.rm` or
+  `na_rm`; in `epi_slide_opt` you'll need to use whatever your `.f`
+  function accepts.
 
 ## Value
 
-An `epi_df` object with one or more new slide computation columns added.
-It will be ungrouped if `.x` was ungrouped, and have the same groups as
-`.x` if `.x` was grouped.
+An `epi_df` object (or, for `epi_slide_opt` on an `epi_archive`, an
+`epi_archive`) with one or more new slide computation columns added. It
+will be ungrouped if `.x` was ungrouped, and have the same groups as
+`.x` if `.x` was grouped. For `epi_archive`s, the result represents the
+version history of running the `epi_slide_opt` computation on all
+versions of the data in the archive.
 
 ## Prefix and suffix shorthand
 
@@ -203,8 +218,9 @@ strings specially interpret content within curly braces. E.g.,
 - `{.n}` will be the number of time steps in the computation
   corresponding to the `.window_size`.
 
-- `{.time_unit_abbr}` will be a lower-case letter corresponding to the
-  `time_type` of `.x`
+- `{.time_unit_abbr}` will be an abbreviation corresponding to the
+  `time_type` of `.x`: `"d"`, `"w"`, `"m"`, or `"step"` for `"day"`,
+  `"week"`, `"yearmonth"`, or `"integer"`, respectively
 
 - `{.align_abbr}` will be `""` if `.align` is the default of `"right"`;
   otherwise, it will be the first letter of `.align`
@@ -357,67 +373,12 @@ cases_deaths_subset %>%
 # via `...`. This example passes some arguments to `frollmean` settings for
 # speed, accuracy, and to allow partially-missing windows:
 covid_case_death_rates_extended %>%
-  epi_slide_mean(
+  epi_slide_opt(
     case_rate,
+    data.table::frollmean,
     .window_size = 7,
-    na.rm = TRUE, algo = "exact", hasNA = TRUE
+    na.rm = TRUE, algo = "exact"
   )
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
-#> Warning: hasNA is deprecated, use has.nf instead
 #> An `epi_df` object, 37,576 x 5 with metadata:
 #> * geo_type  = state
 #> * time_type = day
@@ -452,18 +413,6 @@ cases_deaths_subset %>%
     .suffix = "_{.n}{.time_unit_abbr}_median"
   ) %>%
   print(n = 40)
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
-#> Warning: 'x' is deprecated in frollapply, use 'X' instead
-#> Warning: 'n' is deprecated in frollapply, use 'N' instead
 #> An `epi_df` object, 4,026 x 6 with metadata:
 #> * geo_type  = state
 #> * time_type = day
@@ -517,4 +466,40 @@ cases_deaths_subset %>%
 #> # ℹ 3,986 more rows
 #> # ℹ abbreviated name: ¹​case_rate_7d_av_28d_median
 #> # ℹ 1 more variable: death_rate_7d_av_28d_median <dbl>
+
+# You can calculate entire version histories for the derived signals by
+# calling `epi_slide_opt()` on an `epi_archive`:
+case_death_rate_archive %>%
+  epi_slide_mean(case_rate, .window_size = 14)
+#> An `epi_archive` object, with:
+#> ℹ Time range:    2020-03-01 -- 2021-11-30 (times are days)
+#> ℹ Version range: 2020-09-01 -- 2021-12-01
+#> ℹ A preview of the table (73226 rows x 8 columns):
+#> Key: <geo_value, time_value, version>
+#>           version geo_value time_value case_rate death_rate case_rate_7d_av
+#>            <Date>    <char>     <Date>     <num>      <num>           <num>
+#>     1: 2020-09-01        ak 2020-03-01   0.00000    0.00000              NA
+#>     2: 2020-09-01        ak 2020-03-02   0.00000    0.00000              NA
+#>     3: 2020-09-01        ak 2020-03-03   0.00000    0.00000              NA
+#>     4: 2020-09-01        ak 2020-03-04   0.00000    0.00000              NA
+#>     5: 2020-09-01        ak 2020-03-05   0.00000    0.00000              NA
+#>    ---                                                                     
+#> 73222: 2021-12-01        wy 2021-11-26   0.00000    0.00000        23.20734
+#> 73223: 2021-12-01        wy 2021-11-27   0.00000    0.00000        23.20734
+#> 73224: 2021-12-01        wy 2021-11-28   0.00000    0.00000        23.20734
+#> 73225: 2021-12-01        wy 2021-11-29  96.16573    0.00000        25.07178
+#> 73226: 2021-12-01        wy 2021-11-30  45.50700   13.90969        25.46429
+#>        death_rate_7d_av case_rate_14dav
+#>                   <num>           <num>
+#>     1:               NA              NA
+#>     2:               NA              NA
+#>     3:               NA              NA
+#>     4:               NA              NA
+#>     5:               NA              NA
+#>    ---                                 
+#> 73222:         0.000000        34.11185
+#> 73223:         0.000000        34.11185
+#> 73224:         0.000000        34.11185
+#> 73225:         0.000000        33.37589
+#> 73226:         1.987098        32.82392
 ```

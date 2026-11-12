@@ -200,3 +200,9 @@ Functions operating on `epi_archive` objects.
 - [`covid_case_death_rates_extended`](https://cmu-delphi.github.io/epidatasets/reference/covid_case_death_rates_extended.html)
   : JHU daily COVID-19 cases and deaths rates from all states (from
   epidatasets)
+
+## Other utilities
+
+- [`vec_approx_equal()`](https://cmu-delphi.github.io/epiprocess/dev/reference/vec_approx_equal.md)
+  : Test two vctrs vectors for equality with some tolerance in some
+  cases

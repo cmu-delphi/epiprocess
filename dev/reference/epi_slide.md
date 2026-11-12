@@ -129,7 +129,8 @@ epi_slide(
 - .ref_time_values:
 
   The time values at which to compute the slides values. By default,
-  this is all the unique time values in `.x`.
+  this is all the unique time values in `.x`. Not supported when `.x` is
+  an `epi_archive`.
 
 - .new_col_name:
 
@@ -147,13 +148,17 @@ epi_slide(
   Otherwise, all the rows from `.x` are included by with a missing value
   marker (typically NA, but more technically the result of
   [`vctrs::vec_cast`](https://vctrs.r-lib.org/reference/vec_cast.html)-ing
-  `NA` to the type of the slide computation output).
+  `NA` to the type of the slide computation output). Not supported when
+  `.x` is an `epi_archive`.
 
 ## Value
 
-An `epi_df` object with one or more new slide computation columns added.
-It will be ungrouped if `.x` was ungrouped, and have the same groups as
-`.x` if `.x` was grouped.
+An `epi_df` object (or, for `epi_slide_opt` on an `epi_archive`, an
+`epi_archive`) with one or more new slide computation columns added. It
+will be ungrouped if `.x` was ungrouped, and have the same groups as
+`.x` if `.x` was grouped. For `epi_archive`s, the result represents the
+version history of running the `epi_slide_opt` computation on all
+versions of the data in the archive.
 
 ## Details
 

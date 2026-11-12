@@ -1,7 +1,7 @@
-# Difference between two time value vectors in terms of number of time "steps"
+# Difference between two finite `time_value` vectors in terms of number of time "steps"
 
-Difference between two time value vectors in terms of number of time
-"steps"
+Difference between two finite `time_value` vectors in terms of number of
+time "steps"
 
 ## Usage
 

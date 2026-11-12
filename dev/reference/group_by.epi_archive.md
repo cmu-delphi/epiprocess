@@ -188,12 +188,12 @@ toy_archive %>% group_by(geo_value, age_group)
 #> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
 #> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
-#> Key: <geo_value, time_value, age_group, version>
+#> Key: <geo_value, age_group, time_value, version>
 #>    geo_value age_group time_value    version value
 #>       <char>     <ord>     <Date>     <Date> <num>
-#> 1:        us     adult 2000-01-01 2000-01-02   121
-#> 2:        us     adult 2000-01-01 2000-01-03   125
-#> 3:        us pediatric 2000-01-02 2000-01-03     5
+#> 1:        us pediatric 2000-01-02 2000-01-03     5
+#> 2:        us     adult 2000-01-01 2000-01-02   121
+#> 3:        us     adult 2000-01-01 2000-01-03   125
 #> 4:        us     adult 2000-01-02 2000-01-03   130
 toy_archive %>%
   group_by(geo_value) %>%
@@ -206,12 +206,12 @@ toy_archive %>%
 #> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
 #> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
-#> Key: <geo_value, time_value, age_group, version>
+#> Key: <geo_value, age_group, time_value, version>
 #>    geo_value age_group time_value    version value
 #>       <char>     <ord>     <Date>     <Date> <num>
-#> 1:        us     adult 2000-01-01 2000-01-02   121
-#> 2:        us     adult 2000-01-01 2000-01-03   125
-#> 3:        us pediatric 2000-01-02 2000-01-03     5
+#> 1:        us pediatric 2000-01-02 2000-01-03     5
+#> 2:        us     adult 2000-01-01 2000-01-02   121
+#> 3:        us     adult 2000-01-01 2000-01-03   125
 #> 4:        us     adult 2000-01-02 2000-01-03   130
 grouping_cols <- c("geo_value", "age_group")
 toy_archive %>% group_by(across(all_of(grouping_cols)))
@@ -223,12 +223,12 @@ toy_archive %>% group_by(across(all_of(grouping_cols)))
 #> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
 #> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
-#> Key: <geo_value, time_value, age_group, version>
+#> Key: <geo_value, age_group, time_value, version>
 #>    geo_value age_group time_value    version value
 #>       <char>     <ord>     <Date>     <Date> <num>
-#> 1:        us     adult 2000-01-01 2000-01-02   121
-#> 2:        us     adult 2000-01-01 2000-01-03   125
-#> 3:        us pediatric 2000-01-02 2000-01-03     5
+#> 1:        us pediatric 2000-01-02 2000-01-03     5
+#> 2:        us     adult 2000-01-01 2000-01-02   121
+#> 3:        us     adult 2000-01-01 2000-01-03   125
 #> 4:        us     adult 2000-01-02 2000-01-03   130
 
 # And these are equivalent:
@@ -240,12 +240,12 @@ toy_archive %>% group_by(geo_value)
 #> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
 #> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
-#> Key: <geo_value, time_value, age_group, version>
+#> Key: <geo_value, age_group, time_value, version>
 #>    geo_value age_group time_value    version value
 #>       <char>     <ord>     <Date>     <Date> <num>
-#> 1:        us     adult 2000-01-01 2000-01-02   121
-#> 2:        us     adult 2000-01-01 2000-01-03   125
-#> 3:        us pediatric 2000-01-02 2000-01-03     5
+#> 1:        us pediatric 2000-01-02 2000-01-03     5
+#> 2:        us     adult 2000-01-01 2000-01-02   121
+#> 3:        us     adult 2000-01-01 2000-01-03   125
 #> 4:        us     adult 2000-01-02 2000-01-03   130
 toy_archive %>%
   group_by(geo_value, age_group) %>%
@@ -257,12 +257,12 @@ toy_archive %>%
 #> ℹ Time range:    2000-01-01 -- 2000-01-02 (times are days)
 #> ℹ Version range: 2000-01-02 -- 2000-01-03
 #> ℹ A preview of the table (4 rows x 5 columns):
-#> Key: <geo_value, time_value, age_group, version>
+#> Key: <geo_value, age_group, time_value, version>
 #>    geo_value age_group time_value    version value
 #>       <char>     <ord>     <Date>     <Date> <num>
-#> 1:        us     adult 2000-01-01 2000-01-02   121
-#> 2:        us     adult 2000-01-01 2000-01-03   125
-#> 3:        us pediatric 2000-01-02 2000-01-03     5
+#> 1:        us pediatric 2000-01-02 2000-01-03     5
+#> 2:        us     adult 2000-01-01 2000-01-02   121
+#> 3:        us     adult 2000-01-01 2000-01-03   125
 #> 4:        us     adult 2000-01-02 2000-01-03   130
 
 # To get the grouping variable names as a character vector:

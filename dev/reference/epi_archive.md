@@ -39,7 +39,7 @@ as_epi_archive(
 is_epi_archive(x)
 
 new_epi_archive(
-  x,
+  data_table,
   geo_type,
   time_type,
   other_keys,
@@ -54,8 +54,7 @@ validate_epi_archive(x)
 
 - x:
 
-  A data.frame, data.table, or tibble, with columns `geo_value`,
-  `time_value`, `version`, and then any additional number of columns.
+  An object.
 
 - geo_type:
 
@@ -149,6 +148,17 @@ validate_epi_archive(x)
   value of `clobberable_versions_start` does not fully trust these empty
   updates, and assumes that any version `>= max(x$version)` could be
   clobbered.) If `nrow(x) == 0`, then this argument is mandatory.
+
+- data_table:
+
+  a `data.table` with
+  [`data.table::key()`](https://rdrr.io/pkg/data.table/man/setkey.html)
+  equal to `c("geo_value", other_keys, "time_value", "version")`. For
+  `data.table` users: this sets up an alias of `data_table`; if you plan
+  to keep on working with `data_table` or working directly with the
+  archive's `$DT` using mutating operations, you should `copy()` if
+  appropriate. We will not mutate the `DT` with any exported
+  `{epiprocess}` functions, though.
 
 ## Value
 

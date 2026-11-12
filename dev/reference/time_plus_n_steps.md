@@ -1,4 +1,4 @@
-# Advance/retreat time_values by specified number of time "steps"
+# Advance/retreat time_value(s) by bare-integerish number(s) of time "steps"
 
 Here, a "step" is based on the `time_type`, not just the class of `x`.
 
@@ -18,7 +18,7 @@ time_minus_n_steps(x, y, time_type)
 
 - y:
 
-  integerish (vector)
+  bare integerish (vector)
 
 - time_type:
 

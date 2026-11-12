@@ -34,7 +34,7 @@ apply_compactify(
   numeric, \>=0; absolute tolerance to use on numeric measurement
   columns when determining whether something can be compactified away;
   see
-  [`is_locf`](https://cmu-delphi.github.io/epiprocess/dev/reference/is_locf.md)
+  [`vec_approx_equal`](https://cmu-delphi.github.io/epiprocess/dev/reference/vec_approx_equal.md)
 
 - init_nas_are_locf:
 
@@ -52,3 +52,29 @@ apply_compactify(
   frame format also promote some implicit NAs into explicit ones,
   conflating their origins. We're forced into a judgment call here by
   the current `epi_archive` format.
+
+## Examples
+
+``` r
+
+# Typical usage: compactifying epi_archive-like data
+tibble::tibble(geo_value = 1, time_value = 1, version = 1:4, value = c(1, 1, 3, 4)) %>%
+  epiprocess:::apply_compactify(ukey_names = c("geo_value", "time_value", "version"))
+#> # A tibble: 3 × 4
+#>   geo_value time_value version value
+#>       <dbl>      <dbl>   <int> <dbl>
+#> 1         1          1       1     1
+#> 2         1          1       3     3
+#> 3         1          1       4     4
+
+# Other usage: compactifying data that may not have geo or time
+data.table::data.table(version = 2:6, version_info = c(1, 1, 3, 4, 0), key = "version") %>%
+  epiprocess:::apply_compactify(ukey_names = "version")
+#> Key: <version>
+#>    version version_info
+#>      <int>        <num>
+#> 1:       2            1
+#> 2:       4            3
+#> 3:       5            4
+#> 4:       6            0
+```
