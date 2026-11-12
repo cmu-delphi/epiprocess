@@ -6,6 +6,7 @@ indicate development versions beyond 0.x.
 # epiprocess 0.13.0.9999
 
 ## Breaking changes
+
 - `.versions =` arguments have been standardized across
   `autoplot.epi_archive()` and `epix_slide()`: (a) a vector of
   versions, (b) a description of desired spacing (e.g., "2 weeks"), or
@@ -20,6 +21,7 @@ indicate development versions beyond 0.x.
   have a need for something lower-level.
 
 ## New features
+
 - `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
   histories for 7-day-averages of signals, etc.
 
@@ -43,6 +45,12 @@ indicate development versions beyond 0.x.
   epiweek representations, such as 202552, 202553, 202601; now, such epiweek
   numbers should be converted to representative Dates sharing a consistent day
   of the week.)
+- `epi_slide_opt` computations have been sped up on `epi_df`s
+
+## Cleanup
+
+- Some checks for deprecated arguments from several versions ago have been
+  removed.
 
 # epiprocess 0.13.0
 

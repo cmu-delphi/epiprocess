@@ -220,34 +220,6 @@ epi_slide <- function(
   .window_size = NULL, .align = c("right", "center", "left"),
   .ref_time_values = NULL, .new_col_name = NULL, .all_rows = FALSE
 ) {
-  # Deprecated argument handling
-  provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(provided_args %in% c("x", "f", "ref_time_values", "new_col_name", "all_rows"))) {
-    cli::cli_abort(
-      "epi_slide: you are using one of the following old argument names: `x`, `f`, `ref_time_values`,
-      `new_col_name`, or `all_rows`. Please use the new dot-prefixed names: `.x`, `.f`, `.ref_time_values`,
-      `.new_col_name`, `.all_rows`."
-    )
-  }
-  if ("as_list_col" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
-      If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
-      If a string, please manually prefix your column names instead."
-    )
-  }
-  if ("before" %in% provided_args || "after" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
-      See the slide documentation for more details."
-    )
-  }
-
   # Validate arguments
   assert_class(.x, "epi_df")
   .x_orig_groups <- groups(.x)

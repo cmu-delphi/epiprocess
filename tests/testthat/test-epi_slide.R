@@ -969,3 +969,34 @@ test_that('`epi_slide_opt .align != "right"` errors on `fill` arg', {
     class = "epiprocess__epi_slide_opt__fill_unsupported"
   )
 })
+
+test_that("epi_slide_mean and epi_slide_sum accept `na.rm` or `na_rm`", {
+  toy_edf <- tibble(
+    geo_value = 1,
+    time_value = as.Date("2020-01-01") + 0:4,
+    value = c(1:3, NA, 5)
+  ) %>%
+    as_epi_df(as_of = as.Date("2020-02-01"))
+  # (incomplete windows at the start are NA-padded, so with NA removal they get
+  # partial results:)
+  expect_equal(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3),
+    toy_edf %>% mutate(value_3dav = c(NA, NA, 2, NA, NA))
+  )
+  expect_equal(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3, na.rm = TRUE),
+    toy_edf %>% mutate(value_3dav = c(1, 1.5, 2, 2.5, 4))
+  )
+  expect_equal(
+    toy_edf %>% epi_slide_sum(value, .window_size = 3, na_rm = TRUE),
+    toy_edf %>% mutate(value_3dsum = c(1, 3, 6, 5, 8))
+  )
+  expect_error(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3, na.rm = TRUE, na_rm = TRUE),
+    class = "epiprocess__epi_slide_mean__double_na_rm_setting"
+  )
+  expect_error(
+    toy_edf %>% epi_slide_sum(value, .window_size = 3, na.rm = TRUE, na_rm = TRUE),
+    class = "epiprocess__epi_slide_sum__double_na_rm_setting"
+  )
+})

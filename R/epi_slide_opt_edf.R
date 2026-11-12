@@ -465,10 +465,11 @@ epi_slide_opt_edf_one_epikey <- function(inp_tbl,
 #' # via `...`. This example passes some arguments to `frollmean` settings for
 #' # speed, accuracy, and to allow partially-missing windows:
 #' covid_case_death_rates_extended %>%
-#'   epi_slide_mean(
+#'   epi_slide_opt(
 #'     case_rate,
+#'     data.table::frollmean,
 #'     .window_size = 7,
-#'     na.rm = TRUE, algo = "exact", hasNA = TRUE
+#'     na.rm = TRUE, algo = "exact"
 #'   )
 #'
 #' # If the more specialized possibilities for `.f` don't cover your needs, you
@@ -504,42 +505,6 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
                                  .window_size = NULL, .align = c("right", "center", "left"),
                                  .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
                                  .ref_time_values = NULL, .all_rows = FALSE) {
-  # Deprecated argument handling
-  provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
-    cli::cli_abort(
-      "epi_slide_opt: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
-      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
-      `.ref_time_values`, `.all_rows`."
-    )
-  }
-  if ("as_list_col" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
-      If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("before" %in% provided_args || "after" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
-      See the slide documentation for more details."
-    )
-  }
-  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
-      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
-      class = "epiprocess__epi_slide_opt__new_name_not_supported"
-    )
-  }
-  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: the argument `names_sep` is not supported for `epi_slide_opt`. If you want to customize
-      the output column names, use `dplyr::rename` after the slide.",
-      class = "epiprocess__epi_slide_opt__name_sep_not_supported"
-    )
-  }
-
   assert_class(.x, "epi_df")
   .x_orig_groups <- groups(.x)
   if (inherits(.x, "grouped_df")) {
@@ -687,55 +652,31 @@ epi_slide_opt.epi_df <- function(.x, .col_names, .f, ...,
 }
 
 #' @rdname epi_slide_opt
-#' @description `epi_slide_mean` is a wrapper around `epi_slide_opt` with `.f =
-#' slider::slide_mean`.
+#' @description
+#'
+#' `epi_slide_mean` is a wrapper around `epi_slide_opt` with `.f = slider::slide_mean`.
 #'
 #' @export
 epi_slide_mean <- function(
   .x, .col_names, ...,
+  na.rm = NULL, na_rm = NULL, # nolint: object_name_linter
   .window_size = NULL, .align = c("right", "center", "left"),
   .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
   .ref_time_values = NULL, .all_rows = FALSE
 ) {
-  # Deprecated argument handling
-  provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
-    cli::cli_abort(
-      "epi_slide_mean: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
-      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
-      `.ref_time_values`, `.all_rows`."
-    )
+  if (!is.null(na.rm) && !is.null(na_rm)) {
+    cli::cli_abort("`na.rm` and `na_rm` are mutually exclusive",
+                   class = "epiprocess__epi_slide_mean__double_na_rm_setting")
   }
-  if ("as_list_col" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_mean: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
-      If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("before" %in% provided_args || "after" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_mean: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
-      See the slide documentation for more details."
-    )
-  }
-  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
-      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
-      class = "epiprocess__epi_slide_opt__new_name_not_supported"
-    )
-  }
-  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_mean: the argument `names_sep` is not supported. If you want to customize
-      the output column names, use `dplyr::rename` after the slide."
-    )
-  }
-
-  epi_slide_opt(
+  # Only pass `na_rm` if requested, so `epi_slide_opt` can use `.f` as-is when
+  # there are no other args:
+  na_rm <- na.rm %||% na_rm
+  na_rm_args <- if (is.null(na_rm)) list() else list(na_rm = na_rm)
+  rlang::inject(epi_slide_opt(
     .x = .x,
     .col_names = {{ .col_names }},
     .f = slider::slide_mean,
+    !!!na_rm_args,
     ...,
     .window_size = .window_size,
     .align = .align,
@@ -744,58 +685,43 @@ epi_slide_mean <- function(
     .new_col_names = .new_col_names,
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows
-  )
+  ))
 }
 
 #' @rdname epi_slide_opt
-#' @description `epi_slide_sum` is a wrapper around `epi_slide_opt` with `.f =
-#' slider::slide_sum`.
+
+#' @description
+#'
+#' `epi_slide_sum` is a wrapper around `epi_slide_opt` with `.f =
+#'  slider::slide_sum`.
+#'
+#' @param na.rm,na_rm optional, mutually exclusive; provide TRUE or FALSE:
+#'   Should missing values be excluded from the computation? Defaults to FALSE.
+#'   In `epi_slide_mean` and `epi_slide_sum` we detect either `na.rm` or
+#'   `na_rm`; in `epi_slide_opt` you'll need to use whatever your `.f` function
+#'   accepts.
 #'
 #' @export
 epi_slide_sum <- function(
   .x, .col_names, ...,
+  na.rm = NULL, na_rm = NULL, # nolint: object_name_linter
   .window_size = NULL, .align = c("right", "center", "left"),
   .prefix = NULL, .suffix = NULL, .new_col_names = NULL,
   .ref_time_values = NULL, .all_rows = FALSE
 ) {
-  # Deprecated argument handling
-  provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(purrr::map_lgl(provided_args, ~ .x %in% c("x", "col_names", "f", "ref_time_values", "all_rows")))) {
-    cli::cli_abort(
-      "epi_slide_sum: you are using one of the following old argument names: `x`, `col_names`, `f`, `ref_time_values`,
-      or `all_rows`. Please use the new dot-prefixed names: `.x`, `.col_names`, `.f`,
-      `.ref_time_values`, `.all_rows`."
-    )
+  if (!is.null(na.rm) && !is.null(na_rm)) {
+    cli::cli_abort("`na.rm` and `na_rm` are mutually exclusive",
+                   class = "epiprocess__epi_slide_sum__double_na_rm_setting")
   }
-  if ("as_list_col" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_sum: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
-      If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("before" %in% provided_args || "after" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_sum: `before` and `after` are deprecated for `epi_slide`. Use `.window_size` and `.align` instead.
-      See the slide documentation for more details."
-    )
-  }
-  if ("new_col_name" %in% provided_args || ".new_col_name" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_opt: the argument `new_col_name` is not supported for `epi_slide_opt`. If you want to customize
-      the output column names, use `.prefix =`, `.suffix =`, or `.new_col_**names** =`.",
-      class = "epiprocess__epi_slide_opt__new_name_not_supported"
-    )
-  }
-  if ("names_sep" %in% provided_args || ".names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epi_slide_sum: the argument `names_sep` is not supported. If you want to customize
-      the output column names, use `dplyr::rename` after the slide."
-    )
-  }
-  epi_slide_opt(
+  # Only pass `na_rm` if requested, so `epi_slide_opt` can use `.f` as-is when
+  # there are no other args:
+  na_rm <- na.rm %||% na_rm
+  na_rm_args <- if (is.null(na_rm)) list() else list(na_rm = na_rm)
+  rlang::inject(epi_slide_opt(
     .x = .x,
     .col_names = {{ .col_names }},
     .f = slider::slide_sum,
+    !!!na_rm_args,
     ...,
     .window_size = .window_size,
     .align = .align,
@@ -804,7 +730,7 @@ epi_slide_sum <- function(
     .new_col_names = .new_col_names,
     .ref_time_values = .ref_time_values,
     .all_rows = .all_rows
-  )
+  ))
 }
 
 #' Make a complete date sequence between min(x$time_value) and max

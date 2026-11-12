@@ -24,6 +24,8 @@ epi_slide_mean(
   .x,
   .col_names,
   ...,
+  na.rm = NULL,
+  na_rm = NULL,
   .window_size = NULL,
   .align = c("right", "center", "left"),
   .prefix = NULL,
@@ -37,6 +39,8 @@ epi_slide_sum(
   .x,
   .col_names,
   ...,
+  na.rm = NULL,
+  na_rm = NULL,
   .window_size = NULL,
   .align = c("right", "center", "left"),
   .prefix = NULL,
@@ -125,6 +129,12 @@ supported when \code{.x} is an \code{epi_archive}.}
 a missing value marker (typically NA, but more technically the result of
 \code{vctrs::vec_cast}-ing \code{NA} to the type of the slide computation output).
 Not supported when \code{.x} is an \code{epi_archive}.}
+
+\item{na.rm, na_rm}{optional, mutually exclusive; provide TRUE or FALSE:
+Should missing values be excluded from the computation? Defaults to FALSE.
+In \code{epi_slide_mean} and \code{epi_slide_sum} we detect either \code{na.rm} or
+\code{na_rm}; in \code{epi_slide_opt} you'll need to use whatever your \code{.f} function
+accepts.}
 }
 \value{
 An \code{epi_df} object (or, for \code{epi_slide_opt} on an \code{epi_archive}, an
@@ -210,10 +220,11 @@ cases_deaths_subset \%>\%
 # via `...`. This example passes some arguments to `frollmean` settings for
 # speed, accuracy, and to allow partially-missing windows:
 covid_case_death_rates_extended \%>\%
-  epi_slide_mean(
+  epi_slide_opt(
     case_rate,
+    data.table::frollmean,
     .window_size = 7,
-    na.rm = TRUE, algo = "exact", hasNA = TRUE
+    na.rm = TRUE, algo = "exact"
   )
 
 # If the more specialized possibilities for `.f` don't cover your needs, you
