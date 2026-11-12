@@ -3,7 +3,7 @@
 \name{time_plus_n_steps}
 \alias{time_plus_n_steps}
 \alias{time_minus_n_steps}
-\title{Advance/retreat time_values by specified number of time "steps"}
+\title{Advance/retreat time_value(s) by bare-integerish number(s) of time "steps"}
 \usage{
 time_plus_n_steps(x, y, time_type)
 
@@ -12,7 +12,7 @@ time_minus_n_steps(x, y, time_type)
 \arguments{
 \item{x}{a time_value (vector) of time type \code{time_type}}
 
-\item{y}{integerish (vector)}
+\item{y}{bare integerish (vector)}
 
 \item{time_type}{as in \code{\link[=validate_slide_window_arg]{validate_slide_window_arg()}}}
 }

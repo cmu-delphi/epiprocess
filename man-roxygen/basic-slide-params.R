@@ -25,12 +25,17 @@
 #'   than after.
 #'
 #' @param .ref_time_values The time values at which to compute the slides
-#'   values. By default, this is all the unique time values in `.x`.
+#'   values. By default, this is all the unique time values in `.x`. Not
+#'   supported when `.x` is an `epi_archive`.
 #' @param .all_rows If `.all_rows = FALSE`, the default, then the output
 #'   `epi_df` will have only the rows that had a `time_value` in
 #'   `.ref_time_values`. Otherwise, all the rows from `.x` are included by with
 #'   a missing value marker (typically NA, but more technically the result of
 #'   `vctrs::vec_cast`-ing `NA` to the type of the slide computation output).
-#' @return An `epi_df` object with one or more new slide computation columns
-#'   added. It will be ungrouped if `.x` was ungrouped, and have the same groups
-#'   as `.x` if `.x` was grouped.
+#'   Not supported when `.x` is an `epi_archive`.
+#' @return An `epi_df` object (or, for `epi_slide_opt` on an `epi_archive`, an
+#'   `epi_archive`) with one or more new slide computation columns added. It
+#'   will be ungrouped if `.x` was ungrouped, and have the same groups as `.x`
+#'   if `.x` was grouped. For `epi_archive`s, the result represents the version
+#'   history of running the `epi_slide_opt` computation on all versions of the
+#'   data in the archive.

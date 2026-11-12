@@ -110,6 +110,8 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
   }
 }
 
+time_delta_formats <- c("friendly", "fast")
+
 #' Object that, added to time_values of time_type, advances by one time step/interval
 #'
 #' @param time_type string; `epi_df`'s or `epi_archive`'s `time_type`
@@ -129,7 +131,7 @@ validate_slide_window_arg <- function(arg, time_type, lower = 1, allow_inf = TRU
 #'
 #' @keywords internal
 unit_time_delta <- function(time_type, format = c("friendly", "fast")) {
-  format <- rlang::arg_match(format)
+  format <- rlang::arg_match0(format, time_delta_formats)
   switch(format,
     friendly = switch(time_type,
       day = as.difftime(1, units = "days"),
@@ -237,7 +239,8 @@ time_delta_standardize <- function(time_delta, time_type, format = c("friendly",
 time_type_unit_abbrs <- c(
   day = "d",
   week = "w",
-  yearmonth = "m"
+  yearmonth = "m",
+  integer = "step"
 )
 # ^ Using these unit abbreviations happens to make our automatic slide output
 # naming look like taking ISO-8601 duration designations, removing the P, and
@@ -350,7 +353,7 @@ difftime_approx_ceiling_time_delta <- function(difftime, time_type) {
   )
 }
 
-#' Difference between two time value vectors in terms of number of time "steps"
+#' Difference between two finite `time_value` vectors in terms of number of time "steps"
 #'
 #' @param x a time_value (vector) of time type `time_type`
 #' @param y a time_value (vector) of time type `time_type`
@@ -368,12 +371,12 @@ time_minus_time_in_n_steps <- function(x, y, time_type, require_integer = TRUE) 
   time_delta_to_n_steps(x - y, time_type, require_integer = require_integer)
 }
 
-#' Advance/retreat time_values by specified number of time "steps"
+#' Advance/retreat time_value(s) by bare-integerish number(s) of time "steps"
 #'
 #' Here, a "step" is based on the `time_type`, not just the class of `x`.
 #'
 #' @param x a time_value (vector) of time type `time_type`
-#' @param y integerish (vector)
+#' @param y bare integerish (vector)
 #' @param time_type as in [`validate_slide_window_arg()`]
 #' @return a time_value (vector) of time type `time_type`
 #'
@@ -451,7 +454,7 @@ versions_standardize <- function(versions, archive, versions_arg = caller_arg(ve
   versions_arg # must force this before `versions` is
   if (is.null(versions)) {
     # all versions
-    versions <- vctrs::vec_unique(archive$DT$version)
+    versions <- vec_sort(vec_unique(archive$DT$version))
   } else if (
     is.character(versions) && length(versions) == 1L &&
       forcing_raises_error(vec_cast_patched(versions, archive$DT$version))

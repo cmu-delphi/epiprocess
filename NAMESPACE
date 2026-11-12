@@ -30,6 +30,9 @@ S3method(dplyr_col_modify,epi_df)
 S3method(dplyr_reconstruct,epi_df)
 S3method(dplyr_row_slice,epi_df)
 S3method(drop_na,epi_df)
+S3method(epi_slide_opt,epi_archive)
+S3method(epi_slide_opt,epi_df)
+S3method(epi_slide_opt,grouped_epi_archive)
 S3method(epix_slide,epi_archive)
 S3method(epix_slide,grouped_epi_archive)
 S3method(epix_truncate_versions_after,epi_archive)
@@ -54,7 +57,6 @@ S3method(key_colnames,tbl_ts)
 S3method(left_join,epi_df)
 S3method(mean,epi_df)
 S3method(next_after,Date)
-S3method(next_after,POSIXct)
 S3method(next_after,integer)
 S3method(pivot_longer,epi_df)
 S3method(pivot_wider,epi_df)
@@ -141,6 +143,7 @@ export(time_column_names)
 export(ungroup)
 export(unnest)
 export(validate_epi_archive)
+export(vec_approx_equal)
 export(version_column_names)
 import(epidatasets)
 importFrom(checkmate,
@@ -158,13 +161,19 @@ importFrom(checkmate,
   assert_number,
   assert_numeric,
   assert_scalar,
+  assert_set_equal,
   assert_string,
   assert_subset,
   assert_tibble,
+  assert_true,
   checkInt,
   check_atomic,
+  check_character,
   check_data_frame,
+  check_logical,
   check_names,
+  check_null,
+  check_numeric,
   expect_class,
   test_int,
   test_set_equal,
@@ -200,6 +209,7 @@ importFrom(data.table,
   set,
   setDF,
   setDT,
+  setcolorder,
   setkeyv
 )
 importFrom(dplyr,
@@ -230,9 +240,10 @@ importFrom(dplyr,
   if_else,
   inner_join,
   is_grouped_df,
-  lag,
+  join_by,
   left_join,
   mutate,
+  n_groups,
   pick,
   pull,
   relocate,
@@ -281,6 +292,7 @@ importFrom(rlang,
   .data,
   .env,
   arg_match,
+  arg_match0,
   as_label,
   caller_arg,
   caller_env,
@@ -296,6 +308,7 @@ importFrom(rlang,
   f_rhs,
   inject,
   is_bare_integerish,
+  is_bare_list,
   is_bare_numeric,
   is_environment,
   is_formula,
@@ -317,7 +330,8 @@ importFrom(slider,
   slide_mean,
   slide_min,
   slide_prod,
-  slide_sum
+  slide_sum,
+  slide_vec
 )
 importFrom(stats,
   cor,
@@ -327,6 +341,7 @@ importFrom(stats,
 )
 importFrom(tibble,
   as_tibble,
+  is_tibble,
   new_tibble,
   validate_tibble
 )
@@ -334,6 +349,7 @@ importFrom(tidyr,
   complete,
   drop_na,
   full_seq,
+  nest,
   pivot_longer,
   pivot_wider,
   unnest
@@ -353,23 +369,33 @@ importFrom(utils,
 )
 importFrom(vctrs,
   "vec_slice<-",
+  obj_is_vector,
   vec_assert,
   vec_c,
   vec_cast,
+  vec_cast_common,
   vec_data,
   vec_detect_missing,
   vec_duplicate_any,
+  vec_duplicate_detect,
   vec_duplicate_id,
   vec_equal,
   vec_in,
+  vec_match,
   vec_order,
   vec_ptype,
   vec_rbind,
+  vec_recycle,
   vec_recycle_common,
   vec_rep,
+  vec_rep_each,
+  vec_seq_along,
   vec_set_difference,
+  vec_set_intersect,
+  vec_set_names,
   vec_set_union,
   vec_size,
+  vec_size_common,
   vec_slice,
   vec_sort,
   vec_unique

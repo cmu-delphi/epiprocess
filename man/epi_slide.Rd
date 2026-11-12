@@ -87,7 +87,8 @@ than after.
 }}
 
 \item{.ref_time_values}{The time values at which to compute the slides
-values. By default, this is all the unique time values in \code{.x}.}
+values. By default, this is all the unique time values in \code{.x}. Not
+supported when \code{.x} is an \code{epi_archive}.}
 
 \item{.new_col_name}{Name for the new column that will contain the computed
 values. The default is "slide_value" unless your slide computations output
@@ -99,12 +100,16 @@ be given names that clash with the existing columns of \code{.x}.}
 \code{epi_df} will have only the rows that had a \code{time_value} in
 \code{.ref_time_values}. Otherwise, all the rows from \code{.x} are included by with
 a missing value marker (typically NA, but more technically the result of
-\code{vctrs::vec_cast}-ing \code{NA} to the type of the slide computation output).}
+\code{vctrs::vec_cast}-ing \code{NA} to the type of the slide computation output).
+Not supported when \code{.x} is an \code{epi_archive}.}
 }
 \value{
-An \code{epi_df} object with one or more new slide computation columns
-added. It will be ungrouped if \code{.x} was ungrouped, and have the same groups
-as \code{.x} if \code{.x} was grouped.
+An \code{epi_df} object (or, for \code{epi_slide_opt} on an \code{epi_archive}, an
+\code{epi_archive}) with one or more new slide computation columns added. It
+will be ungrouped if \code{.x} was ungrouped, and have the same groups as \code{.x}
+if \code{.x} was grouped. For \code{epi_archive}s, the result represents the version
+history of running the \code{epi_slide_opt} computation on all versions of the
+data in the archive.
 }
 \description{
 Most rolling/running computations can be handled by \code{\link{epi_slide_mean}},

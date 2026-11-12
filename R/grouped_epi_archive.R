@@ -219,54 +219,6 @@ epix_slide.grouped_epi_archive <- function(
   .new_col_name = NULL,
   .all_versions = FALSE
 ) {
-  # Perform some deprecated argument checks without using `<param> =
-  # deprecated()` in the function signature, because they are from
-  # early development versions and much more likely to be clutter than
-  # informative in the signature.
-  provided_args <- rlang::call_args_names(rlang::call_match())
-  if (any(provided_args %in% c("x", "f", "before", "new_col_name", "all_versions"))) {
-    cli::cli_abort(
-      "epix_slide: you are using one of the following old argument names: `x`, `f`, `before`,
-      `new_col_name`, `all_versions`. Please use the new names: `.x`, `.f`, `.before`,
-      `.new_col_name`, `.all_versions`."
-    )
-  }
-  if (any(provided_args %in% c("ref_time_values", ".ref_time_values"))) {
-    cli::cli_abort(
-      "epix_slide: the argument `ref_time_values` is deprecated. Please use `.versions` instead."
-    )
-  }
-  if ("group_by" %in% provided_args) {
-    cli_abort("
-          The `group_by` argument to `slide` has been removed; please use
-          the `group_by()` S3 generic function
-          before the slide instead. (If you were instead trying to pass a
-          `group_by` argument to `f` or create a column named `group_by`,
-          this check is a false positive, but you will still need to use a
-          different column name here and rename the resulting column after
-          the slide.)
-        ", class = "epiprocess__epix_slide_group_by_parameter_deprecated")
-  }
-  if ("all_rows" %in% provided_args) {
-    cli_abort("
-          The `all_rows` argument has been removed from `epix_slide` (but
-          is still supported in `epi_slide`). Add rows for excluded
-          results with a manual join instead.
-        ", class = "epiprocess__epix_slide_all_rows_parameter_deprecated")
-  }
-  if ("as_list_col" %in% provided_args) {
-    cli::cli_abort(
-      "epix_slide: the argument `as_list_col` is deprecated. If FALSE, you can just remove it.
-      If TRUE, have your given computation wrap its result using `list(result)` instead."
-    )
-  }
-  if ("names_sep" %in% provided_args) {
-    cli::cli_abort(
-      "epix_slide: the argument `names_sep` is deprecated. If NULL, you can remove it, it is now default.
-      If a string, please manually prefix your column names instead."
-    )
-  }
-
   # Argument validation
   .versions <- versions_standardize(.versions, .x$private$ungrouped)
 

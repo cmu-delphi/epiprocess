@@ -92,7 +92,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea1$DT), c("geo_value", "time_value", "version"))
 
   ea2 <- as_epi_archive(df, other_keys = "value", compactify = FALSE)
-  expect_equal(key(ea2$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key(ea2$DT), c("geo_value", "value", "time_value", "version"))
 
   # Tibble
   tib <- tibble::tibble(df, code = "x")
@@ -101,7 +101,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea3$DT), c("geo_value", "time_value", "version"))
 
   ea4 <- as_epi_archive(tib, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea4$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea4$DT), c("geo_value", "code", "time_value", "version"))
 
   # Keyed data.table
   kdt <- data.table::data.table(
@@ -119,7 +119,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
 
   ea6 <- as_epi_archive(kdt, other_keys = "value", compactify = FALSE)
   # Mismatched keys, but the one from as_epi_archive overrides
-  expect_equal(key(ea6$DT), c("geo_value", "time_value", "value", "version"))
+  expect_equal(key(ea6$DT), c("geo_value", "value", "time_value", "version"))
 
   # Unkeyed data.table
   udt <- data.table::data.table(
@@ -134,7 +134,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea7$DT), c("geo_value", "time_value", "version"))
 
   ea8 <- as_epi_archive(udt, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea8$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea8$DT), c("geo_value", "code", "time_value", "version"))
 
   # epi_df
   edf1 <- cases_deaths_subset %>%
@@ -145,7 +145,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea9$DT), c("geo_value", "time_value", "version"))
 
   ea10 <- as_epi_archive(edf1, other_keys = "code", compactify = FALSE)
-  expect_equal(key(ea10$DT), c("geo_value", "time_value", "code", "version"))
+  expect_equal(key(ea10$DT), c("geo_value", "code", "time_value", "version"))
 
   # Keyed epi_df
   edf2 <- data.frame(
@@ -164,7 +164,7 @@ test_that("epi_archives are correctly instantiated with a variety of data types"
   expect_equal(key(ea11$DT), c("geo_value", "time_value", "version"))
 
   ea12 <- as_epi_archive(edf2, other_keys = "misc", compactify = FALSE)
-  expect_equal(key(ea12$DT), c("geo_value", "time_value", "misc", "version"))
+  expect_equal(key(ea12$DT), c("geo_value", "misc", "time_value", "version"))
 })
 
 test_that("`epi_archive` rejects nonunique keys", {
@@ -209,12 +209,6 @@ test_that("`epi_archive` rejects dataframes where time_value and version columns
   expect_error(as_epi_archive(tbl2), class = "epiprocess__time_value_version_mismatch")
 })
 
-test_that("is_locf works as expected", {
-  vec <- c(1, 1, 1e-10, 1.1e-10, NA, NA, NaN, NaN)
-  is_repeated <- c(0, 1, 0, 1, 0, 1, 1, 1)
-  expect_equal(is_locf(vec, .Machine$double.eps^0.5, FALSE), as.logical(is_repeated))
-})
-
 test_that("as_epi_archive guesses reference_time and report_time correctly", {
   df <- data.frame(
     geo_value = "ca",
@@ -251,7 +245,7 @@ test_that("POSIXct versions are converted to Dates", {
     version = as.Date("2020-01-01") + 1:5,
     value = 1:5
   )
-  withr::with_envvar(list("TZ" = "US/Eastern"), {
+  withr::with_envvar(list("TZ" = "America/New_York"), {
     # Silent UTC midnight and UTC noon conversions (despite being
     # located outside of UTC):
     #
@@ -272,7 +266,7 @@ test_that("POSIXct versions are converted to Dates", {
       protoarchive %>%
         mutate(
           version = as.POSIXct(version, tz = "UTC") %>%
-            as.POSIXct(tz = "US/Eastern")
+            as.POSIXct(tz = "America/New_York")
         ) %>%
         as_epi_archive(),
       protoarchive %>% as_epi_archive()
@@ -286,7 +280,7 @@ test_that("POSIXct versions are converted to Dates", {
           as.POSIXct(tz = "UTC") %>%
           # midnight UTC -> late night ET
           `+`(as.difftime(27, units = "hours")) %>%
-          as.POSIXct(tz = "US/Eastern") %>%
+          as.POSIXct(tz = "America/New_York") %>%
           `+`(as.difftime(c(1:3, 1:2), units = "mins"))
       )
     expect_snapshot(
@@ -348,18 +342,18 @@ test_that("POSIXct versions are converted to Dates", {
     expect_equal(utc_result2, utc_result1)
     expect_equal(utc_result3, utc_result1)
   })
-  withr::with_envvar(list("TZ" = "US/Eastern"), {
+  withr::with_envvar(list("TZ" = "America/New_York"), {
     # Check that our ekt-versiondate slicing respects the ekt part + metadata args:
     expect_message(expect_equal(
       as_epi_archive(
         tibble(
           geo_value = c(1, 2, 2),
           time_value = as.Date("2020-01-01") - 1 + c(1, 1, 2),
-          version = as.POSIXct("2020-01-08 08:30:00", tz = "US/Eastern"),
+          version = as.POSIXct("2020-01-08 08:30:00", tz = "America/New_York"),
           value = 1:3
         ),
         clobberable_versions_start = as.Date("2020-01-08"),
-        versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "US/Eastern") %>% as.POSIXct(tz = "UTC")
+        versions_end = as.POSIXct("2020-01-09 08:30:00", tz = "America/New_York") %>% as.POSIXct(tz = "UTC")
       ),
       as_epi_archive(
         tibble(
@@ -393,5 +387,16 @@ test_that("POSIXct versions are converted to Dates", {
   expect_equal(
     withr::with_envvar(list("TZ" = "UTC", "CONFIRM_UTC" = "TRUE"), session_tz()),
     "UTC"
+  )
+})
+
+test_that("as_epi_archive adding signal column to keys works:", {
+  expect_equal(
+    suppressMessages(
+      tibble(signal = 1, geo_value = 1, time_value = 1, version = 1, value = 1) %>%
+        as_epi_archive() %>%
+        .$other_keys
+    ),
+    "signal"
   )
 })

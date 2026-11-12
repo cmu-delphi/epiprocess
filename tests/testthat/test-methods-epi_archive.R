@@ -206,7 +206,8 @@ test_that("filter.epi_archive works as expected", {
     new_epi_archive(
       data.table::data.table(
         geo_value = "ca", time_value = as.Date("2020-06-02"),
-        version = as.Date("2020-06-02") + 0:2, cases = 0:2
+        version = as.Date("2020-06-02") + 0:2, cases = 0:2,
+        key = key_colnames(ea2)
       ),
       ea2$geo_type, ea2$time_type, ea2$other_keys,
       ea2$clobberable_versions_start, ea2$versions_end

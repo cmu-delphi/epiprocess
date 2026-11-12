@@ -15,18 +15,42 @@ indicate development versions beyond 0.x.
   versions based on the imputed reporting cadence and `versions_end`.
   And `autoplot()` will no longer accept just a number in (b), to
   avoid ambiguity with case (a) in some types of archives.
+- The low-level `new_epi_archive()` function's `x` argument has been replaced
+  with a `data_table` argument, which now has extra requirements; see
+  `?new_epi_archive`. Users should still be using `as_epi_archive()` unless they
+  have a need for something lower-level.
+
+## New features
+
+- `epi_slide_{mean,sum,opt}` now work on `epi_archive`s, preparing version
+  histories for 7-day-averages of signals, etc.
 
 ## Improvements
 
 - Automatic character-to-Date and `vec_cast()` conversions have been
   added to various function arguments.
-
 - `as_epi_archive()` now detects POSIXct datetime `version` columns
   and converts them to `Date`s.  Actual POSIXct `version` support may
   be added in the future.  Two kinds of datetimes are supported: (a)
   fake purportedly-UTC midnight/noon datetimes that actually represent
   dates, and (b) actual datetimes. (Improves compatibility with
   `{epidatr}` 1.4.0's `epidata_archive()`.)
+- Some column ordering operations have been changed to place any `other_keys`
+  between `geo_value` and `time_value`. This better hints at how we group
+  together `geo_value` and `other_keys` in many processing functions. Some
+  operations will now reorder columns to this new order.
+- When using integerish time values, we now assume that these represent time
+  step indices that should spaced 1 apart. `epi_slide_opt` defaults no longer
+  error on such input. (Previously, we considered that they might be holding
+  epiweek representations, such as 202552, 202553, 202601; now, such epiweek
+  numbers should be converted to representative Dates sharing a consistent day
+  of the week.)
+- `epi_slide_opt` computations have been sped up on `epi_df`s
+
+## Cleanup
+
+- Some checks for deprecated arguments from several versions ago have been
+  removed.
 
 # epiprocess 0.13.0
 

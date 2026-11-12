@@ -785,6 +785,10 @@ test_that("epi_slide_opt output naming features", {
     ) %>%
     as_epi_df() %>%
     group_by(geo_value)
+  integerly <-
+    tibble::tibble(geo_value = 1, time_value = 1:10, value = 1:10) %>%
+    as_epi_df(as_of = 11L) %>%
+    group_by(geo_value)
 
   # Auto-naming:
   # * Changing .f and .window_size:
@@ -819,6 +823,10 @@ test_that("epi_slide_opt output naming features", {
   expect_equal(
     yearmonthly %>% epi_slide_opt(value, slide_any, .window_size = 3) %>% names(),
     c(names(yearmonthly), "value_3many") # not the best name, but super unlikely anyway
+  )
+  expect_equal(
+    integerly %>% epi_slide_opt(value, slide_mean, .window_size = 3) %>% names(),
+    c(names(integerly), "value_3stepav")
   )
   # * Through forwarding functions:
   expect_equal(
@@ -943,5 +951,52 @@ test_that("epi_slide* output grouping matches input grouping", {
       epi_slide_sum(value, .window_size = 7) %>%
       group_vars(),
     character(0)
+  )
+})
+
+test_that('`epi_slide_opt .align != "right"` errors on `fill` arg', {
+  test_date <- as.Date("2020-01-01")
+  toy_edf <- tibble(
+    geo_value = 1,
+    time_value = test_date - 1 + 1:5,
+    value = c(1:3, NA, 5)
+  ) %>%
+    as_epi_df(as_of = test_date + 10)
+
+  expect_error(
+    toy_edf %>%
+      epi_slide_opt(value, frollmean, .window_size = 3, .align = "left", fill = -1000),
+    class = "epiprocess__epi_slide_opt__fill_unsupported"
+  )
+})
+
+test_that("epi_slide_mean and epi_slide_sum accept `na.rm` or `na_rm`", {
+  toy_edf <- tibble(
+    geo_value = 1,
+    time_value = as.Date("2020-01-01") + 0:4,
+    value = c(1:3, NA, 5)
+  ) %>%
+    as_epi_df(as_of = as.Date("2020-02-01"))
+  # (incomplete windows at the start are NA-padded, so with NA removal they get
+  # partial results:)
+  expect_equal(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3),
+    toy_edf %>% mutate(value_3dav = c(NA, NA, 2, NA, NA))
+  )
+  expect_equal(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3, na.rm = TRUE),
+    toy_edf %>% mutate(value_3dav = c(1, 1.5, 2, 2.5, 4))
+  )
+  expect_equal(
+    toy_edf %>% epi_slide_sum(value, .window_size = 3, na_rm = TRUE),
+    toy_edf %>% mutate(value_3dsum = c(1, 3, 6, 5, 8))
+  )
+  expect_error(
+    toy_edf %>% epi_slide_mean(value, .window_size = 3, na.rm = TRUE, na_rm = TRUE),
+    class = "epiprocess__epi_slide_mean__double_na_rm_setting"
+  )
+  expect_error(
+    toy_edf %>% epi_slide_sum(value, .window_size = 3, na.rm = TRUE, na_rm = TRUE),
+    class = "epiprocess__epi_slide_sum__double_na_rm_setting"
   )
 })

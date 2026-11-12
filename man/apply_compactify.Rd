@@ -21,7 +21,7 @@ would be \code{key(DT)}.}
 
 \item{abs_tol}{numeric, >=0; absolute tolerance to use on numeric measurement
 columns when determining whether something can be compactified away; see
-\code{\link{is_locf}}}
+\code{\link{vec_approx_equal}}}
 
 \item{init_nas_are_locf}{bool; do we treat \link[vctrs:vec_detect_missing]{entirely-missing values} in the initial measurement for
 each epikey-time as LOCF?  Ordinarily \code{FALSE}, but \code{TRUE} if
@@ -40,5 +40,16 @@ Works by shifting all rows except the version, then comparing values to see
 if they've changed. We need to arrange in descending order, but note that
 we don't need to group, since at least one column other than version has
 changed, and so is kept.
+}
+\examples{
+
+# Typical usage: compactifying epi_archive-like data
+tibble::tibble(geo_value = 1, time_value = 1, version = 1:4, value = c(1, 1, 3, 4)) \%>\%
+  epiprocess:::apply_compactify(ukey_names = c("geo_value", "time_value", "version"))
+
+# Other usage: compactifying data that may not have geo or time
+data.table::data.table(version = 2:6, version_info = c(1, 1, 3, 4, 0), key = "version") \%>\%
+  epiprocess:::apply_compactify(ukey_names = "version")
+
 }
 \keyword{internal}
